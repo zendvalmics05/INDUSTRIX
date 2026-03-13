@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.database import Base, engine
 from routers import auth
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine,checkfirst=True)
 
 app = FastAPI(title='INDUSTRIX API', version='1.0.0')
 

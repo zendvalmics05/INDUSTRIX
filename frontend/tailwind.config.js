@@ -20,9 +20,9 @@ export default {
         mono:    ["'JetBrains Mono'", "monospace"],
       },
       boxShadow: {
-        glow:       "0 0 20px rgba(168,85,247,0.35)",
-        "glow-sm":  "0 0 10px rgba(168,85,247,0.25)",
-        "glow-pink":"0 0 20px rgba(236,72,153,0.35)",
+        glow:        "0 0 20px rgba(168,85,247,0.35)",
+        "glow-sm":   "0 0 10px rgba(168,85,247,0.25)",
+        "glow-pink": "0 0 20px rgba(236,72,153,0.35)",
       },
       keyframes: {
         flicker: {
