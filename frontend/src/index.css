@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -49,4 +53,23 @@ html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover,
 #root::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 177, 255, 0.55);
+}
+
+@layer components {
+  .text-glow-purple {
+    text-shadow: 0 0 20px rgba(168,85,247,0.8), 0 0 40px rgba(168,85,247,0.4);
+  }
+  .text-glow-pink {
+    text-shadow: 0 0 20px rgba(236,72,153,0.8), 0 0 40px rgba(236,72,153,0.4);
+  }
+  .input-cyber {
+    @apply w-full bg-brand-bg border border-brand-border rounded-sm px-4 py-3;
+    @apply font-mono text-sm text-white placeholder-white/20;
+    @apply focus:outline-none focus:border-brand-purple transition-all duration-300;
+  }
+  .btn-cyber {
+    @apply relative w-full py-3 font-display font-semibold text-lg tracking-widest uppercase;
+    @apply bg-brand-purple text-white rounded-sm overflow-hidden;
+    @apply transition-all duration-300 hover:bg-purple-500 active:scale-[0.98];
+  }
 }
