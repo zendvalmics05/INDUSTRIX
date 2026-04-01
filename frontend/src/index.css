@@ -2,34 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #000;
+  color: #f1e9ff;
+}
 
-  body {
-    background-color: #0a0a12;
-    color: #e2e2f0;
-    font-family: 'DM Sans', sans-serif;
-    margin: 0;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+#root {
+  min-height: 100dvh;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-  #root {
-    position: relative;
-    z-index: 1;
-  }
+/* Dark-mode scrollbars (Chromium + Firefox) */
+html,
+body,
+#root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 177, 255, 0.55) rgba(0, 0, 0, 0.6);
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+#root::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+#root::-webkit-scrollbar-thumb {
+  background: rgba(120, 177, 255, 0.35);
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+#root::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 177, 255, 0.55);
 }
 
 @layer components {

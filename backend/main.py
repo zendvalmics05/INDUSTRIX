@@ -1,6 +1,5 @@
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import Base, engine
 
@@ -46,3 +45,6 @@ app.include_router(org_teams.router)
 def health():
     return {"status" : "hello"}
 
+@app.get("", tags=["meta"])
+def root():
+    return {"status": "Alive!"}

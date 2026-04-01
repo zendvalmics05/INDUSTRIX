@@ -2,12 +2,13 @@ import { create } from 'zustand'
 
 interface Team {
   id: number
-  team_code: string
+  game_id: number
   name: string
   domain: string
   cash: number
   revenue: number
   market_share: number
+  is_active: boolean
 }
 
 interface AuthState {
