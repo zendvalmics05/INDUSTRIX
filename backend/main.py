@@ -1,12 +1,24 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import Base, engine
-from routers import procurement
-from routers.auth import router as auth_router
 
-Base.metadata.create_all(bind=engine, checkfirst=True)
+from routers.team import auth as team_auth
+from routers.team import leaderboard as team_leaderboard
+from routers.team import procurement as team_procurement
+from routers.team import production as team_production
+from routers.team import sales as team_sales
+from routers.organiser import cycle as org_cycle
+from routers.organiser import deals as org_deals
+from routers.organiser import teams as org_teams
 
-app = FastAPI(title='INDUSTRIX API', version='1.0.0')
+Base.metadata.create_all(bind=engine,checkfirst=True)
+
+app = FastAPI(
+    title       = "Industrix",
+    description = "Market simulation game backend — Jadavpur University Production Engineering",
+    version     = "2.0.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,9 +28,23 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.include_router(auth_router, prefix="/api")
-app.include_router(procurement.router, prefix="/api", tags=["Procurement"])
+# Team-facing routers
+app.include_router(team_auth.router)
+app.include_router(team_procurement.router)
+app.include_router(team_production.router)
+app.include_router(team_sales.router)
+app.include_router(team_leaderboard.router)
 
-@app.get("/", tags=["Health"])
+# Organiser routers
+app.include_router(org_cycle.router)
+app.include_router(org_deals.router)
+app.include_router(org_teams.router)
+
+
+@app.get("/health", tags=["meta"])
+def health():
+    return {"status" : "hello"}
+
+@app.get("", tags=["meta"])
 def root():
-    return {"status": "ok", "game": "Industrix", "version": "1.0.0"}
+    return {"status": "Alive!"}
