@@ -27,7 +27,7 @@ from models.game import RawMaterialSource
 from models.procurement import ComponentSlot, MemoryProcurement
 from models.deals import Event
 
-from core.enums import EventStatus, EventType
+from core.enums import EventStatus, EventType, EventPhase
 
 
 # ── Seeding ───────────────────────────────────────────────────────────────────

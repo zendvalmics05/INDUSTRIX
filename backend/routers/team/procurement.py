@@ -7,13 +7,15 @@ PATCH /team/procurement        — update decisions (partial)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from typing import Dict, List
+
 from core.auth import verify_team
 from core.database import get_db
 from core.enums import CyclePhase
-from models.game import Cycle, Game, Team
+from models.game import Cycle, Game, Team, RawMaterialSource
 from models.procurement import MemoryProcurement
 from schemas.common import OkResponse
-from schemas.procurement import ProcurementMemoryOut, ProcurementPatch
+from schemas.procurement import ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut
 
 router = APIRouter(prefix="/team/procurement", tags=["team"])
 
@@ -33,6 +35,49 @@ def _assert_phase(db: Session, team: Team, expected: CyclePhase) -> Cycle:
             f"Current: {cycle.phase_log.current_phase.value if cycle else 'none'}",
         )
     return cycle
+
+
+@router.get("/sources", response_model=Dict[str, List[RawMaterialSourceOut]])
+def get_sources(
+        team: Team = Depends(verify_team),
+        db: Session = Depends(get_db),
+):
+    """
+    Return all active raw material sources for this game, grouped by component.
+
+    This is the catalogue the team browses when filling in their procurement
+    decisions. Only called during PROCUREMENT_OPEN, but not phase-gated —
+    teams may also want to inspect sources during PRODUCTION_OPEN to plan
+    ahead for the next cycle.
+
+    Response shape:
+        {
+          "airframe":         [{ id, name, quality_mean, ... }, ...],
+          "propulsion":       [...],
+          "avionics":         [...],
+          "fire_suppression": [...],
+          "sensing_safety":   [...],
+          "battery":          [...]
+        }
+    Only components that have at least one active source appear as keys.
+    """
+    sources = (
+        db.query(RawMaterialSource)
+        .filter(
+            RawMaterialSource.game_id == team.game_id,
+            RawMaterialSource.is_active == True,
+        )
+        .order_by(RawMaterialSource.component, RawMaterialSource.name)
+        .all()
+    )
+
+    grouped: Dict[str, List[RawMaterialSourceOut]] = {}
+    for src in sources:
+        comp_key = src.component.value
+        grouped.setdefault(comp_key, []).append(
+            RawMaterialSourceOut.from_orm(src)
+        )
+    return grouped
 
 
 @router.get("", response_model=ProcurementMemoryOut)
