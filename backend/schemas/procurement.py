@@ -38,6 +38,28 @@ class ProcurementPatch(BaseModel):
         return v
 
 
+class RawMaterialSourceOut(BaseModel):
+    """
+    One supplier row shown to teams during PROCUREMENT_OPEN.
+    quality_mean and quality_sigma are shown so teams can make
+    informed decisions about quality/cost trade-offs.
+    is_active is always True here (inactive sources are filtered out).
+    """
+    id: int
+    component: str  # ComponentType value
+    name: str
+    distance: int
+    quality_mean: float
+    quality_sigma: float
+    base_cost_per_unit: float
+    min_order: int
+    max_order: int
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
 class ProcurementMemoryOut(BaseModel):
     """Current (last cycle's) procurement decisions — shown to the team."""
     decisions: Dict[str, dict]
