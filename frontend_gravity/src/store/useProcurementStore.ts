@@ -1,21 +1,22 @@
 import { create } from 'zustand';
-import type { ComponentType, Source, ComponentDecision } from '../types';
+import type { ComponentType, Source, ProcurementDecision } from '../types';
 import { teamApi } from '../api';
 
-const DEFAULT_DECISION: ComponentDecision = {
+const DEFAULT_DECISION: ProcurementDecision = {
   source_id: 1,
   quantity: 0,
   transport: 'road',
 };
 
 interface ProcurementState {
-  decisions: Record<ComponentType, ComponentDecision>;
-  initialDecisions: Record<ComponentType, ComponentDecision>;
+  decisions: Record<ComponentType, ProcurementDecision>;
+  initialDecisions: Record<ComponentType, ProcurementDecision>;
   sources: Source[];
+  sourcesByComponent: Record<string, Source[]>;
   selectedComponent: ComponentType;
 
   setComponent: (c: ComponentType) => void;
-  setDecision: (component: ComponentType, field: keyof ComponentDecision, value: any) => void;
+  setDecision: (component: ComponentType, field: keyof ProcurementDecision, value: any) => void;
   fetchSources: () => Promise<void>;
   fetchExistingDecisions: () => Promise<void>;
   submitDecisions: () => Promise<void>;
@@ -39,6 +40,7 @@ export const useProcurementStore = create<ProcurementState>((set, get) => ({
     battery: { ...DEFAULT_DECISION },
   },
   sources: [],
+  sourcesByComponent: {},
   selectedComponent: 'airframe',
 
   setComponent: (c) => set({ selectedComponent: c }),
@@ -54,17 +56,32 @@ export const useProcurementStore = create<ProcurementState>((set, get) => ({
   })),
 
   fetchSources: async () => {
-    const sources = await teamApi.getSources();
-    set({ sources });
+    try {
+      const sources = await teamApi.getSources();
+      const grouped: Record<string, Source[]> = {};
+      sources.forEach(src => {
+        if (!grouped[src.component]) {
+          grouped[src.component] = [];
+        }
+        grouped[src.component].push(src);
+      });
+      set({ sources, sourcesByComponent: grouped });
+    } catch (err) {
+      console.error("Failed to load sources", err);
+    }
   },
 
   fetchExistingDecisions: async () => {
     try {
       const data = await teamApi.getProcurement();
       if (data && data.decisions) {
-        // Only override if the backend returned an object
         if (Object.keys(data.decisions).length > 0) {
-          const merged = { ...get().decisions, ...data.decisions };
+          const merged = { ...get().decisions };
+          (Object.keys(data.decisions) as ComponentType[]).forEach(comp => {
+            if (data.decisions[comp]) {
+              merged[comp] = { ...merged[comp], ...data.decisions[comp] };
+            }
+          });
           set({ decisions: merged, initialDecisions: merged });
         }
       }
@@ -85,6 +102,6 @@ export const useProcurementStore = create<ProcurementState>((set, get) => ({
     });
     if (Object.keys(changed).length === 0) return;
     await teamApi.patchProcurement(changed);
-    set({ initialDecisions: { ...decisions } });
+    set({ initialDecisions: JSON.parse(JSON.stringify(decisions)) });
   },
 }));

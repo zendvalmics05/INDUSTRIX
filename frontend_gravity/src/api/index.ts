@@ -6,6 +6,9 @@ import type {
   ProductionMemoryOut,
   LeaderboardOut,
   Source,
+  ComponentSlotData,
+  MarketFaction,
+  FinancesData,
 } from '../types';
 
 // Thin wrapper around backend endpoints. No hardcoded data.
@@ -90,4 +93,40 @@ export const teamApi = {
     const { data } = await api.get<LeaderboardOut>('/team/leaderboard');
     return data;
   },
+
+  // Missing factory endpoints
+  getComponents: async () => {
+    const { data } = await api.get<{ drone_stock_total: number; components: ComponentSlotData[] }>('/team/inventory/components');
+    return data;
+  },
+  
+  getMachines: async (comp: string) => {
+    const { data } = await api.get<ComponentSlotData>(`/team/inventory/machines/${comp}`);
+    return data;
+  },
+
+  getProcurementSummary: async () => {
+    const { data } = await api.get('/team/procurement/summary');
+    return data;
+  },
+
+  getProductionSummary: async () => {
+    const { data } = await api.get('/team/production/summary');
+    return data;
+  },
+
+  getSalesSummary: async () => {
+    const { data } = await api.get('/team/sales/summary');
+    return data;
+  },
+
+  getFinances: async (): Promise<FinancesData> => {
+    const { data } = await api.get<FinancesData>('/team/finances');
+    return data;
+  },
+
+  getMarket: async (): Promise<{ factions: MarketFaction[] }> => {
+    const { data } = await api.get<{ factions: MarketFaction[] }>('/team/market');
+    return data;
+  }
 };

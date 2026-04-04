@@ -24,7 +24,10 @@ export const Sales = () => {
     standard: { action: 'sell_market', price_override: null },
     premium: { action: 'sell_market', price_override: null },
   });
-  const [baseline, setBaseline] = useState<typeof decisions | null>(null);
+  const [unitsToAssemble, setUnitsToAssemble] = useState<number | null>(null);
+  
+  const [baselineDecisions, setBaselineDecisions] = useState<typeof decisions | null>(null);
+  const [baselineUnits, setBaselineUnits] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string>('');
 
@@ -34,14 +37,18 @@ export const Sales = () => {
     fetchInventory().catch(() => {});
     teamApi.getSales().then((data) => {
       const d = data?.decisions ?? {};
-      const next = {
+      const nextDecisions = {
         reject: d.reject || decisions.reject,
         substandard: d.substandard || decisions.substandard,
         standard: d.standard || decisions.standard,
         premium: d.premium || decisions.premium,
       };
-      setDecisions(next);
-      setBaseline(next);
+      setDecisions(nextDecisions);
+      setBaselineDecisions(nextDecisions);
+      
+      const u = data?.units_to_assemble ?? null;
+      setUnitsToAssemble(u);
+      setBaselineUnits(u);
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -68,20 +75,31 @@ export const Sales = () => {
     if (!window.confirm('Confirm sales decisions? This cannot be undone until the next phase.')) return;
     setSaving(true);
     try {
-      const changed: Record<string, any> = {};
+      const payload: any = {};
+      const changedDecisions: Record<string, any> = {};
       (['reject', 'substandard', 'standard', 'premium'] as TierKey[]).forEach((tier) => {
         const current = decisions[tier];
-        const prev = baseline?.[tier];
+        const prev = baselineDecisions?.[tier];
         if (!prev || JSON.stringify(current) !== JSON.stringify(prev)) {
-          changed[tier] = current;
+          changedDecisions[tier] = current;
         }
       });
-      if (Object.keys(changed).length > 0) {
-        await teamApi.patchSales({ decisions: changed });
+      if (Object.keys(changedDecisions).length > 0) {
+        payload.decisions = changedDecisions;
       }
+      
+      if (unitsToAssemble !== baselineUnits) {
+        payload.units_to_assemble = unitsToAssemble;
+      }
+
+      if (Object.keys(payload).length > 0) {
+        await teamApi.patchSales(payload);
+      }
+      
       const ts = new Date().toLocaleTimeString();
       setLastSavedAt(ts);
-      setBaseline(decisions);
+      setBaselineDecisions(decisions);
+      setBaselineUnits(unitsToAssemble);
       addToast(`Decisions saved at ${ts}`, 'success');
     } catch (e: any) {
       addToast(e?.message || 'Failed to save sales decisions', 'error');
@@ -92,9 +110,24 @@ export const Sales = () => {
 
   return (
     <div className="flex flex-col h-full space-y-6">
-      <h1 className="font-display text-3xl uppercase tracking-tighter">SALES</h1>
-      <div className="bg-surface-low border border-outline-variant p-4 font-mono text-sm">
-        Brand score: {brandScore.toFixed(1)} · {brandTier.toUpperCase()} · Brand score affects your share of market demand.
+      <h1 className="font-display text-3xl uppercase tracking-tighter">SALES & ASSEMBLY</h1>
+      
+      <div className="flex space-x-6">
+        <div className="bg-surface-low border border-outline-variant p-4 font-mono text-sm flex-1">
+          Brand score: {brandScore.toFixed(1)} · {brandTier.toUpperCase()} · Brand score affects your share of market demand.
+        </div>
+        
+        <div className="bg-surface-low border border-outline-variant p-4 font-mono flex items-center space-x-4 w-1/3">
+          <label className="text-xs text-on-surface-variant uppercase tracking-widest flex-1">UNITS TO ASSEMBLE</label>
+          <input 
+            type="number" min="0" step="1"
+            value={unitsToAssemble === null ? '' : unitsToAssemble}
+            onChange={e => setUnitsToAssemble(e.target.value ? parseInt(e.target.value) : null)}
+            placeholder="Max"
+            disabled={!isSalesOpen}
+            className="w-1/2 bg-surface text-xl border border-outline-variant p-2 text-primary text-right"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -142,7 +175,7 @@ export const Sales = () => {
         ))}
       </div>
 
-      <div className="bg-surface-container border border-outline-variant p-4 flex items-center justify-between">
+      <div className="bg-surface-container border border-outline-variant p-4 flex items-center justify-between mt-auto">
         <div className="font-mono text-sm">
           Estimated total revenue: <span className="text-on-surface">${totalEstimate.toLocaleString()}</span>
         </div>

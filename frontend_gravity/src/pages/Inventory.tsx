@@ -6,7 +6,7 @@ import type { ComponentType } from '../types';
 export const Inventory = () => {
   const { phase } = useGameStore();
   const { 
-    funds, brandScore, brandTier, droneStockTotal, droneBreakdown, rawMaterialStocks, producedThisCycle, carriedFromPrevious, hasGovLoan,
+    funds, brandScore, brandTier, droneStockTotal, droneBreakdown, rawMaterialStocks, hasGovLoan,
     fetchInventory, scrapRejectUnits 
   } = useInventoryStore();
 
@@ -14,7 +14,7 @@ export const Inventory = () => {
     fetchInventory();
   }, [fetchInventory, phase]); // Refetch when phase switches
 
-  const holdingUnits = droneBreakdown.standard + droneBreakdown.premium;
+  const holdingUnits = (droneBreakdown?.standard || 0) + (droneBreakdown?.premium || 0);
   const holdingCost = holdingUnits * 40;
 
   return (
@@ -75,35 +75,35 @@ export const Inventory = () => {
               <span>TOTAL UNITS</span>
               <span>{droneStockTotal.toLocaleString()}</span>
             </div>
-            <div className="font-mono text-xs text-on-surface-variant mb-4">
-              Produced this cycle: {producedThisCycle.toLocaleString()} · Carried from previous: {carriedFromPrevious.toLocaleString()}
-            </div>
 
             <div className="space-y-2 font-mono text-sm">
               <div className="flex justify-between py-2 border-b border-outline-variant/30">
                 <span className="text-error">Reject</span>
-                <span>{droneBreakdown.reject.toLocaleString()}</span>
+                <span>{(droneBreakdown?.reject || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-outline-variant/30">
                 <span className="text-on-surface-variant">Substandard</span>
-                <span>{droneBreakdown.substandard.toLocaleString()}</span>
+                <span>{(droneBreakdown?.substandard || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-outline-variant/30">
                 <span className="text-on-surface-variant">Standard</span>
-                <span>{droneBreakdown.standard.toLocaleString()}</span>
+                <span>{(droneBreakdown?.standard || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-primary">Premium</span>
-                <span>{droneBreakdown.premium.toLocaleString()}</span>
+                <span>{(droneBreakdown?.premium || 0).toLocaleString()}</span>
               </div>
+            </div>
+            <div className="text-xs text-on-surface-variant mt-4 font-mono italic">
+              Note: Backend does not currently provide tier breakdown before resolution. Displaying estimated defaults.
             </div>
           </div>
 
           <button
             onClick={() => scrapRejectUnits()}
-            disabled={droneBreakdown.reject === 0}
+            disabled={(droneBreakdown?.reject || 0) === 0}
             className={`w-full py-5 px-4 font-display font-bold uppercase tracking-widest border transition-all text-sm
-              ${(droneBreakdown.reject === 0) 
+              ${((droneBreakdown?.reject || 0) === 0) 
                 ? 'bg-surface-low border-outline-variant text-on-surface-variant opacity-50 cursor-not-allowed' 
                 : 'bg-error/10 border-error text-error hover:bg-error hover:text-surface'}
             `}

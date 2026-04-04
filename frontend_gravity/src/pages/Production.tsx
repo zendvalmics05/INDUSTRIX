@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useProductionStore, useGameStore } from '../store';
+import { useProductionStore, useGameStore, useInventoryStore } from '../store';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { ComponentTabs, SendDecisionsButton } from '../components/SharedComponents';
 import type { ComponentType } from '../types';
@@ -10,10 +10,11 @@ const WAGE_COSTS = { below_market: 300, market: 500, above_market: 750 };
 export const Production = () => {
   const { phase } = useGameStore();
   const { addToast } = useNotificationStore();
+  const { components, fetchInventory } = useInventoryStore();
   const { 
     componentDecisions, wageLevel, targetHeadcount, upgradeAutomation, 
-    selectedComponent, setComponent, setMaintenance, setRndInvest, clearRndInvest,
-    setWageLevel, setHeadcount, setAutomation, setUpgradeTo, fetchExistingDecisions, submitDecisions 
+    selectedComponent, setComponent, setMaintenance, setUnitsToProduce, setRndInvest, clearRndInvest,
+    setWageLevel, setHeadcount, setAutomation, setBuyMachine, fetchExistingDecisions, submitDecisions 
   } = useProductionStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,10 +22,12 @@ export const Production = () => {
 
   useEffect(() => {
     fetchExistingDecisions();
-  }, [fetchExistingDecisions]);
+    fetchInventory();
+  }, [fetchExistingDecisions, fetchInventory]);
 
   const isProductionOpen = phase === 'production_open';
   const currentComp = componentDecisions[selectedComponent];
+  const factoryCompData = components.find(c => c.component === selectedComponent);
 
   // Computations
   let totalMaintCost = 0;
@@ -121,6 +124,22 @@ export const Production = () => {
                 </div>
 
                 <div className="flex-1 space-y-2">
+                  <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">UNITS TO PRODUCE</label>
+                  <div className="flex items-center space-x-2 bg-surface-low border border-outline-variant p-2">
+                    <input 
+                      type="number" min="0" step="1"
+                      value={currentComp.units_to_produce === null ? '' : currentComp.units_to_produce}
+                      placeholder="Max"
+                      onChange={e => setUnitsToProduce(selectedComponent, e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={!isProductionOpen}
+                      className="w-full bg-transparent font-mono text-xl text-primary disabled:opacity-50 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-6 items-end mt-4">
+                <div className="flex-1 space-y-2">
                   <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">R&D INVESTMENT</label>
                   <div className="flex space-x-2">
                     <select
@@ -144,51 +163,27 @@ export const Production = () => {
                   </div>
                   <p className="text-[10px] text-on-surface-variant font-mono">Cost: {(currentComp.rnd_invest?.levels || 0) * 10000} CU · Takes 2 cycles to arrive.</p>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-surface-low border border-outline-variant p-3">
-                  <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Machine Tier</div>
-                  <div className="font-mono text-sm text-on-surface mt-1">{(currentComp.machine_tier || '—').toUpperCase()}</div>
+                
+                <div className="flex-1 space-y-2">
+                  <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">BUY MACHINE TIER</label>
+                  <select
+                    value={currentComp.buy_machine?.tier || ''}
+                    onChange={(e) => setBuyMachine(selectedComponent, (e.target.value || null) as any)}
+                    disabled={!isProductionOpen}
+                    className="w-full bg-surface-low border border-outline-variant p-3 font-mono text-xs"
+                  >
+                    <option value="">Do not buy machine</option>
+                    <option value="basic">basic</option>
+                    <option value="standard">standard</option>
+                    <option value="industrial">industrial</option>
+                    <option value="precision">precision</option>
+                  </select>
                 </div>
-                <div className="bg-surface-low border border-outline-variant p-3">
-                  <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Machine Condition</div>
-                  <div className="mt-2 h-2 w-full bg-surface">
-                    <div
-                      className={`h-2 ${
-                        (currentComp.machine_condition ?? 0) > 70
-                          ? 'bg-primary'
-                          : (currentComp.machine_condition ?? 0) >= 40
-                            ? 'bg-tertiary'
-                            : 'bg-error'
-                      }`}
-                      style={{ width: `${Math.max(0, Math.min(100, currentComp.machine_condition ?? 0))}%` }}
-                    />
-                  </div>
-                  <div className="font-mono text-xs text-on-surface-variant mt-1">{currentComp.machine_condition ?? '—'}/100</div>
-                  {(currentComp.machine_condition ?? 100) < 40 && (
-                    <div className="font-mono text-[10px] text-error mt-1">DEGRADED — output quality penalty active</div>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2 mt-4">
-                <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">MACHINE UPGRADE (upgrade_to)</label>
-                <select
-                  value={currentComp.upgrade_to || ''}
-                  onChange={(e) => setUpgradeTo(selectedComponent, (e.target.value || null) as any)}
-                  disabled={!isProductionOpen}
-                  className="w-full bg-surface-low border border-outline-variant p-2 font-mono text-xs"
-                >
-                  <option value="">No upgrade</option>
-                  <option value="standard">standard</option>
-                  <option value="industrial">industrial</option>
-                  <option value="precision">precision</option>
-                </select>
-                <div className="text-[10px] font-mono text-on-surface-variant">Tier comparison: Standard 400/8/3.0/35000 · Industrial 700/6/2.0/80000 · Precision 1000/4/1.2/180000</div>
               </div>
             </div>
 
             {/* Global Level Decisions */}
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4">
               <h2 className="text-xs font-mono text-on-surface-variant uppercase tracking-widest border-b border-outline-variant pb-2 mt-4">
                 GLOBAL WORKFORCE & INFRASTRUCTURE
               </h2>
@@ -215,7 +210,7 @@ export const Production = () => {
                     value={targetHeadcount}
                     onChange={e => setHeadcount(parseInt(e.target.value) || 0)}
                     disabled={!isProductionOpen}
-                    className="bg-surface-low border border-outline-variant p-2.5 font-mono text-xl"
+                    className="bg-surface-low border border-outline-variant p-2.5 font-mono text-xl text-primary"
                   />
                 </div>
               </div>
@@ -240,39 +235,83 @@ export const Production = () => {
           )}
         </div>
 
-        {/* COST SUMMARY PANEL */}
+        {/* FACTORY STATUS PANEL */}
         <div className="w-2/5 flex flex-col space-y-6">
           <div className="bg-surface-low p-6 border border-outline-variant space-y-6 flex-1 font-mono text-sm">
             <h2 className="font-display text-sm uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2">
-              COST SUMMARY
+              FACTORY STATUS
             </h2>
             
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div className="flex flex-col">
-                  <span className="text-on-surface-variant text-[10px]">MAINTENANCE COST</span>
-                  <span className="text-on-surface">${totalMaintCost.toLocaleString()}</span>
+            {factoryCompData ? (
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-on-surface-variant text-[10px] uppercase">Max Throughput</span>
+                    <span className="text-primary text-xl">{(factoryCompData.total_throughput || 0).toLocaleString()} units</span>
+                  </div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-on-surface-variant text-[10px] uppercase">R&D Quality Bonus</span>
+                    <span className="text-on-surface">+{factoryCompData.rnd_quality.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="text-on-surface-variant text-[10px] uppercase">R&D Consistency Bonus</span>
+                    <span className="text-on-surface">+{factoryCompData.rnd_consistency.toFixed(1)} σ</span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-between items-end border-t border-outline-variant/30 pt-4">
-                <div className="flex flex-col">
-                  <span className="text-on-surface-variant text-[10px]">R&D COST</span>
-                  <span className="text-on-surface">${totalRndCost.toLocaleString()}</span>
-                </div>
-              </div>
 
-              <div className="flex justify-between items-end border-t border-outline-variant/30 pt-4">
-                <div className="flex flex-col">
-                  <span className="text-on-surface-variant text-[10px]">WORKFORCE COST</span>
-                  <span className="text-on-surface">${workforceCost.toLocaleString()}</span>
+                <div className="border-t border-outline-variant/30 pt-4">
+                  <span className="text-xs text-on-surface-variant uppercase tracking-widest mb-4 block">ACTIVE MACHINES ({factoryCompData.machine_count})</span>
+                  <div className="space-y-3">
+                    {factoryCompData.machines && factoryCompData.machines.map((mac, idx) => (
+                      <div key={idx} className="bg-surface p-3 border border-outline-variant/50">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[10px] uppercase text-primary">T{mac.tier} {mac.source}</span>
+                          <span className="text-[10px] text-on-surface-variant">Thpt: {mac.throughput}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-on-surface-variant uppercase">Condition</span>
+                          <span className={`text-[10px] ${mac.condition < 40 ? 'text-error' : 'text-on-surface'}`}>{mac.condition.toFixed(1)}/100</span>
+                        </div>
+                        <div className="mt-1 h-1 w-full bg-surface-low">
+                          <div
+                            className={`h-1 ${mac.condition > 70 ? 'bg-primary' : mac.condition >= 40 ? 'bg-tertiary' : 'bg-error'}`}
+                            style={{ width: `${Math.max(0, Math.min(100, mac.condition))}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {(!factoryCompData.machines || factoryCompData.machines.length === 0) && (
+                      <div className="text-on-surface-variant text-xs italic opacity-50">No active machines</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-on-surface-variant italic opacity-50 text-center py-8">Loading factory data...</div>
+            )}
 
-            <div className="flex flex-col pt-8 mt-auto">
-              <span className="text-on-surface-variant text-xs mb-1">TOTAL PRODUCTION COST</span>
-              <span className="text-3xl text-primary">${totalProductionCost.toLocaleString()}</span>
+            <div className="border-t border-outline-variant/30 pt-6 mt-auto">
+               <h2 className="font-display text-sm uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 mb-4">
+                 COST ESTIMATES
+               </h2>
+               <div className="space-y-2">
+                 <div className="flex justify-between">
+                   <span className="text-[10px] text-on-surface-variant">MAINTENANCE</span>
+                   <span>${totalMaintCost.toLocaleString()}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-[10px] text-on-surface-variant">R&D</span>
+                   <span>${totalRndCost.toLocaleString()}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-[10px] text-on-surface-variant">WORKFORCE ({wageLevel})</span>
+                   <span>${workforceCost.toLocaleString()}</span>
+                 </div>
+               </div>
+               <div className="flex justify-between mt-4 pt-2 border-t border-outline-variant/50">
+                 <span className="text-xs text-on-surface-variant">TOTAL ESTIMATED</span>
+                 <span className="text-primary text-xl">${totalProductionCost.toLocaleString()}</span>
+               </div>
             </div>
           </div>
         </div>

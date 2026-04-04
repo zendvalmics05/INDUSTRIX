@@ -7,7 +7,7 @@ import { useNotificationStore } from '../store/useNotificationStore';
 
 export const SharedLayout = () => {
   const { isLoggedIn, phase, cycleNumber, lastSyncTs, connectionOk, logout, pollStatus } = useGameStore();
-  const { funds, fetchInventory } = useInventoryStore();
+  const { funds, brandScore, automationLevel, workforceSize, morale, skillLevel, fetchInventory } = useInventoryStore();
   const { toasts, addToast, removeToast } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +17,7 @@ export const SharedLayout = () => {
   const [lastPhaseChangeAt, setLastPhaseChangeAt] = useState<number>(Date.now());
   const [nowTs, setNowTs] = useState<number>(Date.now());
   const negativeFundsToastRef = useRef<boolean>(false);
+  const [expandedSideItem, setExpandedSideItem] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -100,9 +101,38 @@ export const SharedLayout = () => {
   ];
 
   const sideItems = [
-    { id: 'raw_materials', label: 'RAW MATERIALS', icon: <MdFactory /> },
-    { id: 'marketing', label: 'MARKETING', icon: <MdCampaign /> },
-    { id: 'automation', label: 'AUTOMATION LEVEL', icon: <MdPrecisionManufacturing /> },
+    { 
+      id: 'factory', 
+      label: 'FACTORY OVERVIEW', 
+      icon: <MdFactory />,
+      details: (
+        <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
+          <div className="flex justify-between"><span>Workforce:</span> <span className="text-on-surface">{workforceSize}</span></div>
+          <div className="flex justify-between"><span>Skill Level:</span> <span className="text-on-surface">{skillLevel?.toFixed(1) || 0}</span></div>
+          <div className="flex justify-between"><span>Morale:</span> <span className="text-on-surface">{morale?.toFixed(1) || 0}</span></div>
+        </div>
+      )
+    },
+    { 
+      id: 'marketing', 
+      label: 'MARKETING', 
+      icon: <MdCampaign />,
+      details: (
+        <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
+          <div className="flex justify-between"><span>Brand Score:</span> <span className="text-primary">{brandScore?.toFixed(1) || 0}</span></div>
+        </div>
+      )
+    },
+    { 
+      id: 'automation', 
+      label: 'AUTOMATION LEVEL', 
+      icon: <MdPrecisionManufacturing />,
+      details: (
+        <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
+          <div className="flex justify-between"><span>Current Tier:</span> <span className="text-on-surface capitalize">{automationLevel.replace('_', ' ')}</span></div>
+        </div>
+      )
+    },
   ];
 
   const syncAgeSeconds = useMemo(() => {
@@ -182,17 +212,27 @@ export const SharedLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-64 bg-surface-low border-r border-outline-variant flex flex-col py-6 space-y-2">
-          {sideItems.map((item, idx) => (
-            <button
-              key={item.id}
-              className={`flex items-center space-x-4 px-6 py-4 w-full transition-colors 
-                ${idx === 0 ? 'bg-surface-highest text-primary border-l-2 border-primary' : 'text-on-surface-variant hover:bg-surface-highest/50'}
-              `}
-            >
-              <div className="text-xl">{item.icon}</div>
-              <span className="font-display text-xs tracking-widest uppercase text-left">{item.label}</span>
-            </button>
-          ))}
+          {sideItems.map((item) => {
+            const isExpanded = expandedSideItem === item.id;
+            return (
+              <div key={item.id} className="flex flex-col">
+                <button
+                  onClick={() => setExpandedSideItem(isExpanded ? null : item.id)}
+                  className={`flex items-center space-x-4 px-6 py-4 w-full transition-colors 
+                    ${isExpanded ? 'bg-surface-highest text-primary border-l-2 border-primary' : 'text-on-surface-variant hover:bg-surface-highest/50 border-l-2 border-transparent'}
+                  `}
+                >
+                  <div className="text-xl">{item.icon}</div>
+                  <span className="font-display text-xs tracking-widest uppercase text-left">{item.label}</span>
+                </button>
+                {isExpanded && (
+                  <div className="px-6 pb-4 bg-surface-highest border-l-2 border-primary">
+                    {item.details}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </aside>
 
         {/* Main Content */}

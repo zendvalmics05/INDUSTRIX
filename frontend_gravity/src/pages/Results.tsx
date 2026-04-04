@@ -3,7 +3,7 @@ import { useResultsStore, useGameStore } from '../store';
 import { StatusChip } from '../components/SharedComponents';
 
 export const Results = () => {
-  const { phase, teamName, teamId } = useGameStore();
+  const { phase, teamName } = useGameStore();
   const { cycleNumber, isFinal, rows, fetchLeaderboard } = useResultsStore();
 
   useEffect(() => {
@@ -57,9 +57,8 @@ export const Results = () => {
             </thead>
             <tbody>
               {rows.map((row, idx) => {
-                // Team ID logic (if name matches or ID logic holds). 
-                // We'll simulate own-team highlighting by checking name for now since ID isn't in LeaderboardRow
-                const isOwnTeam = (teamId && row.team_id && row.team_id === teamId) || (teamName && row.team_name === teamName);
+                // Team ID logic (if name matches).
+                const isOwnTeam = teamName && row.team_name === teamName;
                 
                 return (
                   <tr 

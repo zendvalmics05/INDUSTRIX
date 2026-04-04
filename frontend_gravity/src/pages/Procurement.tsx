@@ -6,7 +6,7 @@ import { ComponentTabs, SendDecisionsButton, WarningBanner } from '../components
 export const Procurement = () => {
   const { 
     decisions, 
-    sources, 
+    sourcesByComponent, 
     selectedComponent, 
     setComponent, 
     setDecision, 
@@ -31,11 +31,17 @@ export const Procurement = () => {
   }, [fetchSources, fetchInventory, fetchExistingDecisions]);
 
   const currentDecision = decisions[selectedComponent];
-  const activeSources = sources; // Or filter if sources are component-specific in backend
+  const activeSources = sourcesByComponent[selectedComponent] || [];
   const selectedSource = activeSources.find(s => s.id === currentDecision.source_id) || activeSources[0];
 
+  useEffect(() => {
+     if (activeSources.length > 0 && (!currentDecision.source_id || !activeSources.find(s => s.id === currentDecision.source_id))) {
+         setDecision(selectedComponent, 'source_id', activeSources[0].id);
+     }
+  }, [selectedComponent, activeSources, currentDecision.source_id, setDecision]);
+
   // Helper limits and cost multipliers
-  const transportMults = { road: 1.0, rail: 1.4, air: 2.5 };
+  const transportMults = { water: 0.8, road: 1.0, rail: 1.4, air: 2.5 };
   
   // Computations
   const componentCost = selectedSource 
@@ -47,13 +53,14 @@ export const Procurement = () => {
     // Iterate over the keys we explicitly initialized
     for (const comp of Object.keys(decisions) as Array<keyof typeof decisions>) {
       const dec = decisions[comp];
-      const src = sources.find(s => s.id === dec.source_id);
+      const srcs = sourcesByComponent[comp] || [];
+      const src = srcs.find(s => s.id === dec.source_id);
       if (src) {
         total += dec.quantity * src.base_cost_per_unit * transportMults[dec.transport];
       }
     }
     return total;
-  }, [decisions, sources]);
+  }, [decisions, sourcesByComponent]);
 
   const remainingFunds = funds - totalProcurementCost;
   const isProcurementOpen = phase === 'procurement_open';
@@ -61,9 +68,9 @@ export const Procurement = () => {
   // Warnings
   let warningMsg = null;
   if (totalProcurementCost > funds) {
-    warningMsg = "⚠ OVERSPENDING: Total cost exceeds balance";
+    warningMsg = "OVERSPENDING: Total cost exceeds balance";
   } else if (totalProcurementCost > 0.8 * funds) {
-    warningMsg = "⚠ Spending exceeds 80% of available funds";
+    warningMsg = "Spending exceeds 80% of available funds";
   }
 
   const handleSubmit = async () => {
@@ -126,6 +133,9 @@ export const Procurement = () => {
                         <td className="p-2">${s.base_cost_per_unit.toFixed(2)}</td>
                       </tr>
                     ))}
+                    {activeSources.length === 0 && (
+                      <tr><td colSpan={4} className="p-4 text-center text-on-surface-variant">No sources available for {selectedComponent}</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -154,7 +164,7 @@ export const Procurement = () => {
                 TRANSPORT MODE
               </label>
               <div className="flex space-x-2">
-                {['road', 'rail', 'air'].map(mode => (
+                {(['water', 'road', 'rail', 'air'] as const).map(mode => (
                   <button
                     key={mode}
                     disabled={!isProcurementOpen}
@@ -167,11 +177,11 @@ export const Procurement = () => {
                       ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}
                     `}
                   >
-                    {mode} · {transportMults[mode as keyof typeof transportMults]}x
+                    {mode} · {transportMults[mode]}x
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-on-surface-variant font-mono">Road: 20% partial / 5% total loss · Rail: 12% / 3% · Air: 5% / 1%</p>
+              <p className="text-[10px] text-on-surface-variant font-mono">Loss risks: Water: High, Road: Moderate, Rail: Low, Air: Minimal</p>
             </div>
 
           </div>
@@ -192,11 +202,19 @@ export const Procurement = () => {
               SUPPLY CONTRACT DETAILS
             </h2>
             
-            {selectedSource && (
+            {selectedSource ? (
               <div className="space-y-4 font-mono text-sm">
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">SUPPLIER</span>
-                  <span className="text-on-surface">{selectedSource.name}</span>
+                  <span className="text-on-surface text-right">{selectedSource.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">DISTANCE</span>
+                  <span className="text-on-surface">{selectedSource.distance} km</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">ORDER LIMITS</span>
+                  <span className="text-on-surface">{selectedSource.min_order} - {selectedSource.max_order}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">QUALITY MEAN</span>
@@ -215,6 +233,8 @@ export const Procurement = () => {
                   <span className="text-on-surface">{rawMaterialStocks[selectedComponent] || 0} units</span>
                 </div>
               </div>
+            ) : (
+               <div className="text-on-surface-variant font-mono text-sm italic">No source selected</div>
             )}
             
             <div className="pt-4 mt-4 border-t border-outline-variant space-y-4 font-mono">
@@ -255,3 +275,4 @@ export const Procurement = () => {
     </div>
   );
 };
+

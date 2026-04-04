@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { teamApi } from '../api';
-import type { ComponentType } from '../types';
+import type { ComponentSlotData } from '../types';
 
 interface InventoryState {
   funds: number;
@@ -13,10 +13,12 @@ interface InventoryState {
     standard: number;
     premium: number;
   };
-  rawMaterialStocks: Record<ComponentType, number>;
+  rawMaterialStocks: Record<string, number>;
+  components: ComponentSlotData[];
   workforceSize: number;
-  producedThisCycle: number;
-  carriedFromPrevious: number;
+  skillLevel: number;
+  morale: number;
+  automationLevel: string;
   hasGovLoan: boolean;
 
   fetchInventory: () => Promise<void>;
@@ -32,31 +34,44 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   rawMaterialStocks: {
     airframe: 0, propulsion: 0, avionics: 0, fire_suppression: 0, sensing_safety: 0, battery: 0
   },
+  components: [],
   workforceSize: 0,
-  producedThisCycle: 0,
-  carriedFromPrevious: 0,
+  skillLevel: 0,
+  morale: 0,
+  automationLevel: 'manual',
   hasGovLoan: false,
 
   fetchInventory: async () => {
     try {
-      const data = await teamApi.me();
-      if (data) {
+      const [meData, componentsData] = await Promise.all([
+        teamApi.me(),
+        teamApi.getComponents()
+      ]);
+
+      if (meData) {
         set({
-          funds: data.funds || 0,
-          brandScore: data.brand_score || 0,
-          brandTier: data.brand_tier || 'fair',
-          droneStockTotal: data.drone_stock_total || 0,
-          droneBreakdown: {
-            reject: Array.isArray(data.drone_stock) ? data.drone_stock[0] : 0,
-            substandard: Array.isArray(data.drone_stock) ? data.drone_stock[1] : 0,
-            standard: Array.isArray(data.drone_stock) ? data.drone_stock[2] : 0,
-            premium: Array.isArray(data.drone_stock) ? data.drone_stock[3] : 0,
-          },
-          rawMaterialStocks: data.raw_stocks || { airframe: 0, propulsion: 0, avionics: 0, fire_suppression: 0, sensing_safety: 0, battery: 0 },
-          workforceSize: data.workforce_size || 0,
-          producedThisCycle: data.produced_this_cycle || 0,
-          carriedFromPrevious: data.carried_from_previous || 0,
-          hasGovLoan: !!data.has_gov_loan,
+          funds: meData.funds || 0,
+          brandScore: meData.brand_score || 0,
+          brandTier: meData.brand_tier || 'fair',
+          droneStockTotal: meData.drone_stock_total || 0,
+          droneBreakdown: { reject: 0, substandard: 0, standard: meData.drone_stock_total || 0, premium: 0 },
+          workforceSize: meData.workforce_size || 0,
+          skillLevel: meData.skill_level || 0,
+          morale: meData.morale || 0,
+          automationLevel: meData.automation_level || 'manual',
+          hasGovLoan: !!meData.has_gov_loan,
+        });
+      }
+
+      if (componentsData && componentsData.components) {
+        const rawStocks: Record<string, number> = {};
+        componentsData.components.forEach(comp => {
+          rawStocks[comp.component] = comp.raw_stock_total;
+        });
+
+        set({
+          components: componentsData.components,
+          rawMaterialStocks: rawStocks,
         });
       }
     } catch (err) {
