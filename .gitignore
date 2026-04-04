@@ -15,7 +15,6 @@ backend/**/__pycache__/
 backend/venv/
 backend/.venv*/
 **/.venv*/
-backend/.env
 *.py[cod]
 *.pyo
 .venv/
