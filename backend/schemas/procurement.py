@@ -67,3 +67,15 @@ class ProcurementMemoryOut(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class TransportOut(BaseModel):
+    base_cost: int
+    var_cost: int
+    sigma_add: float
+    p_damage: float
+    mean_reduce: float
+    vulnerability: float
+
+    model_config = {
+        "from_attributes": True
+    }
