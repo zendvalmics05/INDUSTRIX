@@ -198,7 +198,7 @@ def _pending_rnd(db: Session, team_id: int, component: str) -> list:
 
 @router.get(
     "/procurement/summary",
-    summary="Last production resolution result for this team.",
+    summary="Last procurement resolution result for this team.",
 )
 def get_procurement_summary(
     team: Team    = Depends(verify_team),
