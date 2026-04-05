@@ -36,10 +36,10 @@ MIN_USABLE_GRADE: int = 1
 # mean_reduce      : subtracted from source quality_mean during draw
 # p_damage         : probability of partial damage event
 TRANSPORT: Dict[str, Dict] = {
-    "air":   {"base_cost": 30000, "var_cost": 200, "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
-    "water": {"base_cost":  8000, "var_cost":  20, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
-    "rail":  {"base_cost":  4000, "var_cost":  60, "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
-    "road":  {"base_cost":  1000, "var_cost": 100, "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
+    "air":   {"base_cost": 3000, "var_cost": 20, "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
+    "water": {"base_cost":  800, "var_cost":  2, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
+    "rail":  {"base_cost":  400, "var_cost":  6, "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
+    "road":  {"base_cost":  100, "var_cost": 10, "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
 }
 
 PARTIAL_DAMAGE_FRACTION: float = 0.25

@@ -12,10 +12,11 @@ from typing import Dict, List
 from core.auth import verify_team
 from core.database import get_db
 from core.enums import CyclePhase
+from core.config import TRANSPORT
 from models.game import Cycle, Game, Team, RawMaterialSource
 from models.procurement import MemoryProcurement
 from schemas.common import OkResponse
-from schemas.procurement import ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut
+from schemas.procurement import ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut, TransportOut
 
 router = APIRouter(prefix="/team/procurement", tags=["team"])
 
@@ -36,6 +37,16 @@ def _assert_phase(db: Session, team: Team, expected: CyclePhase) -> Cycle:
         )
     return cycle
 
+@router.get("/transports", response_model=Dict[str, TransportOut])
+def get_transports(
+        team: Team = Depends(verify_team),
+        db : Session = Depends(get_db),
+):
+    transports = TRANSPORT
+    dct: Dict[str, TransportOut] = {}
+    for key,value in transports.items():
+        dct[key] = TransportOut.from_orm(value)
+    return dct
 
 @router.get("/sources", response_model=List[RawMaterialSourceOut])
 def get_sources(
