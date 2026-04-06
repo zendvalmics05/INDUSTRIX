@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useProductionStore, useGameStore, useInventoryStore } from '../store';
+import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { ComponentTabs, SendDecisionsButton } from '../components/SharedComponents';
+import { ProductionCard } from '../components/PhaseSummaries';
 import type { ComponentType } from '../types';
 import {
   FiSettings, FiTool, FiTrendingUp, FiUsers, FiCpu, FiPlusCircle,
@@ -31,8 +33,8 @@ import {
 
 const Tooltip = ({ text, title }: { text: string; title?: string }) => (
   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 hidden group-hover:block z-50 bg-surface-highest border border-outline-variant p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 pointer-events-none">
-    {title && <div className="text-[10px] font-mono text-primary uppercase mb-1 font-bold tracking-widest">{title}</div>}
-    <p className="text-[10px] font-mono text-on-surface leading-relaxed opacity-90 normal-case">{text}</p>
+    {title && <div className="text-base font-semibold font-medium font-mono text-primary uppercase mb-1 font-bold tracking-widest">{title}</div>}
+    <p className="text-base font-semibold font-medium font-mono text-on-surface leading-relaxed opacity-90 normal-case">{text}</p>
     <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-outline-variant"></div>
   </div>
 );
@@ -43,7 +45,7 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
 
   return (
     <div className="space-y-1">
-      {label && <div className="flex justify-between text-xs uppercase tracking-widest text-on-surface-variant font-mono">
+      {label && <div className="flex justify-between text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono">
         <span className="flex items-center space-x-1">
             <span>{label}</span>
             <div className="group relative">
@@ -80,16 +82,16 @@ const MetricBox = ({ label, value, subvalue, icon: Icon, color = 'text-primary',
       <Icon size={22} />
     </div>
     <div className="min-w-0 flex-1">
-      <div className="text-xs uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
-      <div className="text-2xl font-display text-on-surface leading-tight truncate">{value}</div>
-      {subvalue && <div className="text-[11px] font-mono text-on-surface-variant mt-0.5 opacity-80">{subvalue}</div>}
+      <div className="text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
+      <div className="text-3xl font-bold font-display text-on-surface leading-tight truncate">{value}</div>
+      {subvalue && <div className="text-base font-semibold font-mono text-on-surface-variant mt-0.5 opacity-80">{subvalue}</div>}
     </div>
     {tooltip && <Tooltip text={tooltip} title={label} />}
   </div>
 );
 
 const StockHistogram = ({ stock, label }: { stock: number[] | undefined, label: string }) => {
-    if (!stock || stock.length !== 101) return <div className="h-24 flex items-center justify-center border border-dashed border-outline-variant text-[10px] uppercase font-mono opacity-50">Assembly Buffer Empty</div>;
+    if (!stock || stock.length !== 101) return <div className="h-24 flex items-center justify-center border border-dashed border-outline-variant text-base font-semibold font-medium uppercase font-mono opacity-50">Assembly Buffer Empty</div>;
 
     const unusableStock = stock[0];
     const deciles = Array(25).fill(0);
@@ -102,7 +104,7 @@ const StockHistogram = ({ stock, label }: { stock: number[] | undefined, label: 
 
     return (
         <div className="pt-2 flex flex-col space-y-2 relative flex-1">
-            <div className="flex justify-between items-center text-[10px] text-on-surface-variant uppercase tracking-widest font-mono">
+            <div className="flex justify-between items-center text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono">
                 <span className="flex items-center space-x-1">
                     <span>{label}</span>
                     <div className="group relative">
@@ -117,19 +119,19 @@ const StockHistogram = ({ stock, label }: { stock: number[] | undefined, label: 
                 {deciles.map((val, idx) => (
                     <div key={idx} className="flex-1 bg-surface-highest transition-colors flex flex-col justify-end h-full group/col relative">
                         <div className="w-full bg-primary/60 transition-all duration-300 group-hover/col:bg-primary rounded-t-sm" style={{ height: `${(val / maxVal) * 100}%` }}></div>
-                        <div className="absolute bottom-full mb-1 hidden group-hover/col:block bg-surface p-1 text-[9px] font-mono z-10 border border-outline-variant whitespace-nowrap shadow-lg text-primary">
+                        <div className="absolute bottom-full mb-1 hidden group-hover/col:block bg-surface p-1 text-base font-semibold font-mono z-10 border border-outline-variant whitespace-nowrap shadow-lg text-primary">
                             Gr {idx * 4 + 1}-{idx * 4 + 4}: {val}u
                         </div>
                     </div>
                 ))}
             </div>
-            <div className="flex justify-between text-[8px] text-on-surface-variant font-mono opacity-50">
+            <div className="flex justify-between text-base font-semibold font-medium text-on-surface-variant font-mono opacity-50">
                 <span>Grade 1</span>
                 <span>Grade 100</span>
             </div>
 
             {unusableStock > 0 && (
-                <div className="text-[10px] text-error font-mono mt-1 pt-1 border-t border-error/20 flex justify-between">
+                <div className="text-base font-semibold font-medium text-error font-mono mt-1 pt-1 border-t border-error/20 flex justify-between">
                     <span>SCRAPPED (GRADE 0)</span>
                     <span className="font-bold">{unusableStock}u</span>
                 </div>
@@ -159,14 +161,14 @@ const ProductionDropdown = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-1">
-        <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+        <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
         {tooltip && <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text={tooltip} /></div>}
       </div>
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full flex items-center justify-between bg-surface border p-3.5 font-mono text-xs uppercase transition-all ${
+          className={`w-full flex items-center justify-between bg-surface border p-3.5 font-mono text-base font-semibold font-medium uppercase transition-all ${
             isOpen ? 'border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' : 'border-outline-variant/30 hover:border-outline-variant'
           }`}
         >
@@ -188,12 +190,12 @@ const ProductionDropdown = ({
                 }`}
               >
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className={`text-xs font-bold uppercase transition-colors ${value === opt.value ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
+                  <span className={`text-base font-bold uppercase transition-colors ${value === opt.value ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
                     {opt.label}
                   </span>
-                  {opt.cost !== undefined && <span className="text-xs font-mono text-on-surface-variant opacity-70">${opt.cost.toLocaleString()}</span>}
+                  {opt.cost !== undefined && <span className="text-base font-semibold font-medium font-mono text-on-surface-variant opacity-70">${opt.cost.toLocaleString()}</span>}
                 </div>
-                <p className="text-[11px] font-mono text-on-surface-variant leading-relaxed opacity-80 group-hover:opacity-100">
+                <p className="text-base font-semibold font-mono text-on-surface-variant leading-relaxed opacity-80 group-hover:opacity-100">
                   {opt.info}
                 </p>
               </button>
@@ -235,12 +237,12 @@ const DiscreteStepBar = ({
       <div className="flex justify-between items-end">
         <div className="space-y-0.5">
           <div className="flex items-center space-x-1">
-            <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
             {tooltip && <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text={tooltip} /></div>}
           </div>
-          {info && <div className="text-[10px] font-mono text-on-surface-variant opacity-60 italic">{info}</div>}
+          {info && <div className="text-base font-semibold font-medium font-mono text-on-surface-variant opacity-60 italic">{info}</div>}
         </div>
-        <div className="text-xs font-mono text-on-surface font-bold">Lvl {currentLevel}/{maxLevels}</div>
+        <div className="text-base font-semibold font-medium font-mono text-on-surface font-bold">Lvl {currentLevel}/{maxLevels}</div>
       </div>
       
       <div className="flex items-center space-x-5">
@@ -289,7 +291,7 @@ const DiscreteStepBar = ({
             {isUpgradeLocked && <Tooltip title="Upgrade Locked" text="Hardware evolution in progress. Completion expected at the end of the next cycle." />}
           </button>
           {!isUpgradeLocked && currentLevel < maxLevels && cost && (
-            <div className={`absolute -bottom-5 right-0 text-[10px] font-mono transition-opacity whitespace-nowrap ${isDecisionMade ? 'text-primary' : 'text-on-surface-variant opacity-0 group-hover:opacity-100'}`}>
+            <div className={`absolute -bottom-5 right-0 text-base font-semibold font-medium font-mono transition-opacity whitespace-nowrap ${isDecisionMade ? 'text-primary' : 'text-on-surface-variant opacity-0 group-hover:opacity-100'}`}>
               {isDecisionMade ? `Allocated: $${cost.toLocaleString()}` : `Cost: $${cost.toLocaleString()}`}
             </div>
           )}
@@ -322,12 +324,12 @@ const BottleneckSlider = ({
     <div className="space-y-4">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-            <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
             <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text="Target number of components to produce this cycle. Limited by both machine capacity and raw material stock." /></div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-display text-on-surface">{currentVal.toLocaleString()}</div>
-          <div className={`text-[10px] font-mono uppercase tracking-widest font-bold ${isStockBottleneck ? 'text-tertiary' : 'text-primary'}`}>
+          <div className="text-3xl font-bold font-display text-on-surface">{currentVal.toLocaleString()}</div>
+          <div className={`text-base font-semibold font-medium font-mono uppercase tracking-widest font-bold ${isStockBottleneck ? 'text-tertiary' : 'text-primary'}`}>
             Max Plan: {maxPossible.toLocaleString()} · {isStockBottleneck ? 'RESOURCE LIMITED' : 'CAPACITY LIMITED'}
           </div>
         </div>
@@ -342,7 +344,7 @@ const BottleneckSlider = ({
           disabled={disabled || maxPossible === 0}
           className="w-full h-2 bg-surface-highest rounded-lg appearance-none cursor-pointer accent-primary border border-outline-variant/30"
         />
-        <div className="flex justify-between mt-2 text-[10px] font-mono text-on-surface-variant uppercase opacity-60">
+        <div className="flex justify-between mt-2 text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-60">
           <span>Maintenance (0)</span>
           <span>Max Possible ({maxPossible.toLocaleString()})</span>
         </div>
@@ -369,12 +371,12 @@ const HeadcountSlider = ({
     <div className="space-y-4">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-            <label className="text-xs font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
+            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
             <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text="Assign your active workforce to maintenance and production. Understaffing will reduce effective throughput proportionately." /></div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-display text-on-surface">{value} <span className="text-xs text-on-surface-variant uppercase font-mono opacity-80">Staff</span></div>
-          <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">
+          <div className="text-3xl font-bold font-display text-on-surface">{value} <span className="text-base font-semibold font-medium text-on-surface-variant uppercase font-mono opacity-80">Staff</span></div>
+          <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">
             Optimal Required: <span className="text-primary font-bold">{required}</span>
           </div>
         </div>
@@ -384,7 +386,7 @@ const HeadcountSlider = ({
           className="absolute -top-1 w-1 h-8 bg-primary z-10 border-x border-surface"
           style={{ left: `${(required / maxVal) * 100}%` }}
         >
-          <div className="absolute top-[-16px] left-[-30px] w-15 text-center text-[9px] font-bold text-primary uppercase tracking-tighter">EQUILIBRIUM</div>
+          <div className="absolute top-[-16px] left-[-30px] w-15 text-center text-base font-bold text-primary uppercase tracking-tighter">EQUILIBRIUM</div>
         </div>
 
         <input 
@@ -396,7 +398,7 @@ const HeadcountSlider = ({
           disabled={disabled}
           className="w-full h-2 bg-surface-highest rounded-lg appearance-none cursor-pointer accent-primary border border-outline-variant/30"
         />
-        <div className="flex justify-between mt-2 text-[10px] font-mono text-on-surface-variant uppercase opacity-60">
+        <div className="flex justify-between mt-2 text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-60">
           <span>0 (Min)</span>
           <span className="text-center font-bold text-primary opacity-100">Optimal ({required})</span>
           <span>Max ({maxVal})</span>
@@ -421,7 +423,7 @@ const ContextualStats = ({
 }) => (
   <div className="bg-surface-low border border-outline-variant overflow-hidden">
     <div className="bg-surface-highest/50 px-4 py-2 border-b border-outline-variant flex justify-between items-center">
-      <span className="text-[10px] font-mono text-primary uppercase tracking-[0.2em] font-bold">{title} Status</span>
+      <span className="text-base font-semibold font-medium font-mono text-primary uppercase tracking-[0.2em] font-bold">{title} Status</span>
       <FiBarChart2 className="text-primary" size={14} />
     </div>
     <div className="p-4 flex flex-col space-y-6">
@@ -429,8 +431,8 @@ const ContextualStats = ({
         <StockHistogram stock={stock} label="Output Buffer Quality" />
       </div>
       <div className="pt-4 border-t border-outline-variant/30">
-        <div className="text-[10px] font-mono text-on-surface-variant uppercase mb-2">Cycle Costing Context</div>
-        <div className="space-y-1 text-[11px] font-mono text-on-surface opacity-80">
+        <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase mb-2">Cycle Costing Context</div>
+        <div className="space-y-1 text-base font-semibold font-mono text-on-surface opacity-80">
           <div className="flex justify-between"><span>Maintenance:</span> <span>${maintCost.toLocaleString()}</span></div>
           {rndCost > 0 && <div className="flex justify-between text-tertiary font-bold"><span>Next R&D:</span> <span>${rndCost.toLocaleString()}</span></div>}
           {buyCost > 0 && <div className="flex justify-between text-primary font-bold"><span>Hardware P:</span> <span>${buyCost.toLocaleString()}</span></div>}
@@ -462,7 +464,19 @@ export const Production = () => {
     fetchInventory();
   }, [fetchExistingDecisions, fetchInventory]);
 
-  const isProductionOpen = phase === 'production_open';
+  const productionSummary = useEventsStore(s => s.production);
+  const loadingSummary = useEventsStore(s => s.loadingProduction);
+  const fetchAllSummaries = useEventsStore(s => s.fetchAll);
+
+  const isProductionOpen = ['procurement_open', 'production_open'].includes(phase) && phase !== 'procurement_open';
+  const canSeeSummary = ['sales_open', 'backroom', 'game_over'].includes(phase);
+
+  useEffect(() => {
+    if (canSeeSummary) {
+      fetchAllSummaries(phase);
+    }
+  }, [phase, canSeeSummary, fetchAllSummaries]);
+
   const currentComp = componentDecisions[selectedComponent];
   const factoryCompData = useMemo(() => components.find(c => c.component === selectedComponent), [components, selectedComponent]);
 
@@ -554,18 +568,36 @@ export const Production = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
+      {/* Phase Summary (if resolved) */}
+      {canSeeSummary && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-700 mb-2">
+          <h2 className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-[0.3em] mb-3 pl-1">Resolution Report</h2>
+          {loadingSummary ? (
+             <div className="text-base font-semibold font-medium font-mono text-on-surface-variant animate-pulse px-5 py-8 border border-outline-variant/20 bg-surface-low items-center justify-center flex">
+                Decrypting production summary...
+             </div>
+          ) : productionSummary ? (
+            <ProductionCard data={productionSummary} />
+          ) : (
+             <div className="text-base font-semibold font-medium font-mono text-on-surface-variant px-5 py-8 border border-outline-variant/20 bg-surface-low opacity-60">
+                Production summary payload not found for this cycle.
+             </div>
+          )}
+        </div>
+      )}
+
       <ComponentTabs selected={selectedComponent} onSelect={setComponent} />
       
       <div className="flex justify-between items-end flex-shrink-0">
         <div>
           <h1 className="font-display text-4xl uppercase tracking-tighter">DECISION COCKPIT</h1>
-          <div className="text-on-surface-variant font-mono text-sm mt-1 tracking-widest opacity-80 flex items-center space-x-2">
+          <div className="text-on-surface-variant font-mono text-base font-semibold mt-1 tracking-widest opacity-80 flex items-center space-x-2">
             <span>Cycle {cycleNumber} — Production Operations & Labour Strategy</span>
           </div>
         </div>
         <div className="flex items-center space-x-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full group relative cursor-help">
           <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
-          <span className="text-xs font-mono text-primary uppercase tracking-widest font-bold">Feedback Loop Operative</span>
+          <span className="text-base font-semibold font-medium font-mono text-primary uppercase tracking-widest font-bold">Feedback Loop Operative</span>
           <Tooltip text="Real-time projection engine is active. Values update dynamically as you tweak decisions." />
         </div>
       </div>
@@ -574,7 +606,7 @@ export const Production = () => {
         {/* LEFT PANEL: INPUTS */}
         <div className="w-[50%] flex flex-col space-y-4 overflow-y-auto pr-2 custom-scrollbar">
           <div className="bg-surface-low border border-outline-variant p-6 space-y-7">
-            <h2 className="text-sm font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
+            <h2 className="text-base font-semibold font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
               <FiSettings size={16} /> <span>{selectedComponent.replace('_', ' ')} Directives</span>
             </h2>
 
@@ -602,7 +634,7 @@ export const Production = () => {
             />
 
             <div className="space-y-6 pt-2">
-              <h3 className="text-xs font-mono text-tertiary uppercase tracking-widest flex items-center space-x-2">
+              <h3 className="text-base font-semibold font-medium font-mono text-tertiary uppercase tracking-widest flex items-center space-x-2">
                 <FiZap size={14} /> <span>Hardware Innovation Tracks</span>
               </h3>
               <DiscreteStepBar 
@@ -651,7 +683,7 @@ export const Production = () => {
           </div>
 
           <div className="bg-surface-low border border-outline-variant p-6 space-y-9">
-            <h2 className="text-sm font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
+            <h2 className="text-base font-semibold font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
               <FiUsers size={16} /> <span>Enterprise Operations</span>
             </h2>
             <ProductionDropdown 
@@ -706,7 +738,7 @@ export const Production = () => {
 
           <div className="flex flex-col flex-1 bg-surface-low border border-outline-variant overflow-hidden">
             <div className="bg-surface-highest/50 px-6 py-4 border-b border-outline-variant flex justify-between items-center flex-shrink-0">
-              <h2 className="text-sm font-mono text-on-surface-variant uppercase tracking-[0.25em] flex items-center space-x-2">
+              <h2 className="text-base font-semibold font-mono text-on-surface-variant uppercase tracking-[0.25em] flex items-center space-x-2">
                 <FiTool size={16} /> <span>Active System Health</span>
               </h2>
             </div>
@@ -716,7 +748,7 @@ export const Production = () => {
                 const projected = calculateProjectedCondition(mac.condition, currentComp.maintenance, mac.tier);
                 return (
                   <div key={idx} className="bg-surface/50 border border-outline-variant/30 p-4 space-y-4 shadow-sm group relative cursor-help">
-                    <div className="flex justify-between items-center text-xs font-mono font-bold">
+                    <div className="flex justify-between items-center text-base font-semibold font-medium font-mono font-bold">
                       <span className="uppercase text-primary">{mac.tier} Grade {mac.source}</span>
                       <span className="text-on-surface-variant bg-surface-highest px-2 py-0.5 rounded">TP: {MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.throughput}</span>
                     </div>
@@ -729,30 +761,30 @@ export const Production = () => {
               <div className="bg-surface/30 border border-outline-variant/30 border-dashed p-6 text-center space-y-5 rounded-lg">
                 {currentComp.buy_machine ? (
                   <div className="space-y-4 animate-in zoom-in-95">
-                    <div className="text-xs font-mono text-tertiary uppercase tracking-widest font-bold">Pending Acquisition Selected</div>
+                    <div className="text-base font-semibold font-medium font-mono text-tertiary uppercase tracking-widest font-bold">Pending Acquisition Selected</div>
                     <div className="grid grid-cols-2 gap-3">
                       {(Object.entries(MACHINE_TIERS) as [string, any][]).map(([tier, cfg]) => (
                         <button key={tier} onClick={() => setBuyMachine(selectedComponent, tier as any)} className={`p-3 border text-left transition-all relative ${currentComp.buy_machine?.tier === tier ? 'bg-tertiary/10 border-tertiary shadow-inner' : 'bg-surface border-outline-variant hover:border-on-surface-variant'}`}>
                           <div className="flex justify-between items-center mb-1">
-                            <span className={`text-xs font-bold uppercase ${currentComp.buy_machine?.tier === tier ? 'text-tertiary' : 'text-on-surface'}`}>{tier}</span>
+                            <span className={`text-base font-bold uppercase ${currentComp.buy_machine?.tier === tier ? 'text-tertiary' : 'text-on-surface'}`}>{tier}</span>
                           </div>
-                          <div className="text-[10px] font-mono text-on-surface-variant uppercase opacity-80">Cost: ${(cfg.buy/1000).toFixed(0)}k · TP: {cfg.throughput}</div>
-                          {currentComp.buy_machine?.tier === tier && <div className="absolute top-1 right-1 text-tertiary font-bold animate-pulse text-[8px]">ACTIVE</div>}
+                          <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-80">Cost: ${(cfg.buy/1000).toFixed(0)}k · TP: {cfg.throughput}</div>
+                          {currentComp.buy_machine?.tier === tier && <div className="absolute top-1 right-1 text-tertiary font-bold animate-pulse text-base font-semibold font-medium">ACTIVE</div>}
                         </button>
                       ))}
                     </div>
-                    <button onClick={() => setBuyMachine(selectedComponent, null)} className="text-[11px] font-mono text-error uppercase tracking-widest flex items-center justify-center space-x-2 mx-auto hover:bg-error/5 py-1 px-4 rounded transition-colors font-bold">
+                    <button onClick={() => setBuyMachine(selectedComponent, null)} className="text-base font-semibold font-mono text-error uppercase tracking-widest flex items-center justify-center space-x-2 mx-auto hover:bg-error/5 py-1 px-4 rounded transition-colors font-bold">
                       <FiX size={14} /> <span>Cancel Acquisition</span>
                     </button>
                   </div>
                 ) : (
                   <div className="py-2">
-                    <div className="text-xs font-mono text-on-surface-variant uppercase tracking-[0.25em] mb-4">Capacity Management</div>
+                    <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-[0.25em] mb-4">Capacity Management</div>
                     <button onClick={() => setBuyMachine(selectedComponent, 'basic')} className="group flex flex-col items-center justify-center space-y-3 mx-auto">
                       <div className="p-5 rounded-full bg-surface-highest border border-outline-variant text-on-surface-variant group-hover:text-primary group-hover:border-primary transition-all group-hover:shadow-[0_0_25px_rgba(var(--primary-rgb),0.3)]">
                         <FiPlusSquare size={36} />
                       </div>
-                      <span className="text-xs font-mono uppercase tracking-[0.2em] text-on-surface-variant group-hover:text-primary font-bold">Procure Extra Hardware</span>
+                      <span className="text-base font-semibold font-medium font-mono uppercase tracking-[0.2em] text-on-surface-variant group-hover:text-primary font-bold">Procure Extra Hardware</span>
                       <Tooltip text="Purchase additional machines to increase production capacity. New machines arrive immediately at full condition." />
                     </button>
                   </div>
@@ -779,34 +811,34 @@ export const Production = () => {
         <div className="flex justify-between items-center">
             <div className="flex space-x-12">
                 <div className="flex flex-col group relative cursor-help">
-                    <span className="text-xs text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
                         <span>Maintenance</span>
                         <FiInfo size={10} />
                     </span>
-                    <span className="text-lg font-mono text-on-surface font-bold">${liveStats.totalMaint.toLocaleString()}</span>
+                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${liveStats.totalMaint.toLocaleString()}</span>
                     <Tooltip text="Cumulative maintenance cost for all components across all machines." />
                 </div>
                 <div className="flex flex-col group relative cursor-help">
-                    <span className="text-xs text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
                         <span>R&D / CapEx</span>
                         <FiInfo size={10} />
                     </span>
-                    <span className="text-lg font-mono text-on-surface font-bold text-tertiary">${(liveStats.totalRnd + liveStats.totalBuy).toLocaleString()}</span>
+                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold text-tertiary">${(liveStats.totalRnd + liveStats.totalBuy).toLocaleString()}</span>
                     <Tooltip text="Total capital expenditure for R&D levels and new machine purchases." />
                 </div>
                 <div className="flex flex-col group relative cursor-help">
-                    <span className="text-xs text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
                         <span>Labour Net</span>
                         <FiInfo size={10} />
                     </span>
-                    <span className="text-lg font-mono text-on-surface font-bold">${(liveStats.wageCost + liveStats.automationUpgradeCost).toLocaleString()}</span>
+                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${(liveStats.wageCost + liveStats.automationUpgradeCost).toLocaleString()}</span>
                     <Tooltip text="Personnel costs including wages and automation integration fees." />
                 </div>
             </div>
 
             <div className="flex items-center space-x-10">
                 <div className="text-right">
-                    <div className="text-xs text-on-surface-variant uppercase tracking-[0.2em] font-bold">CYCLE CASH OUTFLOW</div>
+                    <div className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-[0.2em] font-bold">CYCLE CASH OUTFLOW</div>
                     <div className={`text-4xl font-display ${isOverflowing ? 'text-error animate-pulse' : 'text-primary'}`}>${liveStats.totalOutflow.toLocaleString()}</div>
                 </div>
                 <div className="w-72">
@@ -817,7 +849,7 @@ export const Production = () => {
 
         {/* Global Fund Utilization Bar */}
         <div className="space-y-2 pt-2 border-t border-outline-variant/30">
-            <div className="flex justify-between items-center text-[11px] font-mono uppercase tracking-widest">
+            <div className="flex justify-between items-center text-base font-semibold font-mono uppercase tracking-widest">
                 <span className="flex items-center space-x-2">
                     <FiDollarSign className={isOverflowing ? 'text-error' : 'text-primary'} />
                     <span className="text-on-surface-variant">Global Fund Utilisation ({fundUsagePct.toFixed(1)}%)</span>
@@ -840,11 +872,11 @@ export const Production = () => {
                 <div className="flex items-center space-x-3">
                   <FiAlertCircle className="text-error" size={18} />
                   <div>
-                    <span className="text-error font-bold text-[10px] uppercase block tracking-widest">CASH CRUNCH DETECTED</span>
-                    <span className="text-on-surface text-[10px] opacity-80 font-mono">Expenditure exceeds project reserves. Emergency loans will be triggered upon resolution.</span>
+                    <span className="text-error font-bold text-base font-semibold font-medium uppercase block tracking-widest">CASH CRUNCH DETECTED</span>
+                    <span className="text-on-surface text-base font-semibold font-medium opacity-80 font-mono">Expenditure exceeds project reserves. Emergency loans will be triggered upon resolution.</span>
                   </div>
                 </div>
-                <div className="text-error font-mono font-bold text-xs">-${Math.abs(liveStats.remainingFunds).toLocaleString()}</div>
+                <div className="text-error font-mono font-bold text-base font-semibold font-medium">-${Math.abs(liveStats.remainingFunds).toLocaleString()}</div>
               </div>
             )}
         </div>

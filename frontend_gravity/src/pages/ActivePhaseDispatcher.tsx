@@ -23,7 +23,7 @@ export const ActivePhaseDispatcher: React.FC = () => {
       return (
         <div className="flex flex-col items-center justify-center h-full space-y-4">
           <div className="text-4xl animate-pulse text-tertiary">...</div>
-          <h2 className="text-2xl font-display uppercase tracking-widest text-on-surface">Game starting soon</h2>
+          <h2 className="text-3xl font-bold font-display uppercase tracking-widest text-on-surface">Game starting soon</h2>
           <p className="text-on-surface-variant font-mono">Waiting for organiser to create the first cycle.</p>
         </div>
       );
@@ -31,14 +31,14 @@ export const ActivePhaseDispatcher: React.FC = () => {
     case '':
       return (
         <div className="flex flex-col items-center justify-center h-full space-y-4">
-          <h2 className="text-2xl font-display text-error uppercase tracking-widest">No Active Game</h2>
+          <h2 className="text-3xl font-bold font-display text-error uppercase tracking-widest">No Active Game</h2>
           <p className="text-on-surface-variant font-mono">Contact the organiser. Connection might be establishing.</p>
         </div>
       );
     default:
       return (
         <div className="flex flex-col items-center justify-center h-full space-y-4">
-          <h2 className="text-2xl font-display text-error uppercase tracking-widest">Unknown Phase</h2>
+          <h2 className="text-3xl font-bold font-display text-error uppercase tracking-widest">Unknown Phase</h2>
           <p className="text-on-surface-variant font-mono">Unrecognized phase state: {phase}</p>
         </div>
       );

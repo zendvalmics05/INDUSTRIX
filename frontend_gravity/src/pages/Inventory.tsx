@@ -25,11 +25,11 @@ export const Inventory = () => {
 
       <div className="grid grid-cols-2 gap-6 w-full max-w-4xl">
         <div className="bg-surface-container p-6 flex flex-col justify-between">
-          <div className="text-on-surface-variant text-xs font-display uppercase tracking-widest mb-4">GLOBAL FUNDS</div>
+          <div className="text-on-surface-variant text-base font-semibold font-medium font-display uppercase tracking-widest mb-4">GLOBAL FUNDS</div>
           <div className={`font-display text-4xl ${funds < 0 ? 'text-error' : 'text-on-surface'}`}>
             ${funds.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-on-surface-variant text-xs mt-2">CR</div>
+          <div className="text-on-surface-variant text-base font-semibold font-medium mt-2">CR</div>
         </div>
         <MetricCard 
           label="BRAND SCORE" 
@@ -42,13 +42,13 @@ export const Inventory = () => {
         
         {/* RAW MATERIALS */}
         <div className="flex-1 bg-surface-low border border-outline-variant p-6 h-full flex flex-col">
-          <h2 className="font-display text-sm uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 mb-4">
+          <h2 className="font-display text-base font-semibold uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 mb-4">
             RAW MATERIALS STOCK
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-left font-mono text-sm">
+            <table className="w-full text-left font-mono text-base font-semibold">
               <thead>
-                <tr className="text-on-surface-variant text-xs border-b border-outline-variant">
+                <tr className="text-on-surface-variant text-base font-semibold font-medium border-b border-outline-variant">
                   <th className="py-2 font-normal text-left pl-2">COMPONENT</th>
                   <th className="py-2 font-normal text-right pr-2">UNITS</th>
                 </tr>
@@ -68,15 +68,15 @@ export const Inventory = () => {
         {/* FINISHED DRONES */}
         <div className="flex-1 flex flex-col space-y-4">
           <div className="bg-surface-container border border-outline-variant p-6 flex flex-col">
-            <h2 className="font-display text-sm uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 mb-4">
+            <h2 className="font-display text-base font-semibold uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 mb-4">
               FINISHED DRONES
             </h2>
-            <div className="font-display text-2xl text-on-surface mb-6 bg-surface-highest p-4 flex justify-between">
+            <div className="font-display text-3xl font-bold text-on-surface mb-6 bg-surface-highest p-4 flex justify-between">
               <span>TOTAL UNITS</span>
               <span>{droneStockTotal.toLocaleString()}</span>
             </div>
 
-            <div className="space-y-2 font-mono text-sm">
+            <div className="space-y-2 font-mono text-base font-semibold">
               <div className="flex justify-between py-2 border-b border-outline-variant/30">
                 <span className="text-error">Reject</span>
                 <span>{(droneBreakdown?.reject || 0).toLocaleString()}</span>
@@ -94,7 +94,7 @@ export const Inventory = () => {
                 <span>{(droneBreakdown?.premium || 0).toLocaleString()}</span>
               </div>
             </div>
-            <div className="text-xs text-on-surface-variant mt-4 font-mono italic">
+            <div className="text-base font-semibold font-medium text-on-surface-variant mt-4 font-mono italic">
               Note: Backend does not currently provide tier breakdown before resolution. Displaying estimated defaults.
             </div>
           </div>
@@ -102,7 +102,7 @@ export const Inventory = () => {
           <button
             onClick={() => scrapRejectUnits()}
             disabled={(droneBreakdown?.reject || 0) === 0}
-            className={`w-full py-5 px-4 font-display font-bold uppercase tracking-widest border transition-all text-sm
+            className={`w-full py-5 px-4 font-display font-bold uppercase tracking-widest border transition-all text-base font-semibold
               ${((droneBreakdown?.reject || 0) === 0) 
                 ? 'bg-surface-low border-outline-variant text-on-surface-variant opacity-50 cursor-not-allowed' 
                 : 'bg-error/10 border-error text-error hover:bg-error hover:text-surface'}
@@ -111,17 +111,17 @@ export const Inventory = () => {
             SCRAP REJECT UNITS
           </button>
           {holdingUnits > 0 && (
-            <div className="bg-surface-low border border-outline-variant p-3 font-mono text-xs text-on-surface-variant">
+            <div className="bg-surface-low border border-outline-variant p-3 font-mono text-base font-semibold font-medium text-on-surface-variant">
               Holding cost: 40 CU per unsold drone per cycle. Current holding cost: {holdingCost.toLocaleString()} CU.
             </div>
           )}
           {funds < 0 && (
-            <div className="bg-surface-low border border-error p-3 font-mono text-xs text-error">
+            <div className="bg-surface-low border border-error p-3 font-mono text-base font-semibold font-medium text-error">
               NEGATIVE — contact organiser
             </div>
           )}
           {hasGovLoan && (
-            <div className="bg-surface-low border border-outline-variant p-3 font-mono text-xs text-on-surface-variant">
+            <div className="bg-surface-low border border-outline-variant p-3 font-mono text-base font-semibold font-medium text-on-surface-variant">
               GOVERNMENT LOAN ACTIVE — backroom deals blocked. Brand score penalty active.
             </div>
           )}

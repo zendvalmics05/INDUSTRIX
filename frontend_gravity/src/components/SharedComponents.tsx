@@ -1,6 +1,8 @@
 import React from 'react';
 
 // Send Decisions Button
+import StarBorder from './StarBorder';
+
 export const SendDecisionsButton = ({ 
   onClick, 
   disabled = false, 
@@ -10,17 +12,22 @@ export const SendDecisionsButton = ({
   disabled?: boolean;
   loading?: boolean;
 }) => (
-  <button
+  <StarBorder
+    as="button"
     onClick={onClick}
     disabled={disabled || loading}
-    className={`w-full py-4 uppercase font-display font-bold tracking-wider 
+    className={`w-full flex ${disabled || loading ? 'opacity-30 cursor-not-allowed' : ''}`}
+    innerClassName={`w-full py-4 uppercase font-display font-bold tracking-wider 
       bg-gradient-to-br from-primary to-primary-container text-[#111417]
       transition-all duration-200
-      ${disabled || loading ? 'opacity-30 cursor-not-allowed' : 'hover:opacity-90'}
+      ${(!disabled && !loading) ? 'hover:opacity-90' : ''}
     `}
+    color="#f0e6ff"
+    speed="3s"
+    thickness={2}
   >
     {loading ? 'SENDING...' : 'SEND DECISIONS'}
-  </button>
+  </StarBorder>
 );
 
 // Status Chip
@@ -38,7 +45,7 @@ export const StatusChip = ({
     ghost: 'bg-surface-highest text-on-surface-variant'
   };
   return (
-    <span className={`px-2 py-1 text-xs font-mono font-bold uppercase ${vMap[variant]}`}>
+    <span className={`px-2 py-1 text-sm font-mono font-extrabold uppercase ${vMap[variant]}`}>
       {label}
     </span>
   );
@@ -55,14 +62,14 @@ export const MetricCard = ({
   subtext?: string;
 }) => (
   <div className="bg-surface-container p-6 flex flex-col justify-between">
-    <div className="text-on-surface-variant text-xs font-display uppercase tracking-widest mb-4">
+    <div className="text-on-surface-variant text-sm font-display font-semibold uppercase tracking-widest mb-4">
       {label}
     </div>
-    <div className="text-on-surface font-display text-4xl">
+    <div className="text-on-surface font-display text-5xl font-bold">
       {value}
     </div>
     {subtext && (
-      <div className="text-on-surface-variant text-xs mt-2">
+      <div className="text-on-surface-variant text-sm mt-2">
         {subtext}
       </div>
     )}
@@ -72,7 +79,7 @@ export const MetricCard = ({
 // Warning Banner
 export const WarningBanner = ({ message }: { message: string }) => (
   <div className="bg-tertiary/10 border-l-4 border-tertiary p-3 my-4">
-    <p className="text-on-surface text-sm">{message}</p>
+    <p className="text-on-surface text-base font-medium">{message}</p>
   </div>
 );
 
@@ -116,10 +123,10 @@ export const ComponentTabs = ({
               ${isActive ? 'bg-surface-highest border-b-2 border-primary' : 'bg-transparent text-on-surface-variant'}
             `}
           >
-            <div className={`text-xl mb-2 ${isActive ? 'text-primary' : 'text-on-surface-variant'}`}>
+            <div className={`text-2xl mb-2 ${isActive ? 'text-primary' : 'text-on-surface-variant'}`}>
               {tab.icon}
             </div>
-            <span className={`text-[10px] font-display uppercase tracking-widest ${isActive ? 'text-primary font-bold' : ''}`}>
+            <span className={`text-xs font-display font-semibold uppercase tracking-widest ${isActive ? 'text-primary font-extrabold' : ''}`}>
               {tab.label}
             </span>
           </button>
