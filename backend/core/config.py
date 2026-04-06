@@ -118,6 +118,7 @@ RND_YIELD_BONUS:       float = 0.04  # per level: -4% raw material consumed
 
 # ── Sales & market ────────────────────────────────────────────────────────────
 PRICE_REJECT_SCRAP:     float = 200.0
+PRICE_REJECT_REWORK:    float = 400.0
 PRICE_REJECT_BLACK_MKT: float = 600.0
 PRICE_SUBSTANDARD:      float = 1_400.0
 PRICE_STANDARD:         float = 3_000.0

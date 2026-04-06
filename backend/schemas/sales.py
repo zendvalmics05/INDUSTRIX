@@ -61,10 +61,24 @@ class SalesPatch(BaseModel):
 class SalesMemoryOut(BaseModel):
     """What the team sees when they GET their current sales decisions."""
     decisions:         dict
+    units_to_assemble: Optional[int] = None
+    qr_hard:           float = 0.0
+    qr_soft:           float = 0.0
+    qr_premium:        float = 0.0
 
     model_config = {
         "from_attributes": True
     }
+
+
+class SalesPricesOut(BaseModel):
+    """Authoritative prices for sales decision making."""
+    scrap:       float
+    rework:      float
+    black_market: float
+    substandard: float
+    standard:    float
+    premium:     float
 
 
 # ── Leaderboard ───────────────────────────────────────────────────────────────
@@ -86,6 +100,25 @@ class LeaderboardOut(BaseModel):
     rows:         List[LeaderboardRow]
 
 
+# ── Projections ──────────────────────────────────────────────────────────────
+
+class AssemblyProjectionIn(BaseModel):
+    """How many drones to project."""
+    units_to_assemble: int = Field(..., ge=0)
+
+
+class AssemblyProjectionOut(BaseModel):
+    """
+    Result of a quality projection.
+    projected_distribution: 101-element array [0..100] of drone counts.
+    bottleneck_component: name of the component limiting max_possible.
+    max_possible: current upper bound of assembly.
+    """
+    projected_distribution: List[int]
+    bottleneck_component:   str
+    max_possible:           int
+
+
 # ── Inventory snapshot ────────────────────────────────────────────────────────
 
 class InventoryOut(BaseModel):
@@ -93,6 +126,7 @@ class InventoryOut(BaseModel):
     funds:             float
     brand_score:       float
     brand_tier:        str
+    drone_stock:       List[int]
     drone_stock_total: int
     workforce_size:    int
     skill_level:       float

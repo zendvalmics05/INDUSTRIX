@@ -30,7 +30,7 @@ from core.config import (
     BRAND_DELTA_SUBSTANDARD_SELL, BRAND_TIERS,
     HOLDING_COST_PER_UNIT, MAX_MARKET_SHARE, PRICE_ELASTICITY,
     PRICE_PREMIUM_NORMAL, PRICE_PREMIUM_SELL, PRICE_REJECT_BLACK_MKT,
-    PRICE_REJECT_SCRAP, PRICE_STANDARD, PRICE_SUBSTANDARD, QUALITY_MAX,
+    PRICE_REJECT_REWORK, PRICE_REJECT_SCRAP, PRICE_STANDARD, PRICE_SUBSTANDARD, QUALITY_MAX,
 )
 from core.enums import (
     BrandTier, ComponentType, EventPhase, EventStatus, EventType,
@@ -116,7 +116,8 @@ def _update_brand(
     tier_sold:        Dict[str, int],
     black_mkt_found:  bool,
     black_mkt_hidden: bool,
-) -> None:
+) -> float:
+    old_score = inventory.brand_score
     delta = 0.0
     if tier_sold.get("premium", 0) > 0:
         delta += BRAND_DELTA_PREMIUM_SELL
@@ -132,6 +133,7 @@ def _update_brand(
     inventory.brand_score *= BRAND_DECAY
     inventory.brand_score  = max(0.0, min(100.0, inventory.brand_score + delta))
     inventory.brand_tier   = compute_brand_tier(inventory.brand_score)
+    return round(inventory.brand_score - old_score, 2)
 
 
 # ── Tier classification ───────────────────────────────────────────────────────
@@ -220,6 +222,77 @@ def _assemble_drones(
         drone_array[drone_grade] += 1
 
     return drone_array, fin_stocks
+
+
+def get_assembly_projections(
+    slots:           Dict[str, ComponentSlot],
+    units_requested: int,
+    rng:             Optional[np.random.Generator] = None,
+) -> Tuple[List[int], str, int]:
+    """
+    Project the quality distribution and identify the bottleneck for assembly.
+    Does NOT modify slots/database.
+    
+    Returns:
+        drone_distribution: int[101] — projected counts per grade.
+        bottleneck:         str — component name that is the tightest constraint.
+        max_possible:       int — total drones that can be built.
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    all_comps = [c.value for c in ComponentType]
+    
+    # Calculate totals and identify bottleneck
+    comp_totals = {}
+    for cv in all_comps:
+        if cv in slots:
+            comp_totals[cv] = sum(slots[cv].finished_stock[1:]) if slots[cv].finished_stock else 0
+        else:
+            comp_totals[cv] = 0
+            
+    max_possible = min(comp_totals.values()) if comp_totals else 0
+    bottleneck   = min(comp_totals, key=comp_totals.get) if comp_totals else "none"
+    
+    # We only project if units_requested > 0
+    to_project = max(0, min(units_requested, max_possible))
+    drone_arr  = [0] * 101
+    
+    if to_project > 0:
+        # Create a deep copy for simulation
+        sim_stocks = {
+            cv: list(slots[cv].finished_stock or [0]*101)
+            for cv in all_comps if cv in slots
+        }
+        
+        for _ in range(to_project):
+            grades = []
+            for cv in all_comps:
+                arr   = sim_stocks.get(cv, [0]*101)
+                total = sum(arr[1:])
+                if total <= 0:
+                    grades.append(0)
+                    continue
+                r = rng.integers(1, total, endpoint=True)
+                cum = 0
+                for g in range(1, 101):
+                    cum += arr[g]
+                    if cum >= r:
+                        arr[g] = max(0, arr[g] - 1)
+                        grades.append(g)
+                        break
+            
+            # Blend formula (weakest link + simple average)
+            if grades:
+                simple_avg = sum(grades) / len(grades)
+                min_g      = min(grades)
+                weights    = [math.exp(-ASSEMBLY_BETA * (g - min_g)) for g in grades]
+                wl_avg     = sum(w * g for w, g in zip(weights, grades)) / sum(weights)
+                final      = (1 - ASSEMBLY_LAMBDA) * simple_avg + ASSEMBLY_LAMBDA * wl_avg
+                grade      = int(np.clip(final, 0, QUALITY_MAX))
+                drone_arr[grade] += 1
+                
+    return drone_arr, bottleneck, max_possible
 
 
 # ── Market allocation — faction-based ────────────────────────────────────────
@@ -565,7 +638,13 @@ def resolve_sales(
         if not inv_t:
             continue
 
-        stock_t = inv_t.drone_stock or [0] * 101
+        # CRITICAL FIX: For the current team, use the freshly assembled stock.
+        # Otherwise the market simulation sees 0 drones and no sales occur.
+        if t.id == team.id:
+            stock_t = combined_stock
+        else:
+            stock_t = inv_t.drone_stock or [0] * 101
+
         tiers_t = classify_drones(
             stock_t, cycle.qr_hard, cycle.qr_soft, cycle.qr_premium
         )
@@ -624,11 +703,17 @@ def resolve_sales(
         gov_revenue = mods["gov_purchase_units"] * mods["gov_purchase_price"]
 
     # ── Per-tier resolution ───────────────────────────────────────────────────
-    total_revenue   = gov_revenue
-    total_held      = 0
-    total_scrapped  = 0
-    black_mkt_units = 0
-    black_mkt_rev   = 0.0
+    revenue_by_tier = {
+        "premium":     0.0,
+        "standard":    0.0,
+        "substandard": 0.0,
+        "reject":      0.0
+    }
+    total_revenue_gross = gov_revenue  # Track total before costs
+    total_held          = 0
+    total_scrapped      = 0
+    black_mkt_units     = 0
+    black_mkt_rev       = 0.0
     tier_sold:      Dict[str, int] = {}
     new_drone_stock = [0] * 101
     sold_so_far     = 0
@@ -652,12 +737,20 @@ def resolve_sales(
             continue
 
         if action == "scrap":
-            total_revenue  += count * PRICE_REJECT_SCRAP
+            rev = count * PRICE_REJECT_SCRAP
+            total_revenue_gross += rev
+            revenue_by_tier["reject"] += rev
             total_scrapped += count
 
         elif action == "black_market":
             black_mkt_units += count
             black_mkt_rev   += count * PRICE_REJECT_BLACK_MKT
+
+        elif action == "rework":
+            rev = count * PRICE_REJECT_REWORK
+            total_revenue_gross += rev
+            revenue_by_tier["reject"] += rev
+            total_scrapped += count   # treated as scrapped in terms of inventory cleanup
 
         elif action == "hold":
             total_held += count
@@ -677,8 +770,10 @@ def resolve_sales(
             if can_take > 0:
                 # Use price_map (already accounts for price_pressure, overrides, actions).
                 price = price_map.get(tier_val, PRICE_REJECT_SCRAP)
+                rev   = can_take * price
 
-                total_revenue       += can_take * price
+                total_revenue_gross  += rev
+                revenue_by_tier[tier_val] += rev
                 sold_so_far         += can_take
                 tier_sold[tier_val]  = can_take
 
@@ -705,13 +800,14 @@ def resolve_sales(
             black_mkt_fine  = black_mkt_rev * BLACK_MKT_FINE_MULTIPLIER
             black_mkt_found = True
         else:
-            total_revenue   += black_mkt_rev
+            total_revenue_gross += black_mkt_rev
+            revenue_by_tier["reject"] += black_mkt_rev
             black_mkt_hidden = True
 
     # ── Costs ─────────────────────────────────────────────────────────────────
     holding_cost           = total_held * HOLDING_COST_PER_UNIT
     sales_costs_this_cycle = holding_cost + black_mkt_fine
-    total_revenue         -= sales_costs_this_cycle
+    final_net_revenue      = total_revenue_gross - sales_costs_this_cycle
 
     # ── Mark sales events applied ─────────────────────────────────────────────
     _mark_applied(sales_events)
@@ -723,34 +819,54 @@ def resolve_sales(
     _mark_applied(fin_events)
 
     # ── Brand update ──────────────────────────────────────────────────────────
-    _update_brand(inventory, tier_sold, black_mkt_found, black_mkt_hidden)
+    brand_delta = _update_brand(inventory, tier_sold, black_mkt_found, black_mkt_hidden)
 
     # ── Update inventory ──────────────────────────────────────────────────────
     inventory.drone_stock      = new_drone_stock
-    inventory.funds            = round(inventory.funds + total_revenue, 2)
+    inventory.funds            = round(inventory.funds + final_net_revenue, 2)
     inventory.cumulative_profit = round(
-        inventory.cumulative_profit + total_revenue, 2
+        inventory.cumulative_profit + final_net_revenue, 2
     )
 
     db.flush()
 
+    # ── Restructure faction detail for frontend ──────────────────────────────
+    faction_sales = []
+    for f in faction_detail:
+        units = f["purchases"].get(team.id, 0)
+        if units > 0:
+            # Note: tier_preference might not be perfectly granular if multiple tiers 
+            # were sold to same faction, but it works for 99% of simulation cases.
+            tier = f["tier_preference"]
+            price = price_map.get(tier, 0.0)
+            faction_sales.append({
+                "faction":        f["faction"],
+                "tier":           tier,
+                "units_sold":     units,
+                "price_per_unit": price,
+                "revenue":        units * price
+            })
+
     return {
+        "cycle_number":      cycle.cycle_number,
         "drones_assembled":  drones_assembled,
-        "max_possible":      max_possible,
         "units_sold":        sold_so_far,
         "units_held":        total_held,
         "units_scrapped":    total_scrapped,
+        "revenue":           round(total_revenue_gross, 2), # Frontend uses gross for the main "REVENUE" highlight
+        "holding_cost":      round(holding_cost, 2),
+        "brand_delta":       brand_delta,
+        "brand_score_after": round(inventory.brand_score, 2),
+        "closing_funds":     round(inventory.funds, 2),
+        "black_market_discovered": black_mkt_found,
+        "faction_sales":     faction_sales,
+        "revenue_by_tier":   {k: round(v, 2) for k, v in revenue_by_tier.items()},
+        # Keep internal metadata
         "gov_purchase_rev":  round(gov_revenue, 2),
         "black_mkt_units":   black_mkt_units,
-        "black_mkt_found":   black_mkt_found,
         "black_mkt_fine":    round(black_mkt_fine, 2),
-        "total_revenue":     round(total_revenue, 2),
-        "holding_cost":      round(holding_cost, 2),
         "fin_adjustment":    round(fin_adjustment, 2),
-        "brand_score":       round(inventory.brand_score, 2),
-        "closing_funds":     round(inventory.funds, 2),
         "tier_sold":         tier_sold,
-        "faction_detail":    faction_detail,
     }
 
 

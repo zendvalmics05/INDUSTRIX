@@ -74,6 +74,7 @@ def my_inventory(
         funds             = inv.funds,
         brand_score       = inv.brand_score,
         brand_tier        = inv.brand_tier.value,
+        drone_stock       = inv.drone_stock if inv.drone_stock else [0]*101,
         drone_stock_total = sum(inv.drone_stock[1:]) if inv.drone_stock else 0,
         workforce_size    = inv.workforce_size,
         skill_level       = inv.skill_level,

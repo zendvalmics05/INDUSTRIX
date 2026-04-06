@@ -76,6 +76,7 @@ class SalesAction(str, enum.Enum):
     SELL_DISCOUNTED = "sell_discounted"
     HOLD            = "hold"
     SCRAP           = "scrap"
+    REWORK          = "rework"
     BLACK_MARKET    = "black_market"
 
 
