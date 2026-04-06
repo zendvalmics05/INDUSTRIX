@@ -9,6 +9,9 @@ interface Team {
   revenue: number
   market_share: number
   is_active: boolean
+  minerals: number
+  chemicals: number
+  power: number
 }
 
 interface AuthState {

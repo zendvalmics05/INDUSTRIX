@@ -238,3 +238,22 @@ export interface SalesSummary {
   faction_sales: SalesFactionSale[];
   revenue_by_tier: Record<string, number>;
 }
+
+// ── Backroom & Notifications ──────────────────────────────────────────────────
+
+export interface NotificationOut {
+  id: string;
+  cycle_number: number;
+  type: 'sabotage' | 'discovery_self' | 'discovery_thwarted' | 'fine' | 'benefit' | 'intel_report' | 'operational_loss';
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'error' | 'success';
+  discovery_code?: string | null;
+  payload?: any;
+}
+
+export interface BackroomStatusOut {
+  discovery_boost_active: boolean;
+  boost_cost: number;
+  boost_probability: number;
+}

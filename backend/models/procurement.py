@@ -62,6 +62,10 @@ class Inventory(Base):
     # Blocks backroom deals while active.
     has_gov_loan = Column(Boolean, nullable=False, default=False)
 
+    # If > 0, chance of blocking an incoming sabotage event.
+    # Set by the organiser via the "Security Protocol" (Buy Intel) deal.
+    block_probability = Column(Float, nullable=False, default=0.0)
+
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     team = relationship("Team", back_populates="inventory")

@@ -15,14 +15,15 @@ from sqlalchemy.orm import Session
 
 from core.auth import verify_organiser
 from core.config import MACHINE_TIERS
+from core.enums import EventPhase, EventStatus
 from core.database import get_db
-from models.game import Game, Team
+from models.game import Game, Team, Cycle
 from models.procurement import ComponentSlot, Inventory, Machine
+from models.deals import Event
 from schemas.common import OkResponse
 from schemas.game import GameCreate, GameOut, TeamCreate, TeamOut
 from schemas.production import ComponentSlotOut, MachineOut
-from services.cycle import add_team, create_game
-from services.production import get_active_machines
+
 
 from core.config import ADMIN_CODE
 
@@ -90,6 +91,7 @@ def bootstrap_game(
     if not expected or x_bootstrap_secret != expected:
         raise HTTPException(403, "Invalid bootstrap secret.")
 
+    from services.cycle import create_game
     game = create_game(
         db                       = db,
         name                     = body.name,
@@ -116,6 +118,7 @@ def create_team(
     Inventory, ComponentSlot × 6, Machine × 6 (one Standard per component),
     MemoryProcurement, MemoryProduction, MemorySales.
     """
+    from services.cycle import add_team
     try:
         team = add_team(db, game, body.name, body.pin)
     except Exception as e:
@@ -133,7 +136,7 @@ def list_teams(
     result = []
     for team in teams:
         inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
-
+        from services.production import get_active_machines
         # Count total active machines across all components
         machine_count = (
             db.query(Machine)
@@ -502,7 +505,6 @@ def repay_loan(
 # ── Leaderboard history ───────────────────────────────────────────────────────
 
 from models.game import Cycle
-from services.leaderboard import compute_leaderboard
 
 
 @router.get("/leaderboard/history",
@@ -531,6 +533,7 @@ def leaderboard_history(
         is_final   = (
             cycle.phase_log and cycle.phase_log.completed_at is not None
         )
+        from services.leaderboard import compute_leaderboard
         rows = compute_leaderboard(db, game, cycle, is_final=is_final)
         history.append({
             "cycle_number": cycle.cycle_number,
@@ -546,22 +549,27 @@ def leaderboard_history(
 @router.get("/game/summary",
             summary="Full game state in one call for the organiser dashboard.")
 def game_summary(
-    game: Game    = Depends(verify_organiser),
+    x_organiser_secret: str = Header(...),
     db:   Session = Depends(get_db),
 ):
     """
-    Returns a complete snapshot of the current game state:
-    - Current cycle number and phase
-    - All teams with funds, brand, drone stock, gov-loan status
-    - Market factions (volume + price ceiling)
-    - Current game-level QR thresholds and demand multiplier
-    - Active event count per phase
-
-    Use this as the primary data source for the organiser dashboard
-    to avoid making 10 separate API calls.
+    Full game snapshot. Returns 'game: null' instead of 404 if not found.
     """
+    from core.config import ADMIN_CODE
+    if x_organiser_secret != ADMIN_CODE:
+        raise HTTPException(403, "Invalid secret.")
+
+    game = db.query(Game).filter(Game.is_active == True).first()
+    if not game:
+        return {
+            "game": None,
+            "cycle": None,
+            "teams": [],
+            "market_factions": [],
+            "pending_events_by_phase": {}
+        }
+    from core.enums import EventPhase
     from models.market import MarketFaction
-    from models.deals import EventPhase
 
     cycle = (
         db.query(Cycle)

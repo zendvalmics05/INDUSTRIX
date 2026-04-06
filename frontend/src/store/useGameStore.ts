@@ -43,6 +43,7 @@ interface GameState {
   fetchSources: () => Promise<void>
   submitProcurement: (component: string) => Promise<void>
   fetchCostEstimate: () => Promise<void>
+  provisionResources: (resources: {minerals: number, chemicals: number, power: number}) => Promise<void>
 
   // Derived
   totalCost: number
@@ -121,6 +122,28 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ totalCost: res.data.total_cost })
     } catch (err) {
       console.error('fetchCostEstimate error:', err)
+    }
+  },
+
+  provisionResources: async (resources) => {
+    try {
+      const res = await api.post('/team/procurement/provision', resources)
+      // Update team in auth store with new values
+      const setAuth = useAuthStore.getState().setAuth
+      const token = useAuthStore.getState().token
+      const currentTeam = useAuthStore.getState().team
+      if (token && currentTeam) {
+        setAuth(token, {
+          ...currentTeam,
+          minerals: res.data.minerals,
+          chemicals: res.data.chemicals,
+          power: res.data.power,
+          cash: res.data.funds_left,
+        })
+      }
+    } catch (err) {
+      console.error('provisionResources error:', err)
+      throw err
     }
   },
 

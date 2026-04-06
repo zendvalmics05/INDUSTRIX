@@ -44,10 +44,10 @@ from core.config import (
     RND_CONSISTENCY_BONUS, RND_CYCLES_PER_LEVEL,
     RND_QUALITY_BONUS, RND_YIELD_BONUS,
     RIOT_SURVIVAL, RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
+    RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
     SKILL_GAIN_LOW_MORALE, SKILL_SIGMA_REDUCTION,
     STRIKE_SURVIVAL, UNDERSTAFFING_MORALE_PENALTY,
     WAGE_COST_PER_WORKER, WAGE_MORALE_DELTA,
-    AUTOMATION_UPGRADE_COST,
 )
 from core.enums import (
     AutomationLevel, ComponentType,
@@ -230,7 +230,9 @@ def _consume_raw_stock(
     yield_reduction: float,
 ) -> Tuple[List[int], int, float]:
     """Pull units from raw_stock. Returns (updated_stock, consumed, rm_mean)."""
-    effective_needed = max(1, int(units_needed * (1.0 - yield_reduction)))
+    if units_needed <= 0:
+        return list(raw_stock), 0, 0.0
+    effective_needed = int(units_needed * (1.0 - yield_reduction))
     total_available  = sum(raw_stock[1:])
     to_consume       = min(effective_needed, total_available)
 
@@ -378,8 +380,42 @@ def resolve_production(
             levels = p.get("levels_stolen", 1)
             if comp and focus and comp in slots:
                 attr = f"rnd_{focus}"
-                setattr(slots[comp], attr,
-                        max(0, getattr(slots[comp], attr) - levels))
+                current = getattr(slots[comp], attr)
+                lost = min(current, levels)
+                setattr(slots[comp], attr, current - lost)
+                # If it's a THEFT (source_team_id set), buyer gains it
+                if ev.source_team_id:
+                     buyer_slot = db.query(ComponentSlot).filter(
+                         ComponentSlot.team_id == ev.source_team_id,
+                         ComponentSlot.component == comp
+                     ).first()
+                     if buyer_slot:
+                         setattr(buyer_slot, attr, min(MAX_RND_LEVEL, getattr(buyer_slot, attr) + lost))
+
+        elif ev.event_type == EventType.TALENT_THEFT:
+            stolen = p.get("workforce_stolen", 0)
+            inventory.workforce_size = max(0, inventory.workforce_size - stolen)
+            # Transfer to buyer
+            if ev.source_team_id:
+                buyer_inv = db.query(Inventory).filter(Inventory.team_id == ev.source_team_id).first()
+                if buyer_inv:
+                    buyer_inv.workforce_size += stolen
+            
+            # Handle R&D transfer if specified in talent theft
+            if p.get("stolen_rnd"):
+                comp = p.get("component")
+                if comp and comp in slots:
+                    # Steal 1 level of Quality by default for that component
+                    current = slots[comp].rnd_quality
+                    if current > 0:
+                        slots[comp].rnd_quality -= 1
+                        if ev.source_team_id:
+                             buyer_slot = db.query(ComponentSlot).filter(
+                                 ComponentSlot.team_id == ev.source_team_id,
+                                 ComponentSlot.component == comp
+                             ).first()
+                             if buyer_slot:
+                                 buyer_slot.rnd_quality = min(MAX_RND_LEVEL, buyer_slot.rnd_quality + 1)
 
         elif ev.event_type == EventType.RND_INVESTMENT:
             comp   = p.get("component")
@@ -515,8 +551,10 @@ def resolve_production(
 
         # ── Compute throughput and output parameters ──────────────────────────
         tp_total  = int(total_throughput(machines) * labour_factor * production_survival)
+            
         eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality)
         eff_grade += fast_quality_bonus   # bonus only if a machine was bought
+
         sigma     = _compute_sigma(automation_level, inventory.skill_level,
                                     slot.rnd_consistency)
         yield_reduction = slot.rnd_yield * RND_YIELD_BONUS

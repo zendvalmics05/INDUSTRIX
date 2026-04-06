@@ -1,9 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import LoginPage from './pages/LoginPage'
+import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import EventCountdownPage from './pages/EventCountdownPage.jsx'
+import AdminLoginPage from './pages/AdminLoginPage.tsx'
+import OrganiserPage from './pages/OrganiserPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
-import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedRoute from './components/ProtectedRoute.tsx'
+import AdminRoute from './components/AdminRoute.tsx'
 
 export default function App() {
   return (
@@ -25,7 +28,17 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <AdminRoute>
+            <OrganiserPage />
+          </AdminRoute>
+        }
+      />
+
+      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

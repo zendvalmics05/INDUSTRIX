@@ -11,6 +11,8 @@ import type {
   FinancesData,
   TransportOut,
   CostProjectionOut,
+  NotificationOut,
+  BackroomStatusOut,
 } from '../types';
 
 // Thin wrapper around backend endpoints. No hardcoded data.
@@ -100,6 +102,27 @@ export const teamApi = {
     return data;
   },
 
+  getSalesPrices: async (): Promise<{
+    scrap: number;
+    rework: number;
+    black_market: number;
+    substandard: number;
+    standard: number;
+    premium: number;
+  }> => {
+    const { data } = await api.get('/team/sales/prices');
+    return data;
+  },
+
+  projectSalesAssembly: async (units: number): Promise<{ 
+    projected_distribution: number[]; 
+    bottleneck_component: string; 
+    max_possible: number; 
+  }> => {
+    const { data } = await api.post('/team/sales/projections', { units_to_assemble: units });
+    return data;
+  },
+
   // Public leaderboard (works only during backroom/game_over)
   getLeaderboard: async (): Promise<LeaderboardOut> => {
     const { data } = await api.get<LeaderboardOut>('/team/leaderboard');
@@ -139,6 +162,22 @@ export const teamApi = {
 
   getMarket: async (): Promise<{ factions: MarketFaction[] }> => {
     const { data } = await api.get<{ factions: MarketFaction[] }>('/team/market');
+    return data;
+  },
+
+  // Notifications & Backroom
+  getNotifications: async (): Promise<NotificationOut[]> => {
+    const { data } = await api.get<NotificationOut[]>('/team/events/notifications');
+    return data;
+  },
+
+  getBackroomStatus: async (): Promise<BackroomStatusOut> => {
+    const { data } = await api.get<BackroomStatusOut>('/team/events/backroom-status');
+    return data;
+  },
+
+  buyIntel: async () => {
+    const { data } = await api.post('/team/events/buy-intel');
     return data;
   }
 };

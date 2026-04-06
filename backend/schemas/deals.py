@@ -13,7 +13,7 @@ Reflects the new Event table structure:
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, validator
 
-from core.enums import EventPhase, EventType, GovDealType
+from core.enums import EventPhase, EventType, GovDealType, NotificationType
 
 
 # ── Government deals ──────────────────────────────────────────────────────────
@@ -25,6 +25,10 @@ class GovDealCreate(BaseModel):
     target_team_id:  Optional[int] = Field(
         None, gt=0,
         description="Required for RED_* offensive deals. Null for GREEN_* self-buffs.",
+    )
+    target_component: Optional[str] = Field(
+        None,
+        description="Target a specific component (airframe, propulsion, etc.) for sabotage or focus.",
     )
     override_params: Optional[Dict[str, Any]] = Field(
         None,
@@ -77,6 +81,7 @@ class EventOut(BaseModel):
     payload:        dict
     status:         str
     gov_deal_id:    Optional[int]
+    discovery_code: Optional[str]
     notes:          Optional[str]
     created_at:     Any
     applied_at:     Optional[Any]
@@ -185,3 +190,63 @@ class GameUpdateSettings(BaseModel):
     qr_soft:                  Optional[float] = Field(None, ge=0, le=100)
     qr_premium:               Optional[float] = Field(None, ge=0, le=100)
     market_demand_multiplier: Optional[float] = Field(None, gt=0)
+
+
+# ── Team-facing notifications ─────────────────────────────────────────────────
+
+class NotificationOut(BaseModel):
+    id:              str
+    cycle_number:    int
+    type:            NotificationType
+    title:           str
+    message:         str
+    severity:        str
+    discovery_code:  Optional[str] = None
+    payload:         Optional[Dict[str, Any]] = None
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class BackroomStatusOut(BaseModel):
+    discovery_boost_active: bool
+    boost_cost:             float
+    boost_probability:      float
+
+
+# ── Inter-Team Exchange ───────────────────────────────────────────────────────
+
+class AssetTransfer(BaseModel):
+    """Container for assets being moved in an exchange."""
+    funds:     float = 0.0
+    minerals:  float = 0.0
+    chemicals: float = 0.0
+    power:     float = 0.0
+    
+    # component_type -> { "raw": [0...100], "finished": [0...100] }
+    # grade distributions for stocks
+    raw_stock:      Dict[str, List[int]] = Field(default_factory=dict)
+    finished_stock: Dict[str, List[int]] = Field(default_factory=dict)
+    
+    # [0...100] array for final products
+    drone_stock: List[int] = Field(default_factory=lambda: [0]*101)
+    
+    # List of specific machine IDs
+    machines: List[int] = Field(default_factory=list)
+    
+    # component_type -> { "quality": delta_int, "consistency": delta_int, "yield": delta_int }
+    rnd_levels: Dict[str, Dict[str, int]] = Field(default_factory=dict)
+
+
+class InterTeamExchangeCreate(BaseModel):
+    """Organiser-driven multi-asset swap between two teams."""
+    team_a_id: int
+    team_b_id: int
+    
+    # What A gives to B
+    team_a_to_b: AssetTransfer
+    # What B gives to A
+    team_b_to_a: AssetTransfer
+    
+    notes: Optional[str] = None

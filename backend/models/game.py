@@ -9,7 +9,6 @@ These are the backbone everything else references via FK.
 import secrets
 from datetime import datetime
 
-from anyio.streams.text import TextSendStream
 from sqlalchemy import (
     Boolean, Column, DateTime, Enum as SAEnum,
     Float, ForeignKey, Integer, String, UniqueConstraint, func,
@@ -155,33 +154,6 @@ class CyclePhaseLog(Base):
     procurement_summary = Column(JSONB, nullable=True)  # {str(team_id): {...}}
     production_summary = Column(JSONB, nullable=True)   # {str(team_id): {...}}
     sales_summary      = Column(JSONB, nullable=True)   # {str(team_id): {...}}
-
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    cycle = relationship("Cycle", back_populates="phase_log")
-    """
-    Tracks the current phase of a cycle and timestamps for each transition.
-    One row per cycle, created when the cycle is created.
-
-    The organiser calls /advance to move through:
-      PROCUREMENT_OPEN → PRODUCTION_OPEN → SALES_OPEN → BACKROOM
-
-    From BACKROOM the organiser calls /next or /end-game.
-    """
-    __tablename__ = "cycle_phase_log"
-
-    id       = Column(Integer, primary_key=True, index=True)
-    cycle_id = Column(Integer, ForeignKey("cycle.id", ondelete="CASCADE"),
-                      nullable=False, unique=True, index=True)
-
-    current_phase = Column(SAEnum(CyclePhase), nullable=False,
-                            default=CyclePhase.PROCUREMENT_OPEN)
-
-    procurement_opened_at = Column(DateTime, nullable=True)
-    production_opened_at  = Column(DateTime, nullable=True)
-    sales_opened_at       = Column(DateTime, nullable=True)
-    backroom_opened_at    = Column(DateTime, nullable=True)
-    completed_at          = Column(DateTime, nullable=True)
 
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

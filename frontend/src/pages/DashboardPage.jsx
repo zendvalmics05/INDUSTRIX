@@ -129,6 +129,15 @@ function DashboardPage() {
               <strong>199.99</strong>
             </div>
 
+            <div className="left-table-wrap">
+              <div className="left-table-title">RESOURCES</div>
+              <div className="space-y-1 px-2 py-1 text-xs">
+                 <div className="flex justify-between"><span>MINERALS</span> <span className="text-purple-400">{Math.round(team?.minerals || 0)}</span></div>
+                 <div className="flex justify-between"><span>CHEMICALS</span> <span className="text-purple-400">{Math.round(team?.chemicals || 0)}</span></div>
+                 <div className="flex justify-between"><span>POWER</span> <span className="text-purple-400">{Math.round(team?.power || 0)}</span></div>
+              </div>
+            </div>
+
             {mainTab === 'home' ? (
               <div className="left-table-wrap left-crew-wrap">
                 <div className="left-table-title">FIELD CREW</div>

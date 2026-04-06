@@ -9,7 +9,7 @@ GET  /organiser/cycle/status   — full phase status for organiser dashboard
 PATCH /organiser/game/settings — update qr thresholds / demand multiplier
 POST /organiser/cycle/force-phase — emergency: set phase manually
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
 from core.auth import verify_organiser
@@ -18,7 +18,7 @@ from core.enums import CyclePhase
 from models.game import Cycle, Game
 from schemas.common import OkResponse
 from schemas.deals import AdvancePhaseOut, GameUpdateSettings
-from services.cycle import advance_phase, create_cycle, end_game, start_next_cycle
+
 
 router = APIRouter(prefix="/organiser/cycle", tags=["organiser"])
 
@@ -29,6 +29,7 @@ def create_new_cycle(
     db:   Session = Depends(get_db),
 ):
     """Create cycle 1 (or next cycle if called manually instead of /next)."""
+    from services.cycle import create_cycle
     cycle = create_cycle(db, game)
     return OkResponse(message=f"Cycle {cycle.cycle_number} created.")
 
@@ -47,6 +48,7 @@ def advance(
     SALES_OPEN       → (sales resolves)        → BACKROOM
     """
     try:
+        from services.cycle import advance_phase
         phase_log = advance_phase(db, game)
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -71,6 +73,7 @@ def next_cycle(
 ):
     """From BACKROOM: roll discovery on deals, start a new cycle."""
     try:
+        from services.cycle import start_next_cycle
         cycle = start_next_cycle(db, game)
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -84,6 +87,7 @@ def finish_game(
 ):
     """From BACKROOM: end the game. Leaderboard becomes final."""
     try:
+        from services.cycle import end_game
         end_game(db, game)
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -92,10 +96,18 @@ def finish_game(
 
 @router.get("/status")
 def cycle_status(
-    game: Game    = Depends(verify_organiser),
+    x_organiser_secret: str = Header(...),
     db:   Session = Depends(get_db),
 ):
     """Full cycle status for the organiser dashboard."""
+    from core.config import ADMIN_CODE
+    if x_organiser_secret != ADMIN_CODE:
+        raise HTTPException(403, "Invalid secret.")
+
+    game = db.query(Game).filter(Game.is_active == True).first()
+    if not game:
+        return {"cycle": None, "phase": None}
+    
     cycle = (
         db.query(Cycle)
         .filter(Cycle.game_id == game.id)

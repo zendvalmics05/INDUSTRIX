@@ -6,7 +6,6 @@ PATCH /team/procurement        — update decisions (partial)
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from typing import Dict, List
 
 from core.auth import verify_team
@@ -14,9 +13,12 @@ from core.database import get_db
 from core.enums import CyclePhase
 from core.config import TRANSPORT
 from models.game import Cycle, Game, Team, RawMaterialSource
-from models.procurement import MemoryProcurement
+from models.procurement import MemoryProcurement, Inventory
 from schemas.common import OkResponse
-from schemas.procurement import ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut, TransportOut, CostProjectionOut
+from schemas.procurement import (
+    ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut,
+    TransportOut, CostProjectionOut
+)
 
 router = APIRouter(prefix="/team/procurement", tags=["team"])
 
@@ -55,13 +57,6 @@ def get_sources(
 ):
     """
     Return all active raw material sources for this game.
-
-    This is the catalogue the team browses when filling in their procurement
-    decisions. Only called during PROCUREMENT_OPEN, but not phase-gated —
-    teams may also want to inspect sources during PRODUCTION_OPEN to plan
-    ahead for the next cycle.
-
-    Only components that have at least one active source appear as keys.
     """
     sources = (
         db.query(RawMaterialSource)
@@ -142,14 +137,14 @@ def project_costs(
             summary[comp_val] = {"material_cost": 0.0, "transport_cost": 0.0, "total": 0.0}
             continue
             
-        mods = _get_component_modifiers(events, comp_val)
+        mods = _get_component_modifiers(events, comp_val, source.name)
         distance_km = getattr(source, "distance", 500.0)
         
         t_cfg = TRANSPORT.get(transport_mode)
         if not t_cfg:
             summary[comp_val] = {"material_cost": 0.0, "transport_cost": 0.0, "total": 0.0}
             continue
-
+ 
         raw_material_cost = quantity * source.base_cost_per_unit
         raw_transport_cost = t_cfg["base_cost"] + (t_cfg["var_cost"] * distance_km * quantity)
         

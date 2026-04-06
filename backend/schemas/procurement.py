@@ -41,8 +41,6 @@ class ProcurementPatch(BaseModel):
 class RawMaterialSourceOut(BaseModel):
     """
     One supplier row shown to teams during PROCUREMENT_OPEN.
-    quality_mean and quality_sigma are shown so teams can make
-    informed decisions about quality/cost trade-offs.
     is_active is always True here (inactive sources are filtered out).
     """
     id: int

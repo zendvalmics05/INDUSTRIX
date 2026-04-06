@@ -118,6 +118,7 @@ RND_YIELD_BONUS:       float = 0.04  # per level: -4% raw material consumed
 
 # ── Sales & market ────────────────────────────────────────────────────────────
 PRICE_REJECT_SCRAP:     float = 200.0
+PRICE_REJECT_REWORK:    float = 400.0
 PRICE_REJECT_BLACK_MKT: float = 600.0
 PRICE_SUBSTANDARD:      float = 1_400.0
 PRICE_STANDARD:         float = 3_000.0
@@ -163,6 +164,8 @@ DEAL_DISCOVERY_DECAY:      float = 0.80
 DEAL_SIZE_DISCOVERY_RATE:  float = 0.02
 DEAL_REPEAT_STACK_RATE:    float = 0.08
 DEAL_FINE_MULTIPLIER:      float = 2.5
+DISCOVERY_BOOST_PROBABILITY: float = 0.85
+DISCOVERY_BOOST_COST:        float = 10_000.0
 
 DEAL_BRIBE_FLOOR: Dict[str, float] = {
     "red_supply_sabotage": 5_000, "red_price_inflation": 4_000,
@@ -271,6 +274,7 @@ DEFAULT_MARKET_FACTIONS: list = [
         "brand_min":       0.0,
     },
 ]
+
 
 # Tier hierarchy for faction stepping-down logic.
 # When a faction's preferred tier is exhausted they step down by one.
