@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store';
 import { useNavigate } from 'react-router-dom';
-import StarBorder from '../components/StarBorder';
+import { DrawOutlineButton } from '../components/DrawOutlineButton';
 
 export const Login = () => {
   const [teamId, setTeamId] = useState('');
@@ -93,22 +93,12 @@ export const Login = () => {
           </div>
 
           <div className="pt-4 flex w-full">
-            <StarBorder
-              as="button"
+            <DrawOutlineButton
               type="submit"
               disabled={!teamId || !pin || loading}
-              className={`w-full ${(!teamId || !pin || loading) ? 'opacity-30 cursor-not-allowed' : ''}`}
-              innerClassName={`w-full py-4 uppercase font-display font-bold tracking-wider
-                bg-gradient-to-br from-primary to-primary-container text-[#111417]
-                transition-all duration-200
-                ${(!teamId || !pin || loading) ? '' : 'hover:opacity-90'}
-              `}
-              color="#f0e6ff"
-              speed="3s"
-              thickness={2}
             >
               {loading ? 'AUTHENTICATING...' : 'ACCESS SYSTEM'}
-            </StarBorder>
+            </DrawOutlineButton>
           </div>
         </form>
       </div>

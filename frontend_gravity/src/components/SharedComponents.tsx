@@ -1,7 +1,6 @@
 import React from 'react';
 
-// Send Decisions Button
-import StarBorder from './StarBorder';
+import { DrawOutlineButton } from './DrawOutlineButton';
 
 export const SendDecisionsButton = ({ 
   onClick, 
@@ -12,22 +11,12 @@ export const SendDecisionsButton = ({
   disabled?: boolean;
   loading?: boolean;
 }) => (
-  <StarBorder
-    as="button"
+  <DrawOutlineButton
     onClick={onClick}
     disabled={disabled || loading}
-    className={`w-full flex ${disabled || loading ? 'opacity-30 cursor-not-allowed' : ''}`}
-    innerClassName={`w-full py-4 uppercase font-display font-bold tracking-wider 
-      bg-gradient-to-br from-primary to-primary-container text-[#111417]
-      transition-all duration-200
-      ${(!disabled && !loading) ? 'hover:opacity-90' : ''}
-    `}
-    color="#f0e6ff"
-    speed="3s"
-    thickness={2}
   >
     {loading ? 'SENDING...' : 'SEND DECISIONS'}
-  </StarBorder>
+  </DrawOutlineButton>
 );
 
 // Status Chip
