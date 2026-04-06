@@ -36,11 +36,13 @@ from schemas.deals import (
     AdvancePhaseOut, EventOut, GlobalEventCreate,
     GovDealCreate, GovDealOut, GovLoanCreate,
     InterTeamLoanCreate, LoanCreatedOut,
+    InterTeamExchangeCreate,   # Added
 )
 from services.deals import (
     apply_discovery, check_discovery_code,
     create_global_event, create_loan_events,
     record_gov_deal, roll_discovery,
+    execute_inter_team_exchange, # Added
 )
 
 router = APIRouter(prefix="/organiser/deals", tags=["organiser"])
@@ -137,8 +139,40 @@ def create_gov_deal(
     db.commit()
     return deal
 
+# ── Inter-team Multi-Asset Exchange ──────────────────────────────────────────
 
-# ── Inter-team loan ───────────────────────────────────────────────────────────
+@router.post("/exchange", response_model=OkResponse, status_code=201,
+             summary="Execute a multi-asset exchange between two teams.")
+def create_inter_team_exchange(
+    body: InterTeamExchangeCreate,
+    game: Game    = Depends(verify_organiser),
+    db:   Session = Depends(get_db),
+):
+    """
+    Simultaneously swap multiple assets between two teams.
+    Handles funds, minerals, chemicals, power, machines, components, and R&D.
+    
+    This is an organiser-driven atomic operation.
+    """
+    _assert_backroom(game, db)
+    team_a = _get_team(body.team_a_id, game.id, db)
+    team_b = _get_team(body.team_b_id, game.id, db)
+
+    try:
+        execute_inter_team_exchange(
+            db                 = db,
+            team_a             = team_a,
+            team_b             = team_b,
+            team_a_to_b_assets = body.team_a_to_b.dict(),
+            team_b_to_a_assets = body.team_b_to_a.dict(),
+            notes              = body.notes,
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(400, f"Exchange failed: {str(e)}")
+
+    db.commit()
+    return OkResponse(message=f"Exchange between {team_a.name} and {team_b.name} executed.")
 
 @router.post("/inter-team", response_model=LoanCreatedOut, status_code=201,
              summary="Record an inter-team loan negotiated offline.")
@@ -199,6 +233,7 @@ def create_inter_team_loan(
         borrower_team_id = borrower.id,
         lender_team_id   = lender.id,
         amount_per_cycle = amount_per_cycle,
+        principal        = body.principal,  # Pass principal
         notes            = body.notes,
     )
 
@@ -261,6 +296,7 @@ def create_gov_loan(
         borrower_team_id = borrower.id,
         lender_team_id   = None,            # None = government
         amount_per_cycle = amount_per_cycle,
+        principal        = body.principal,  # Pass principal
         notes            = body.notes or f"Gov loan: {body.principal:.0f} CU",
     )
 

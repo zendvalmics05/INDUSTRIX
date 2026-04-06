@@ -44,6 +44,11 @@ class Inventory(Base):
     drone_stock = Column(ARRAY(Integer), nullable=False,
                           default=lambda: [0] * 101)
 
+    # Resource stocks — generic raw materials
+    minerals  = Column(Float, nullable=False, default=0.0)
+    chemicals = Column(Float, nullable=False, default=0.0)
+    power     = Column(Float, nullable=False, default=0.0)
+
     brand_score = Column(Float,           nullable=False, default=50.0)
     brand_tier  = Column(SAEnum(BrandTier), nullable=False,
                           default=BrandTier.FAIR)

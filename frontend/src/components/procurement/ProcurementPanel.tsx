@@ -20,7 +20,6 @@ export default function ProcurementPanel() {
     selectSource,
     updateProcurement,
     totalCost,
-    funds,
     fetchSources,
     submitProcurement,
     fetchCostEstimate,
@@ -53,13 +52,34 @@ export default function ProcurementPanel() {
     await fetchCostEstimate()
   }
 
+  // Provisioning state
+  const { provisionResources } = useGameStore()
+  const [provMinerals, setProvMinerals] = useState(0)
+  const [provChemicals, setProvChemicals] = useState(0)
+  const [provPower, setProvPower] = useState(0)
+
+  const handleProvision = async () => {
+    try {
+      await provisionResources({
+        minerals: provMinerals,
+        chemicals: provChemicals,
+        power: provPower
+      })
+      // Clear inputs on success
+      setProvMinerals(0)
+      setProvChemicals(0)
+      setProvPower(0)
+      alert("Resources provisioned successfully.")
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Provisioning failed.")
+    }
+  }
+
   // Map click handler
   const handleMapSelect = (site: any) => {
     if (!site) return
     selectSource(site)
   }
-
-  console.log("sources",sources)
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -82,7 +102,7 @@ export default function ProcurementPanel() {
       </div>
 
       {/* 🔹 Map + Controls */}
-      <div className="grid grid-cols-[2fr_1fr] gap-4 h-[500px]">
+      <div className="grid grid-cols-[2fr_1fr] gap-4 h-[560px]">
 
         {/* 🌍 Map */}
         <div className="h-full min-h-[400px]">
@@ -94,67 +114,113 @@ export default function ProcurementPanel() {
           />
         </div>
 
-        {/* 📦 Right Panel */}
-        <div className="flex flex-col gap-4 border border-white/10 p-4 rounded">
+        {/* 📦 Right Panel Container */}
+        <div className="flex flex-col gap-4 overflow-y-auto pr-2">
+          
+          {/* 📦 Order Panel */}
+          <div className="flex flex-col gap-4 border border-white/10 p-4 rounded bg-black/40">
+            <h3 className="text-sm font-bold text-purple-400">RAW MATERIAL ORDER</h3>
+            
+            {/* Supplier Info */}
+            {selectedSource ? (
+              <div>
+                <h2 className="text-base font-bold text-white">
+                  {selectedSource.name}
+                </h2>
+                <p className="text-xs text-white/50">
+                  {selectedSource.component}
+                </p>
 
-          {/* Supplier Info */}
-          {selectedSource ? (
-            <div>
-              <h2 className="text-lg font-bold text-white">
-                {selectedSource.name}
-              </h2>
-              <p className="text-sm text-white/50">
-                {selectedSource.component}
-              </p>
+                <div className="mt-2 text-xs space-y-1">
+                  <div>Quality: {selectedSource.quality_mean}</div>
+                  <div>Consistency: {selectedSource.quality_sigma}</div>
+                  <div>Cost/unit: {selectedSource.base_cost_per_unit} CU</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-white/40 text-xs">
+                Select a supplier from map
+              </div>
+            )}
 
-              <div className="mt-2 text-sm space-y-1">
-                <div>Quality: {selectedSource.quality_mean}</div>
-                <div>Consistency: {selectedSource.quality_sigma}</div>
-                <div>Cost/unit: {selectedSource.base_cost_per_unit} CU</div>
+            {/* Controls */}
+            <div className="flex flex-col gap-2">
+              <input
+                type="number"
+                placeholder="Quantity"
+                className="input-cyber py-1 text-sm text-white"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              />
+
+              <select
+                className="input-cyber py-1 text-sm bg-black text-white"
+                value={transport}
+                onChange={(e) =>
+                  setTransport(e.target.value as 'air' | 'rail' | 'road')
+                }
+              >
+                <option value="road">Road (cheap, risky)</option>
+                <option value="rail">Rail (balanced)</option>
+                <option value="air">Air (expensive, safe)</option>
+              </select>
+
+              <button className="btn-cyber py-1 text-sm" onClick={handleConfirm}>
+                Confirm Order
+              </button>
+            </div>
+
+            {/* Cost Summary */}
+            <div className="mt-2 border-t border-white/10 pt-2 text-xs">
+              <div>Total Order: {Math.round(totalCost)} CU</div>
+            </div>
+          </div>
+
+          {/* 📦 Provisioning Panel */}
+          <div className="flex flex-col gap-3 border border-purple-500/30 p-4 rounded bg-purple-900/10">
+            <h3 className="text-sm font-bold text-purple-400">STATE PROVISIONING</h3>
+            <p className="text-[10px] text-white/40 uppercase tracking-wider">Purchase Utility Resources from State</p>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] w-16 text-white/60">MINERALS</span>
+                <input
+                  type="number"
+                  className="input-cyber flex-1 py-1 text-xs text-white"
+                  value={provMinerals}
+                  onChange={(e) => setProvMinerals(Number(e.target.value))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] w-16 text-white/60">CHEMICALS</span>
+                <input
+                  type="number"
+                  className="input-cyber flex-1 py-1 text-xs text-white"
+                  value={provChemicals}
+                  onChange={(e) => setProvChemicals(Number(e.target.value))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] w-16 text-white/60">POWER</span>
+                <input
+                  type="number"
+                  className="input-cyber flex-1 py-1 text-xs text-white"
+                  value={provPower}
+                  onChange={(e) => setProvPower(Number(e.target.value))}
+                />
               </div>
             </div>
-          ) : (
-            <div className="text-white/40 text-sm">
-              Select a supplier from map
-            </div>
-          )}
 
-          {/* Controls */}
-          <div className="flex flex-col gap-2">
-            <input
-              type="number"
-              placeholder="Quantity"
-              className="input-cyber"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            />
-
-            <select
-              className="input-cyber"
-              value={transport}
-              onChange={(e) =>
-                setTransport(e.target.value as 'air' | 'rail' | 'road')
-              }
+            <button 
+              className="btn-cyber py-1 text-xs border-purple-500/50 hover:bg-purple-600/20"
+              onClick={handleProvision}
             >
-              <option value="road">Road (cheap, risky)</option>
-              <option value="rail">Rail (balanced)</option>
-              <option value="air">Air (expensive, safe)</option>
-            </select>
-
-            <button className="btn-cyber" onClick={handleConfirm}>
-              Confirm Order
+              PROVISION ASSETS
             </button>
           </div>
 
-          {/* Cost Summary */}
-          <div className="mt-4 border-t border-white/10 pt-3 text-sm">
-            <div>Total Cost: {Math.round(totalCost)} CU</div>
-            <div className="text-white/50">
-              Funds Left: {Math.round(funds - totalCost)} CU
-            </div>
-          </div>
         </div>
       </div>
     </div>
   )
-}
+}

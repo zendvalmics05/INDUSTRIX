@@ -12,11 +12,14 @@ from typing import Dict, List
 from core.auth import verify_team
 from core.database import get_db
 from core.enums import CyclePhase
-from core.config import TRANSPORT
+from core.config import TRANSPORT, RESOURCE_COSTS
 from models.game import Cycle, Game, Team, RawMaterialSource
-from models.procurement import MemoryProcurement
+from models.procurement import MemoryProcurement, Inventory
 from schemas.common import OkResponse
-from schemas.procurement import ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut, TransportOut, CostProjectionOut
+from schemas.procurement import (
+    ProcurementMemoryOut, ProcurementPatch, RawMaterialSourceOut,
+    TransportOut, CostProjectionOut, ProvisionRequest, ProvisionOut
+)
 
 router = APIRouter(prefix="/team/procurement", tags=["team"])
 
@@ -163,3 +166,44 @@ def project_costs(
         total_cost += final_total
         
     return CostProjectionOut(total_cost=round(total_cost, 2), per_component=summary)
+
+@router.post("/provision", response_model=ProvisionOut)
+def provision_resources(
+    body: ProvisionRequest,
+    team: Team    = Depends(verify_team),
+    db:   Session = Depends(get_db),
+):
+    """
+    Purchase minerals, chemicals, or power from the state.
+    Available only during PROCUREMENT_OPEN.
+    """
+    _assert_phase(db, team, CyclePhase.PROCUREMENT_OPEN)
+
+    inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
+    if inv is None:
+        raise HTTPException(500, "Team inventory not initialised.")
+
+    total_cost = (
+        body.minerals * RESOURCE_COSTS["minerals"] +
+        body.chemicals * RESOURCE_COSTS["chemicals"] +
+        body.power * RESOURCE_COSTS["power"]
+    )
+
+    if inv.funds < total_cost:
+        raise HTTPException(400, "Insufficient funds for resource provisioning.")
+
+    inv.funds -= total_cost
+    inv.minerals += body.minerals
+    inv.chemicals += body.chemicals
+    inv.power += body.power
+
+    db.commit()
+
+    return ProvisionOut(
+        message="Resources provisioned from the state.",
+        cost=round(total_cost, 2),
+        minerals=inv.minerals,
+        chemicals=inv.chemicals,
+        power=inv.power,
+        funds_left=inv.funds,
+    )

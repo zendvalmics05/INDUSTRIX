@@ -87,3 +87,20 @@ class CostProjectionOut(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class ProvisionRequest(BaseModel):
+    minerals:  float = Field(0.0, ge=0)
+    chemicals: float = Field(0.0, ge=0)
+    power:     float = Field(0.0, ge=0)
+
+class ProvisionOut(BaseModel):
+    message:    str
+    cost:       float
+    minerals:   float
+    chemicals:  float
+    power:      float
+    funds_left: float
+
+    model_config = {
+        "from_attributes": True
+    }

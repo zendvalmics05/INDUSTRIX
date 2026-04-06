@@ -476,6 +476,7 @@ def create_loan_events(
     borrower_team_id: int,
     lender_team_id:   Optional[int],  # None = government
     amount_per_cycle: float,
+    principal:        float,          # Added principal
     notes:            Optional[str] = None,
 ) -> List[Event]:
     """
@@ -484,6 +485,7 @@ def create_loan_events(
     during which interest is due.
     """
     events = []
+    # Interest cycles
     for cyc in db_cycles:
         ev = _make_event(
             db             = db,
@@ -500,6 +502,27 @@ def create_loan_events(
             notes          = notes,
         )
         events.append(ev)
+    
+    # Final repayment cycle (last cycle of interest + 1 or same if duration=1?)
+    # Usually principal is repaid in the LAST cycle of interest.
+    if db_cycles:
+        last_cyc = db_cycles[-1]
+        ev_rep = _make_event(
+            db             = db,
+            game_id        = game.id,
+            cycle_id       = last_cyc.id,
+            phase          = EventPhase.FINANCIAL,
+            event_type     = EventType.LOAN_REPAYMENT,
+            payload        = {
+                "amount":          round(principal, 2),
+                "lender_team_id":  lender_team_id,
+            },
+            target_team_id = borrower_team_id,
+            source_team_id = lender_team_id,
+            notes          = f"Principal Repayment: {notes}" if notes else "Principal Repayment",
+        )
+        events.append(ev_rep)
+
     db.flush()
     return events
 
@@ -705,3 +728,143 @@ def check_discovery_code(db: Session, game_id: int, code: str) -> Optional[Event
         )
         .first()
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Inter-Team Generic Exchange
+# ─────────────────────────────────────────────────────────────────────────────
+
+def execute_inter_team_exchange(
+    db: Session,
+    team_a,
+    team_b,
+    team_a_to_b_assets: Dict,
+    team_b_to_a_assets: Dict,
+    notes: Optional[str] = None,
+):
+    """
+    Executes a bidirectional swap of any assets between A and B.
+    Validates ownership and handles machine slot remapping.
+    """
+    from models.procurement import Inventory, ComponentSlot, Machine
+    
+    inv_a: Inventory = db.query(Inventory).filter(Inventory.team_id == team_a.id).one()
+    inv_b: Inventory = db.query(Inventory).filter(Inventory.team_id == team_b.id).one()
+
+    def transfer_assets(src_inv, dst_inv, assets, src_team_name, dst_team_name):
+        # 1. Generic Resources
+        for res in ["funds", "minerals", "chemicals", "power"]:
+            val = assets.get(res, 0)
+            if val > 0:
+                setattr(src_inv, res, round(getattr(src_inv, res) - val, 2))
+                setattr(dst_inv, res, round(getattr(dst_inv, res) + val, 2))
+
+        # 2. Drone Stock (array swap)
+        drone_transfer = assets.get("drone_stock", [0]*101)
+        if sum(drone_transfer) > 0:
+            src_stock = list(src_inv.drone_stock)
+            dst_stock = list(dst_inv.drone_stock)
+            for g in range(101):
+                take = min(src_stock[g], drone_transfer[g])
+                src_stock[g] -= take
+                dst_stock[g] += take
+            src_inv.drone_stock = src_stock
+            dst_inv.drone_stock = dst_stock
+
+        # 3. Component Slots (raw/finished)
+        comp_stock = assets.get("component_stock", {})
+        for comp_type, values in comp_stock.items():
+            src_slot = db.query(ComponentSlot).filter(
+                ComponentSlot.team_id == src_inv.team_id,
+                ComponentSlot.component == comp_type
+            ).one()
+            dst_slot = db.query(ComponentSlot).filter(
+                ComponentSlot.team_id == dst_inv.team_id,
+                ComponentSlot.component == comp_type
+            ).one()
+            
+            raw_t = values.get("raw", [0]*101)
+            fin_t = values.get("finished", [0]*101)
+            
+            # Raw
+            s_raw = list(src_slot.raw_stock)
+            d_raw = list(dst_slot.raw_stock)
+            for g in range(101):
+                take = min(s_raw[g], raw_t[g])
+                s_raw[g] -= take
+                d_raw[g] += take
+            src_slot.raw_stock = s_raw
+            dst_slot.raw_stock = d_raw
+            
+            # Finished
+            s_fin = list(src_slot.finished_stock)
+            d_fin = list(dst_slot.finished_stock)
+            for g in range(101):
+                take = min(s_fin[g], fin_t[g])
+                s_fin[g] -= take
+                d_fin[g] += take
+            src_slot.finished_stock = s_fin
+            dst_slot.finished_stock = d_fin
+
+        # 4. R&D Levels
+        rnd_data = assets.get("rnd_levels", {})
+        for comp_type, focus_deltas in rnd_data.items():
+            dst_slot = db.query(ComponentSlot).filter(
+                ComponentSlot.team_id == dst_inv.team_id,
+                ComponentSlot.component == comp_type
+            ).one()
+            # Simple increment, src doesn't "lose" bytes usually in knowledge trade
+            # but user said "exchange", so we might decrement src or just grant to dst.
+            # Usually R&D levels are non-destructive grants.
+            for focus, delta in focus_deltas.items():
+                attr = f"rnd_{focus}"
+                if hasattr(dst_slot, attr):
+                    setattr(dst_slot, attr, max(0, getattr(dst_slot, attr) + delta))
+
+        # 5. Machines
+        machine_ids = assets.get("machines", [])
+        for mid in machine_ids:
+            m = db.query(Machine).filter(Machine.id == mid, Machine.team_id == src_inv.team_id).first()
+            if m:
+                # Find target slot for this component
+                target_slot = db.query(ComponentSlot).filter(
+                    ComponentSlot.team_id == dst_inv.team_id,
+                    ComponentSlot.component == m.component
+                ).one()
+                m.team_id = dst_inv.team_id
+                m.slot_id = target_slot.id
+                # Condition is carried over as per user requirement
+
+    # Execute both directions
+    transfer_assets(inv_a, inv_b, team_a_to_b_assets, team_a.name, team_b.name)
+    transfer_assets(inv_b, inv_a, team_b_to_a_assets, team_b.name, team_a.name)
+
+    # Create Notifications/Events for both teams
+    # We use source_team_id = OTHER team, target_team_id = THIS team
+    # so they see who they traded with.
+    from models.game import Cycle
+    
+    # Use the game's current cycle for the event record
+    cycle_id = team_a.game.current_cycle.id if hasattr(team_a.game, "current_cycle") else None
+    if not cycle_id:
+        # Fallback to the latest cycle in the game
+        latest_cycle = db.query(Cycle).filter(Cycle.game_id == team_a.game_id).order_by(Cycle.cycle_number.desc()).first()
+        cycle_id = latest_cycle.id if latest_cycle else None
+
+    if cycle_id:
+        _make_event(
+            db=db, game_id=team_a.game_id, cycle_id=cycle_id,
+            phase=EventPhase.FINANCIAL, event_type=EventType.ASSET_EXCHANGE,
+            payload={"notes": notes, "direction": "inbound", "from": team_a.name},
+            target_team_id=team_b.id, source_team_id=team_a.id,
+            notes=notes
+        )
+        _make_event(
+            db=db, game_id=team_a.game_id, cycle_id=cycle_id,
+            phase=EventPhase.FINANCIAL, event_type=EventType.ASSET_EXCHANGE,
+            payload={"notes": notes, "direction": "inbound", "from": team_b.name},
+            target_team_id=team_a.id, source_team_id=team_b.id,
+            notes=notes
+        )
+
+    db.flush()

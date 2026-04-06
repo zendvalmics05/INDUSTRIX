@@ -274,6 +274,7 @@ class EventType(str, enum.Enum):
 
     # Financial
     LOAN_INTEREST = "loan_interest"
+    LOAN_REPAYMENT = "loan_repayment"
     ARBITRARY_FINE = "arbitrary_fine"
     TAX_EVASION_REFUND = "tax_evasion_refund"
     GLOBAL_MARKET_SHIFT = "global_market_shift"
@@ -282,6 +283,9 @@ class EventType(str, enum.Enum):
     TALENT_THEFT = "talent_theft"
     RESOURCE_BLOCKADE = "resource_blockade"
     ESPIONAGE_DATA = "espionage_data"
+
+    # Inter-Team Generic
+    ASSET_EXCHANGE = "asset_exchange"
 
 
 class EventStatus(str, enum.Enum):
@@ -344,3 +348,4 @@ class NotificationType(str, enum.Enum):
     BENEFIT             = "benefit"             # Tax refund, grant, boost
     INTEL_REPORT        = "intel_report"        # Espionage results (BLUE)
     OPERATIONAL_LOSS    = "operational_loss"    # Loss of workers/R&D (BLUE target)
+    ASSET_EXCHANGE      = "asset_exchange"      # Intra-company trade result

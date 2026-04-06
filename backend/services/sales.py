@@ -498,6 +498,19 @@ def _resolve_financial_events(
                 )
                 if lender_inv:
                     lender_inv.funds += amount
+        elif ev.event_type == EventType.LOAN_REPAYMENT:
+            amount    = p.get("amount", 0.0)
+            lender_id = p.get("lender_team_id")
+            inventory.funds -= amount
+            adjustment      -= amount
+            if lender_id:
+                lender_inv = (
+                    db.query(Inventory)
+                    .filter(Inventory.team_id == lender_id)
+                    .first()
+                )
+                if lender_inv:
+                    lender_inv.funds += amount
         elif ev.event_type == EventType.ARBITRARY_FINE:
             fine             = p.get("fine_amount", 0.0)
             inventory.funds -= fine

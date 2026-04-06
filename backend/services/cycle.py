@@ -96,6 +96,7 @@ def add_team(db: Session, game: Game, name: str, pin: str) -> Team:
         morale            = 60.0,
         has_gov_loan      = False,
         cumulative_profit = 0.0,
+        block_probability = 0.0,
     )
     db.add(inv)
 

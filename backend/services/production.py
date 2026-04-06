@@ -48,6 +48,8 @@ from core.config import (
     STRIKE_SURVIVAL, UNDERSTAFFING_MORALE_PENALTY,
     WAGE_COST_PER_WORKER, WAGE_MORALE_DELTA,
     AUTOMATION_UPGRADE_COST,
+    RESOURCE_CONSUMPTION, POWER_BASE_LOAD,
+    POWER_SHORTAGE_THROUGHPUT_MULT, CHEMICAL_SHORTAGE_GRADE_PENALTY,
 )
 from core.enums import (
     AutomationLevel, ComponentType,
@@ -456,6 +458,52 @@ def resolve_production(
     if required_labour > 0 and actual_labour < required_labour:
         labour_factor = actual_labour / required_labour
 
+    # ── Resource Management ───────────────────────────────────────────────────
+    # 1. Base power load
+    inventory.power = max(0.0, inventory.power - POWER_BASE_LOAD)
+    
+    power_shortage = inventory.power <= 0
+    resource_scale = 1.0
+    
+    # 2. Calculate total required minerals and chemicals for the requested production
+    total_minerals_needed = 0.0
+    total_chemicals_needed = 0.0
+    
+    for comp_val, slot in slots.items():
+        comp_dec = decisions.get(comp_val, {})
+        units_to_produce = comp_dec.get("units_to_produce")
+        
+        # We need an estimate of requested units. If None, it uses full throughput.
+        # This is a bit tricky because throughput depends on power status.
+        machines = all_machines.get(comp_val, [])
+        if not machines: continue
+        
+        tp_base = total_throughput(machines) * labour_factor * production_survival
+        if power_shortage:
+            tp_base *= POWER_SHORTAGE_THROUGHPUT_MULT
+        
+        requested = int(tp_base) if units_to_produce is None else min(units_to_produce, int(tp_base))
+        
+        # R&D yield reduction applies to resource consumption too
+        yield_reduction = slot.rnd_yield * RND_YIELD_BONUS
+        effective_req = requested * (1.0 - yield_reduction)
+        
+        rates = RESOURCE_CONSUMPTION.get(comp_val, {"minerals": 0, "chemicals": 0, "power": 0})
+        total_minerals_needed += effective_req * rates["minerals"]
+        total_chemicals_needed += effective_req * rates["chemicals"]
+        # Power for production is consumed per unit as well
+        inventory.power = max(0.0, inventory.power - (effective_req * rates["power"]))
+
+    # 3. Scaling if minerals are insufficient
+    if total_minerals_needed > inventory.minerals and total_minerals_needed > 0:
+        resource_scale = inventory.minerals / total_minerals_needed
+        
+    chemical_penalty_active = False
+    if total_chemicals_needed > inventory.chemicals and total_chemicals_needed > 0:
+        chemical_penalty_active = True
+        # If minerals are also missing, we prioritize mineral scaling for volume
+        # and just apply a quality hit for chemicals.
+
     # ── Per-component processing ──────────────────────────────────────────────
     component_summaries: Dict = {}
     total_maint_cost    = 0.0
@@ -549,8 +597,15 @@ def resolve_production(
 
         # ── Compute throughput and output parameters ──────────────────────────
         tp_total  = int(total_throughput(machines) * labour_factor * production_survival)
+        if power_shortage:
+            tp_total = int(tp_total * POWER_SHORTAGE_THROUGHPUT_MULT)
+            
         eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality)
         eff_grade += fast_quality_bonus   # bonus only if a machine was bought
+        
+        if chemical_penalty_active:
+            eff_grade -= CHEMICAL_SHORTAGE_GRADE_PENALTY
+
         sigma     = _compute_sigma(automation_level, inventory.skill_level,
                                     slot.rnd_consistency)
         yield_reduction = slot.rnd_yield * RND_YIELD_BONUS
@@ -561,11 +616,19 @@ def resolve_production(
             requested = tp_total
         else:
             requested = max(0, min(units_to_produce, tp_total))
+            
+        # Apply resource scale (minerals)
+        requested = int(requested * resource_scale)
 
         # ── Consume raw stock ─────────────────────────────────────────────────
         slot.raw_stock, consumed, rm_mean = _consume_raw_stock(
             slot.raw_stock, requested, yield_reduction
         )
+        
+        # ── Consume resources from inventory ──────────────────────────────────
+        rates = RESOURCE_CONSUMPTION.get(comp_val, {"minerals": 0, "chemicals": 0, "power": 0})
+        inventory.minerals = max(0.0, inventory.minerals - (consumed * rates["minerals"]))
+        inventory.chemicals = max(0.0, inventory.chemicals - (consumed * rates["chemicals"]))
 
         # ── Draw finished component output ────────────────────────────────────
         blended_mean = RM_WEIGHT * rm_mean + (1 - RM_WEIGHT) * eff_grade
@@ -585,6 +648,8 @@ def resolve_production(
             "rm_consumed":      consumed,
             "fin_stock_total":  sum(slot.finished_stock[1:]),
             "maintenance":      maintenance,
+            "resource_error": "Insufficient Minerals" if resource_scale < 0.99 else None,
+            "power_error": "Power Shortage (Low Throughput)" if power_shortage else None,
         }
 
     # ── Wages ─────────────────────────────────────────────────────────────────

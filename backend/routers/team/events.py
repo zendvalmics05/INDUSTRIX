@@ -171,6 +171,94 @@ def get_notifications(
                 payload=ev.payload
             ))
 
+    # 5. Blue Deals - Intel Reports (Buyer View)
+    intel_reports = (
+        db.query(Event)
+        .filter(
+            Event.source_team_id == team.id,
+            Event.cycle_id.in_(cycle_ids),
+            Event.status == EventStatus.APPLIED,
+            Event.event_type == EventType.ESPIONAGE_DATA
+        )
+        .all()
+    )
+    for ev in intel_reports:
+        notifications.append(NotificationOut(
+            id=f"intel-{ev.id}",
+            cycle_number=ev.cycle.cycle_number,
+            type=NotificationType.INTEL_REPORT,
+            title="Intelligence Bureau: Reconnaissance Report",
+            message=f"Confidential data intercepted regarding target organization. Decryption successful.",
+            severity="info",
+            payload=ev.payload
+        ))
+
+    # 6. Blue Deals - Operational Loss (Victim View)
+    losses = (
+        db.query(Event)
+        .filter(
+            Event.target_team_id == team.id,
+            Event.cycle_id.in_(cycle_ids),
+            Event.status == EventStatus.APPLIED,
+            Event.event_type.in_([EventType.TALENT_THEFT, EventType.RESOURCE_BLOCKADE])
+        )
+        .all()
+    )
+    for ev in losses:
+        desc = ev.event_type.replace("_", " ").title()
+        notifications.append(NotificationOut(
+            id=f"loss-{ev.id}",
+            cycle_number=ev.cycle.cycle_number,
+            type=NotificationType.OPERATIONAL_LOSS,
+            title=f"Operational Disturbance: {desc}",
+            message=f"Anomalies detected in internal operations. Asset reconciliation required.",
+            severity="error",
+            payload=ev.payload
+        ))
+
+    # 7. Asset Exchanges (Mutual View)
+    exchanges = (
+        db.query(Event)
+        .filter(
+            Event.target_team_id == team.id,
+            Event.cycle_id.in_(cycle_ids),
+            Event.event_type == EventType.ASSET_EXCHANGE
+        )
+        .all()
+    )
+    for ev in exchanges:
+        origin = ev.payload.get("from", "External")
+        notifications.append(NotificationOut(
+            id=f"exch-{ev.id}",
+            cycle_number=ev.cycle.cycle_number,
+            type=NotificationType.ASSET_EXCHANGE,
+            title="Intra-Company Asset Transfer",
+            message=f"Assets received from {origin}. Protocol: {ev.payload.get('direction', 'unknown')}.",
+            severity="info",
+            payload=ev.payload
+        ))
+
+    # 8. Loan Repayments
+    repayments = (
+        db.query(Event)
+        .filter(
+            Event.target_team_id == team.id,
+            Event.cycle_id.in_(cycle_ids),
+            Event.event_type == EventType.LOAN_REPAYMENT
+        )
+        .all()
+    )
+    for ev in repayments:
+        notifications.append(NotificationOut(
+            id=f"repr-{ev.id}",
+            cycle_number=ev.cycle.cycle_number,
+            type=NotificationType.ASSET_EXCHANGE, # reuse or use info
+            title="Debt Reconciliation",
+            message=f"Automatic repayment processed. Principal and interest updated.",
+            severity="info",
+            payload=ev.payload
+        ))
+
     # Sort by cycle number desc, then id desc
     notifications.sort(key=lambda x: (x.cycle_number, x.id), reverse=True)
     return notifications
@@ -183,9 +271,9 @@ def get_backroom_status(
 ):
     inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
     return BackroomStatusOut(
-        discovery_boost_active=inv.discovery_boost_active,
-        boost_cost=DISCOVERY_BOOST_COST,
-        boost_probability=DISCOVERY_BOOST_PROBABILITY
+        discovery_boost_active=inv.block_probability > 0,
+        boost_cost=0.0, # Now dynamic/manual
+        boost_probability=inv.block_probability
     )
 
 
@@ -194,17 +282,7 @@ def buy_intel(
     db: Session = Depends(get_db),
     team: Team = Depends(get_current_team)
 ):
-    """Pay the government to increase discovery chance for any attack on us."""
-    inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
-    
-    if inv.funds < DISCOVERY_BOOST_COST:
-        raise HTTPException(status_code=400, detail="Insufficient funds for Intelligence report.")
-    
-    if inv.discovery_boost_active:
-        raise HTTPException(status_code=400, detail="Intelligence protocol already active for this cycle.")
-    
-    inv.funds -= DISCOVERY_BOOST_COST
-    inv.discovery_boost_active = True
-    db.commit()
-    
-    return {"message": "Intelligence protocol activated. Standard discovery rates boosted to 85%."}
+    raise HTTPException(
+        status_code=403, 
+        detail="Standard security autonomous activation disabled. Contact your Government Liaison for custom protocol pricing."
+    )

@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useGameStore, useInventoryStore } from '../store';
+import { useEffect, useMemo } from 'react';
+import { useGameStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import {
   ProcurementCard,
@@ -9,8 +9,6 @@ import {
 } from '../components/PhaseSummaries';
 import {
   FiTrendingUp,
-  FiChevronDown,
-  FiChevronUp,
   FiAlertTriangle,
   FiCheckCircle,
   FiShield,
@@ -83,6 +81,8 @@ const NotificationItem = ({ notification }: { notification: any }) => {
           {notification.type === 'discovery_self' && <FiLock size={14} />}
           {notification.type === 'discovery_thwarted' && <FiShield size={14} className="text-success" />}
           {notification.type === 'benefit' && <FiCheckCircle size={14} className="text-success" />}
+          {notification.type === 'intel_report' && <FiEye size={14} className="text-primary animate-pulse" />}
+          {notification.type === 'operational_loss' && <FiAlertTriangle size={14} className="text-error" />}
           <span className="font-display text-sm uppercase tracking-tight truncate font-bold">{notification.title}</span>
         </div>
         <div className="flex flex-col items-end flex-shrink-0 ml-2">
@@ -111,7 +111,11 @@ const NotificationItem = ({ notification }: { notification: any }) => {
             <div key={k} className="bg-white/5 px-2 py-1 rounded flex flex-col">
               <span className="text-[8px] uppercase opacity-40 tracking-widest truncate">{k.replace(/_/g, ' ')}</span>
               <span className="text-[10px] font-mono font-bold truncate">
-                {typeof v === 'number' ? v.toLocaleString() : String(v)}
+                {typeof v === 'object' && v !== null 
+                  ? JSON.stringify(v) 
+                  : typeof v === 'number' 
+                    ? v.toLocaleString() 
+                    : String(v)}
               </span>
             </div>
           ))}
@@ -126,10 +130,6 @@ const NotificationItem = ({ notification }: { notification: any }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const BuyIntelCard = () => {
   const status = useEventsStore(s => s.backroomStatus);
-  const buyIntel = useEventsStore(s => s.buyIntel);
-  const loading = useEventsStore(s => s.loadingNotifications);
-  const funds = useInventoryStore(s => s.funds);
-  const [confirming, setConfirming] = useState(false);
 
   if (!status) return null;
 
@@ -161,33 +161,23 @@ const BuyIntelCard = () => {
       </div>
 
       <p className="text-xs font-mono opacity-70 mb-4 leading-tight">
-        Activate emergency government surveillance to increase the discovery probability of any backroom deal targeting your facility to <span className="text-primary font-bold">{status.boost_probability * 100}%</span>.
+        Activate custom government security protocols to increase the discovery probability of any backroom deal targeting your facility.
+        {status.discovery_boost_active && (
+          <span className="block mt-2 text-primary font-bold">CURRENT PROTECTION: {status.boost_probability * 100}%</span>
+        )}
       </p>
 
       {status.discovery_boost_active ? (
-        <div className="flex items-center space-x-2 text-[9px] font-mono text-primary/80 uppercase tracking-widest">
+        <div className="flex items-center space-x-2 text-[9px] font-mono text-primary/80 uppercase tracking-widest bg-primary/10 p-3 border border-primary/20">
           <FiShield size={10} />
-          <span>Facility Hardened against Sabotage</span>
+          <span>Security Protocol Active: Hostile Traces Heightened</span>
         </div>
       ) : (
-        <button
-          onClick={() => confirming ? (buyIntel(), setConfirming(false)) : setConfirming(true)}
-          onMouseLeave={() => setConfirming(false)}
-          disabled={loading || funds < status.boost_cost}
-          className={`w-full py-3 font-display text-sm uppercase tracking-widest transition-all border ${
-            funds < status.boost_cost
-              ? 'border-outline-variant text-on-surface-variant opacity-40 cursor-not-allowed'
-              : confirming 
-                ? 'bg-primary text-on-primary border-primary animate-pulse'
-                : 'border-primary text-primary hover:bg-primary/10 hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]'
-          }`}
-        >
-          {funds < status.boost_cost 
-            ? 'Insufficient Liquidity' 
-            : confirming 
-              ? 'Confirm Authorization?' 
-              : 'Authorize Surveillance'}
-        </button>
+        <div className="border border-outline-variant/30 p-4 text-[10px] font-mono text-center space-y-2 opacity-60">
+          <FiLock className="mx-auto mb-1" size={16} />
+          <div className="uppercase tracking-widest">Protocol Offline</div>
+          <p className="text-[9px] leading-tight">Standard autonomous activation is DISABLED. Negotiate custom protection rates with the Government Liaison in the Backroom.</p>
+        </div>
       )}
     </div>
   );
