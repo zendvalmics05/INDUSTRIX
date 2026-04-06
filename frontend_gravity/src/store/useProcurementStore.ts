@@ -159,7 +159,10 @@ export const useProcurementStore = create<ProcurementState>((set, get) => ({
               newIsBuying[comp] = merged[comp].quantity > 0;
             }
           });
-          set({ decisions: merged, initialDecisions: merged, isBuying: newIsBuying });
+          set({ decisions: merged, initialDecisions: JSON.parse(JSON.stringify(merged)), isBuying: newIsBuying });
+          
+          // CRITICAL: Trigger projection calculation so the Fund Utilisation and Global Spend are not stuck at 0
+          get().fetchProjectedCosts();
         }
       }
     } catch (err) {

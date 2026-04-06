@@ -41,8 +41,6 @@ class ProcurementPatch(BaseModel):
 class RawMaterialSourceOut(BaseModel):
     """
     One supplier row shown to teams during PROCUREMENT_OPEN.
-    quality_mean and quality_sigma are shown so teams can make
-    informed decisions about quality/cost trade-offs.
     is_active is always True here (inactive sources are filtered out).
     """
     id: int
@@ -83,23 +81,6 @@ class TransportOut(BaseModel):
 class CostProjectionOut(BaseModel):
     total_cost: float
     per_component: Dict[str, dict]
-
-    model_config = {
-        "from_attributes": True
-    }
-
-class ProvisionRequest(BaseModel):
-    minerals:  float = Field(0.0, ge=0)
-    chemicals: float = Field(0.0, ge=0)
-    power:     float = Field(0.0, ge=0)
-
-class ProvisionOut(BaseModel):
-    message:    str
-    cost:       float
-    minerals:   float
-    chemicals:  float
-    power:      float
-    funds_left: float
 
     model_config = {
         "from_attributes": True

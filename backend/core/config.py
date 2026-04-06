@@ -275,32 +275,6 @@ DEFAULT_MARKET_FACTIONS: list = [
     },
 ]
 
-# ── Resources ─────────────────────────────────────────────────────────────────
-# Costs for State Provisioning (per unit)
-RESOURCE_COSTS: Dict[str, float] = {
-    "minerals":  50.0,
-    "chemicals": 120.0,
-    "power":     15.0,
-}
-
-# Fixed power overhead per team per cycle
-POWER_BASE_LOAD: float = 100.0
-
-# Resource consumption per component unit produced
-# {component_type: {minerals, chemicals, power}}
-RESOURCE_CONSUMPTION: Dict[str, Dict[str, float]] = {
-    "airframe":         {"minerals": 5.0, "chemicals": 2.0, "power": 10.0},
-    "propulsion":       {"minerals": 4.0, "chemicals": 3.0, "power": 15.0},
-    "avionics":         {"minerals": 2.0, "chemicals": 5.0, "power": 12.0},
-    "fire_suppression": {"minerals": 3.0, "chemicals": 6.0, "power": 8.0},
-    "sensing_safety":   {"minerals": 1.0, "chemicals": 4.0, "power": 10.0},
-    "battery":          {"minerals": 6.0, "chemicals": 4.0, "power": 20.0},
-}
-
-# Penalty for 0 power (throughput multiplier)
-POWER_SHORTAGE_THROUGHPUT_MULT: float = 0.2
-# Penalty for chemical shortage (grade hit)
-CHEMICAL_SHORTAGE_GRADE_PENALTY: float = 12.0
 
 # Tier hierarchy for faction stepping-down logic.
 # When a faction's preferred tier is exhausted they step down by one.

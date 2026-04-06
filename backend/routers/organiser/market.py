@@ -93,20 +93,6 @@ def _get_faction(faction_id: int, game_id: int, db: Session) -> MarketFaction:
     return f
 
 
-def seed_market_factions(db: Session, game: Game) -> List[MarketFaction]:
-    """
-    Called once when a game is created.
-    Seeds the six default factions from config.
-    """
-    rows = []
-    for defn in DEFAULT_MARKET_FACTIONS:
-        faction = MarketFaction(game_id=game.id, **defn)
-        db.add(faction)
-        rows.append(faction)
-    db.flush()
-    return rows
-
-
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get(
@@ -222,6 +208,7 @@ def reset_factions(
     """
     db.query(MarketFaction).filter(MarketFaction.game_id == game.id).delete()
     db.flush()
+    from services.cycle import seed_market_factions
     rows = seed_market_factions(db, game)
     db.commit()
     return [db.query(MarketFaction).get(r.id) for r in rows]

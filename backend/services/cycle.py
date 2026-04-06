@@ -38,7 +38,26 @@ from services.deals import (
     create_events_for_pending_deals, roll_discovery,
 )
 from services.production import seed_machine
-from routers.organiser.market import seed_market_factions
+
+
+# ── Market Seed ────────────────────────────────────────────────────────────────
+
+from core.config import DEFAULT_MARKET_FACTIONS
+from models.market import MarketFaction
+from typing import List
+
+def seed_market_factions(db: Session, game: Game) -> List[MarketFaction]:
+    """
+    Called once when a game is created.
+    Seeds the six default factions from config.
+    """
+    rows = []
+    for defn in DEFAULT_MARKET_FACTIONS:
+        faction = MarketFaction(game_id=game.id, **defn)
+        db.add(faction)
+        rows.append(faction)
+    db.flush()
+    return rows
 
 
 # ── Game setup ────────────────────────────────────────────────────────────────
@@ -94,9 +113,6 @@ def add_team(db: Session, game: Game, name: str, pin: str) -> Team:
         workforce_size    = 50,
         skill_level       = 40.0,
         morale            = 60.0,
-        minerals          = 0.0,
-        chemicals         = 0.0,
-        power             = 0.0,
         has_gov_loan      = False,
         cumulative_profit = 0.0,
         block_probability = 0.0,
