@@ -88,7 +88,7 @@ def _mark_applied(events: List[Event]) -> None:
 # ── Per-component event helpers ───────────────────────────────────────────────
 
 def _get_component_modifiers(
-        events: List[Event], comp_val: str
+        events: List[Event], comp_val: str, source_name: str
 ) -> Dict:
     """
     Aggregate all event modifiers relevant to one component.
@@ -98,15 +98,26 @@ def _get_component_modifiers(
         mean_bonus          : float   added to source quality_mean
         cost_multiplier     : float   applied to total procurement cost
         loss_fraction       : float   fraction of units sabotaged to scrap
+        resource_blockade   : float   additional cost multiplier for specific source
     """
     mods = {
         "mean_bonus": 0.0,
         "cost_multiplier": 1.0,
         "loss_fraction": 0.0,
+        "resource_blockade": 1.0,
     }
 
     for ev in events:
         p = ev.payload or {}
+        
+        # 1. Source-specific blockade (can be global for team or specific component)
+        if ev.event_type == EventType.RESOURCE_BLOCKADE:
+            target_source = p.get("source_name")
+            if target_source and target_source == source_name:
+                mods["resource_blockade"] *= p.get("cost_multiplier", 1.0)
+            continue
+
+        # 2. Component filtering
         # Events without a "component" key are global for this team.
         # Events with a "component" key only apply to that component.
         if "component" in p and p["component"] != comp_val:
@@ -137,6 +148,7 @@ def _get_component_modifiers(
 def _draw_quality_array(
         mean: float, sigma: float, quantity: int,
         rng: np.random.Generator,
+        resource_blockade: float = 1.0,
 ) -> List[int]:
     """Draw `quantity` units from N(mean, sigma), return 101-int array."""
     if quantity <= 0:
@@ -290,7 +302,7 @@ def resolve_procurement(
             continue
 
             # Aggregate event modifiers for this component
-        mods = _get_component_modifiers(events, comp_val)
+        mods = _get_component_modifiers(events, comp_val, source.name)
 
         # ── Quality draw ──────────────────────────────────────────────────────
         effective_mean = source.quality_mean + mods["mean_bonus"] - t_cfg["mean_reduce"]
@@ -337,7 +349,7 @@ def resolve_procurement(
         cost = _compute_transport_cost(
             quantity, source.base_cost_per_unit,
             distance_km, transport,
-            mods["cost_multiplier"],
+            mods["cost_multiplier"] * mods["resource_blockade"],
         )
         total_cost += cost
 

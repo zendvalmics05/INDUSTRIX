@@ -11,6 +11,8 @@ import type {
   FinancesData,
   TransportOut,
   CostProjectionOut,
+  NotificationOut,
+  BackroomStatusOut,
 } from '../types';
 
 // Thin wrapper around backend endpoints. No hardcoded data.
@@ -160,6 +162,22 @@ export const teamApi = {
 
   getMarket: async (): Promise<{ factions: MarketFaction[] }> => {
     const { data } = await api.get<{ factions: MarketFaction[] }>('/team/market');
+    return data;
+  },
+
+  // Notifications & Backroom
+  getNotifications: async (): Promise<NotificationOut[]> => {
+    const { data } = await api.get<NotificationOut[]>('/team/events/notifications');
+    return data;
+  },
+
+  getBackroomStatus: async (): Promise<BackroomStatusOut> => {
+    const { data } = await api.get<BackroomStatusOut>('/team/events/backroom-status');
+    return data;
+  },
+
+  buyIntel: async () => {
+    const { data } = await api.post('/team/events/buy-intel');
     return data;
   }
 };

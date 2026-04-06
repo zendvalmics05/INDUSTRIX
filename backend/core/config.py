@@ -164,6 +164,8 @@ DEAL_DISCOVERY_DECAY:      float = 0.80
 DEAL_SIZE_DISCOVERY_RATE:  float = 0.02
 DEAL_REPEAT_STACK_RATE:    float = 0.08
 DEAL_FINE_MULTIPLIER:      float = 2.5
+DISCOVERY_BOOST_PROBABILITY: float = 0.85
+DISCOVERY_BOOST_COST:        float = 10_000.0
 
 DEAL_BRIBE_FLOOR: Dict[str, float] = {
     "red_supply_sabotage": 5_000, "red_price_inflation": 4_000,

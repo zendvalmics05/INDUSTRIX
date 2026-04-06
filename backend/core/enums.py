@@ -278,6 +278,11 @@ class EventType(str, enum.Enum):
     TAX_EVASION_REFUND = "tax_evasion_refund"
     GLOBAL_MARKET_SHIFT = "global_market_shift"
 
+    # Intelligence (BLUE) Resolve Events
+    TALENT_THEFT = "talent_theft"
+    RESOURCE_BLOCKADE = "resource_blockade"
+    ESPIONAGE_DATA = "espionage_data"
+
 
 class EventStatus(str, enum.Enum):
     PENDING = "pending"  # created, waiting to be consumed
@@ -314,6 +319,12 @@ class GovDealType(str, enum.Enum):
     GREEN_AUDIT_IMMUNITY = "green_audit_immunity"
     GREEN_QUALITY_WAIVER = "green_quality_waiver"
     GREEN_TAX_EVASION = "green_tax_evasion"
+    GREEN_SECURITY_PROTOCOL = "green_security_protocol"
+
+    # Blue (Intelligence/Manipulation)
+    BLUE_ESPIONAGE = "blue_espionage"
+    BLUE_TALENT_POACHING = "blue_talent_poaching"
+    BLUE_RESOURCE_BLOCKADE = "blue_resource_blockade"
 
 
 class GovDealStatus(str, enum.Enum):
@@ -321,3 +332,15 @@ class GovDealStatus(str, enum.Enum):
     APPLIED = "applied"
     DISCOVERED = "discovered"
     CANCELLED = "cancelled"
+
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+class NotificationType(str, enum.Enum):
+    SABOTAGE            = "sabotage"            # You were targeted
+    DISCOVERY_SELF      = "discovery_self"      # Your deal was caught
+    DISCOVERY_THWARTED  = "discovery_thwarted"  # Sabotage against you was cancelled
+    FINE                = "fine"                # Government fine
+    BENEFIT             = "benefit"             # Tax refund, grant, boost
+    INTEL_REPORT        = "intel_report"        # Espionage results (BLUE)
+    OPERATIONAL_LOSS    = "operational_loss"    # Loss of workers/R&D (BLUE target)

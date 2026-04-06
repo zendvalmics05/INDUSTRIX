@@ -1,29 +1,80 @@
 import { create } from 'zustand';
 import { teamApi } from '../api';
-import type { ProcurementSummary, ProductionSummary, SalesSummary } from '../types';
+import type { 
+  ProcurementSummary, 
+  ProductionSummary, 
+  SalesSummary, 
+  NotificationOut,
+  BackroomStatusOut
+} from '../types';
 
 interface EventsState {
   procurement: ProcurementSummary | null;
   production: ProductionSummary | null;
   sales: SalesSummary | null;
+  notifications: NotificationOut[];
+  backroomStatus: BackroomStatusOut | null;
+  
   loadingProcurement: boolean;
   loadingProduction: boolean;
   loadingSales: boolean;
+  loadingNotifications: boolean;
+  
   fetchAll: (phase: string) => Promise<void>;
+  fetchNotifications: () => Promise<void>;
+  fetchBackroomStatus: () => Promise<void>;
+  buyIntel: () => Promise<void>;
 }
 
-export const useEventsStore = create<EventsState>((set) => ({
+export const useEventsStore = create<EventsState>((set, get) => ({
   procurement: null,
   production: null,
   sales: null,
+  notifications: [],
+  backroomStatus: null,
+  
   loadingProcurement: false,
   loadingProduction: false,
   loadingSales: false,
+  loadingNotifications: false,
+
+  fetchNotifications: async () => {
+    set({ loadingNotifications: true });
+    try {
+      const data = await teamApi.getNotifications();
+      set({ notifications: data });
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    } finally {
+      set({ loadingNotifications: false });
+    }
+  },
+
+  fetchBackroomStatus: async () => {
+    try {
+      const data = await teamApi.getBackroomStatus();
+      set({ backroomStatus: data });
+    } catch (err) {
+      console.error("Failed to fetch backroom status", err);
+    }
+  },
+
+  buyIntel: async () => {
+    await teamApi.buyIntel();
+    await get().fetchBackroomStatus();
+  },
 
   fetchAll: async (phase: string) => {
     const canSeeProcurement = ['production_open', 'sales_open', 'backroom', 'game_over'].includes(phase);
     const canSeeProduction  = ['sales_open', 'backroom', 'game_over'].includes(phase);
     const canSeeSales       = ['backroom', 'game_over'].includes(phase);
+
+    // Notifications are always visible if logged in
+    get().fetchNotifications();
+    
+    if (phase === 'backroom') {
+      get().fetchBackroomStatus();
+    }
 
     if (canSeeProcurement) {
       set({ loadingProcurement: true });

@@ -35,16 +35,18 @@ roll_discovery(db, cycle)
 """
 import math
 import random
+import secrets
+import string
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
-
 from core.config import (
     BRAND_DELTA_DEAL_FOUND, DEAL_BASE_DISCOVERY, DEAL_BRIBE_FLOOR,
     DEAL_DISCOVERY_DECAY, DEAL_EFFECT_CAP, DEAL_FINE_MULTIPLIER,
     DEAL_LOG_SCALE_DIVISOR, DEAL_REPEAT_STACK_RATE, DEAL_SIZE_DISCOVERY_RATE,
     GOV_LOAN_INTEREST_RATE, BRAND_DELTA_GOV_LOAN,
+    DISCOVERY_BOOST_PROBABILITY, DISCOVERY_BOOST_COST,
 )
 from core.enums import (
     EventPhase, EventStatus, EventType,
@@ -58,6 +60,13 @@ from models.procurement import Inventory
 # ─────────────────────────────────────────────────────────────────────────────
 # Internal helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _generate_discovery_code() -> str:
+    """Generate a random 7-character trace ID (XXX-XXXX)."""
+    p1 = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(3))
+    p2 = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+    return f"{p1}-{p2}"
+
 
 def _effect_scale(bribe: float, floor: float) -> float:
     if floor <= 0 or bribe <= floor:
@@ -97,6 +106,7 @@ def _make_event(
     target_team_id: Optional[int] = None,
     source_team_id: Optional[int] = None,
     gov_deal_id:    Optional[int] = None,
+    discovery_code: Optional[str] = None,
     notes:          Optional[str] = None,
 ) -> Event:
     ev = Event(
@@ -109,6 +119,7 @@ def _make_event(
         payload        = payload,
         status         = EventStatus.PENDING,
         gov_deal_id    = gov_deal_id,
+        discovery_code = discovery_code,
         notes          = notes,
     )
     db.add(ev)
@@ -125,6 +136,7 @@ def _deal_to_events(
     override:       Optional[Dict],
     buyer_team_id:  int,
     target_team_id: Optional[int],
+    target_component: Optional[str] = None,
 ) -> List[Dict]:
     """
     Map a GovDealType to one or more (phase, event_type, payload,
@@ -138,7 +150,10 @@ def _deal_to_events(
     self_id   = buyer_team_id
     rival_id  = target_team_id  # may be None for GREEN deals
 
-    def p(d): return {**d, **(override or {})}
+    def p(d): 
+        if target_component:
+            d["component"] = target_component
+        return {**d, **(override or {})}
 
     mapping = {
         # ── Procurement ───────────────────────────────────────────────────────
@@ -235,6 +250,21 @@ def _deal_to_events(
             EventPhase.FINANCIAL, EventType.TAX_EVASION_REFUND,
             p({"refund_fraction": min(0.25, 0.08 * scale)}), self_id,
         )],
+
+        # --- Blue (Intelligence/Manipulation) ---
+        "blue_espionage": [(
+            # Espionage resolves immediately or in Financial
+            EventPhase.FINANCIAL, EventType.ESPIONAGE_DATA,
+            p({"intel_scope": "full" if scale > 1.2 else "partial"}), self_id,
+        )],
+        "blue_talent_poaching": [(
+            EventPhase.PRODUCTION, EventType.TALENT_THEFT,
+            p({"workforce_stolen": int(5 * scale), "stolen_rnd": True if scale > 1.5 else False}), rival_id,
+        )],
+        "blue_resource_blockade": [(
+            EventPhase.PROCUREMENT, EventType.RESOURCE_BLOCKADE,
+            p({"cost_multiplier": 1.0 + 0.50 * scale}), rival_id,
+        )],
     }
 
     return [
@@ -255,6 +285,7 @@ def record_gov_deal(
     deal_type:       GovDealType,
     bribe_amount:    float,
     target_team=None,
+    target_component: Optional[str] = None,
     override_params: Optional[Dict] = None,
     notes:           Optional[str]  = None,
 ) -> GovDeal:
@@ -317,6 +348,7 @@ def record_gov_deal(
         deal_type.value, scale, override_params,
         buyer_team.id,
         target_team.id if target_team else None,
+        target_component,
     )
     effect_payload = event_specs[0]["payload"] if event_specs else {}
 
@@ -342,13 +374,17 @@ def record_gov_deal(
 
     # Find the next cycle to attach events to
     next_cyc = _next_cycle(db, game.id, cycle)
-    if next_cyc is None:
-        # Backroom is being run before next cycle exists — events will be
-        # created when the next cycle is opened via create_events_for_deal()
-        pass
+    
+    # Special case: Espionage and Security Protocol might need immediate action
+    if deal_type == GovDealType.BLUE_ESPIONAGE:
+        # Espionage reveal happens NOW in the negotiated cycle
+        _create_event_rows_for_deal(db, game, cycle, deal, event_specs, buyer_team.id)
+    elif deal_type == GovDealType.GREEN_SECURITY_PROTOCOL:
+        # Security protocol active IMMEDIATELY for this backroom's discovery roll
+        inv.block_probability = override_params.get("block_prob", 0.90) if override_params else 0.90
     else:
-        _create_event_rows_for_deal(db, game, next_cyc, deal, event_specs,
-                                     buyer_team.id)
+        if next_cyc:
+            _create_event_rows_for_deal(db, game, next_cyc, deal, event_specs, buyer_team.id)
 
     return deal
 
@@ -363,6 +399,12 @@ def _create_event_rows_for_deal(
 ) -> None:
     """Generate Event rows for a deal into the given cycle."""
     for spec in event_specs:
+        # Generate a discovery code only for offensive (RED) deals
+        # (where source != target)
+        code = None
+        if spec["target_team_id"] and spec["target_team_id"] != buyer_team_id:
+            code = _generate_discovery_code()
+
         _make_event(
             db             = db,
             game_id        = game.id,
@@ -373,6 +415,7 @@ def _create_event_rows_for_deal(
             target_team_id = spec["target_team_id"],
             source_team_id = buyer_team_id,
             gov_deal_id    = deal.id,
+            discovery_code = code,
             notes          = deal.notes,
         )
 
@@ -412,6 +455,7 @@ def create_events_for_pending_deals(
             None,
             deal.buyer_team_id,
             deal.target_team_id,
+            deal.effect_payload.get("component"), # Preserve targeting
         )
         _create_event_rows_for_deal(db, game, new_cycle, deal, event_specs,
                                      deal.buyer_team_id)
@@ -557,46 +601,107 @@ def roll_discovery(db: Session, cycle) -> Dict:
     safe_count       = 0
 
     for deal in pending:
+        # Get target team's inventory to check for discovery boost
+        target_inv = None
+        if deal.target_team_id:
+            target_inv = (
+                db.query(Inventory)
+                .filter(Inventory.team_id == deal.target_team_id)
+                .first()
+            )
+
         deal.cycles_active += 1
-        effective_p = deal.discovery_probability * (
-            DEAL_DISCOVERY_DECAY ** deal.cycles_active
-        )
+        
+        if target_inv and target_inv.discovery_boost_active:
+            effective_p = DISCOVERY_BOOST_PROBABILITY
+        else:
+            effective_p = deal.discovery_probability * (
+                DEAL_DISCOVERY_DECAY ** deal.cycles_active
+            )
+        
         effective_p = min(1.0, max(0.0, effective_p))
 
         if random.random() < effective_p:
-            # Discovered — cancel effect, apply fine
-            fine = round(deal.bribe_amount * DEAL_FINE_MULTIPLIER, 2)
-            inv  = (
-                db.query(Inventory)
-                .filter(Inventory.team_id == deal.buyer_team_id)
-                .first()
-            )
-            if inv:
-                inv.funds      -= fine
-                inv.brand_score = max(0.0, inv.brand_score + BRAND_DELTA_DEAL_FOUND)
+            # Check if target has a Security Protocol blocking this
+            if target_inv and target_inv.block_probability > 0:
+                if random.random() < target_inv.block_probability:
+                    # BLOCKED - deal is cancelled/neutralized, source safe
+                    discovered_count += 0 # not discovered
+                    safe_count += 1
+                    # We still flip the deal status so it doesn't fire next cycle
+                    deal.status = GovDealStatus.CANCELLED
+                    cancel_pending_events(db, deal)
+                    continue
 
-            # Cancel all pending Event rows for this deal
-            (
-                db.query(Event)
-                .filter(
-                    Event.gov_deal_id == deal.id,
-                    Event.status      == EventStatus.PENDING,
-                )
-                .update(
-                    {"status": EventStatus.APPLIED,
-                     "applied_at": datetime.utcnow()},
-                    synchronize_session=False,
-                )
-            )
-
-            deal.status = GovDealStatus.DISCOVERED
+            apply_discovery(db, deal)
             discovered_count += 1
         else:
             safe_count += 1
 
+    # Reset security protocols for all teams
+    db.query(Inventory).update({"block_probability": 0.0})
+    
     db.flush()
     return {
         "discovered": discovered_count,
         "safe":       safe_count,
     }
 
+
+def cancel_pending_events(db: Session, deal: GovDeal) -> None:
+    """Cancel all pending events for a deal (neutralization)."""
+    db.query(Event).filter(
+        Event.gov_deal_id == deal.id,
+        Event.status == EventStatus.PENDING
+    ).update(
+        {"status": EventStatus.APPLIED, "applied_at": datetime.utcnow()},
+        synchronize_session=False
+    )
+
+def apply_discovery(db: Session, deal: GovDeal) -> None:
+    """
+    Actually apply the consequences of a discovery to a deal.
+    Shared logic between random roll and manual trigger.
+    """
+    if deal.status != GovDealStatus.PENDING:
+        return
+
+    fine = round(deal.bribe_amount * DEAL_FINE_MULTIPLIER, 2)
+    inv = (
+        db.query(Inventory)
+        .filter(Inventory.team_id == deal.buyer_team_id)
+        .first()
+    )
+    if inv:
+        inv.funds -= fine
+        inv.brand_score = max(0.0, inv.brand_score + BRAND_DELTA_DEAL_FOUND)
+
+    # Cancel all pending Event rows for this deal
+    (
+        db.query(Event)
+        .filter(
+            Event.gov_deal_id == deal.id,
+            Event.status == EventStatus.PENDING,
+        )
+        .update(
+            {"status": EventStatus.APPLIED,
+             "applied_at": datetime.utcnow()},
+            synchronize_session=False,
+        )
+    )
+
+    deal.status = GovDealStatus.DISCOVERED
+    deal.applied_at = datetime.utcnow()
+    db.flush()
+
+
+def check_discovery_code(db: Session, game_id: int, code: str) -> Optional[Event]:
+    """Helper for organiser to verify a guess code."""
+    return (
+        db.query(Event)
+        .filter(
+            Event.game_id == game_id,
+            Event.discovery_code == code
+        )
+        .first()
+    )

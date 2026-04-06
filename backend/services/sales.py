@@ -796,7 +796,9 @@ def resolve_sales(
     if black_mkt_units > 0:
         total_produced = sum(combined_stock[1:]) or 1
         p_discover = BLACK_MKT_DISCOVERY_BASE * (black_mkt_units / total_produced)
-        if random.random() < p_discover:
+        
+        # Audit immunity completely blocks discovery
+        if not mods["audit_immune"] and random.random() < p_discover:
             black_mkt_fine  = black_mkt_rev * BLACK_MKT_FINE_MULTIPLIER
             black_mkt_found = True
         else:

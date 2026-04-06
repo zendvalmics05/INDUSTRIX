@@ -88,6 +88,9 @@ class Event(Base):
     gov_deal_id = Column(Integer, ForeignKey("gov_deal.id", ondelete="SET NULL"),
                           nullable=True, index=True)
 
+    # Unique "Trace ID" for sabotage (RED) events.
+    discovery_code = Column(String(12), nullable=True, index=True)
+
     # Human-readable context for the organiser audit view.
     notes      = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
