@@ -11,7 +11,7 @@ from models.game import Cycle, Team
 from models.deals import Event, GovDeal
 from models.procurement import Inventory
 from schemas.deals import NotificationOut, BackroomStatusOut
-from routers.team.auth import get_current_team
+from core.auth import verify_team
 
 router = APIRouter(prefix="/events", tags=["Team Events"])
 
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/events", tags=["Team Events"])
 @router.get("/notifications", response_model=List[NotificationOut])
 def get_notifications(
     db: Session = Depends(get_db),
-    team: Team = Depends(get_current_team)
+    team: Team = Depends(verify_team)
 ):
     """
     Fetch all intelligence notifications for the current team.
@@ -267,7 +267,7 @@ def get_notifications(
 @router.get("/backroom-status", response_model=BackroomStatusOut)
 def get_backroom_status(
     db: Session = Depends(get_db),
-    team: Team = Depends(get_current_team)
+    team: Team = Depends(verify_team)
 ):
     inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
     return BackroomStatusOut(
@@ -280,7 +280,7 @@ def get_backroom_status(
 @router.post("/buy-intel")
 def buy_intel(
     db: Session = Depends(get_db),
-    team: Team = Depends(get_current_team)
+    team: Team = Depends(verify_team)
 ):
     raise HTTPException(
         status_code=403, 
