@@ -13,7 +13,7 @@ from models.procurement import Inventory
 from schemas.deals import NotificationOut, BackroomStatusOut
 from core.auth import verify_team
 
-router = APIRouter(prefix="/events", tags=["Team Events"])
+router = APIRouter(prefix="/team/events", tags=["Team Events"])
 
 
 @router.get("/notifications", response_model=List[NotificationOut])
@@ -45,11 +45,12 @@ def get_notifications(
     min_cycle_num = max(1, current_cycle.cycle_number - 1)
     
     # Cycles to include (current and previous)
-    cycle_ids = [
-        c.id for c in db.query(Cycle.id)
-        .filter(Cycle.game_id == team.game_id, Cycle.cycle_number >= min_cycle_num)
-        .all()
-    ]
+    relevant_cycles = db.query(Cycle).filter(Cycle.game_id == team.game_id, Cycle.cycle_number >= min_cycle_num).all()
+    cycle_ids = [c.id for c in relevant_cycles]
+    
+    # Map all cycles for this game to be safe
+    all_cycles = db.query(Cycle).filter(Cycle.game_id == team.game_id).all()
+    cycle_num_map = {c.id: c.cycle_number for c in all_cycles}
 
     notifications = []
 
@@ -95,7 +96,7 @@ def get_notifications(
             fine = round(deal.bribe_amount * 2.5, 2)
             notifications.append(NotificationOut(
                 id=f"deal-disc-{deal.id}",
-                cycle_number=deal.negotiated_cycle.cycle_number + 1,
+                cycle_number=cycle_num_map.get(deal.negotiated_cycle_id, 0) + 1,
                 type=NotificationType.DISCOVERY_SELF,
                 title="Protocol Investigation: Compromised",
                 message=f"Ministry auditors intercepted your arrangement for '{deal.deal_type}'. Penalty of {fine:,.0f} CU applied.",
@@ -103,16 +104,28 @@ def get_notifications(
                 payload=deal.effect_payload
             ))
         
-        # B. If Self-Buff (Confirmed record for the team)
-        elif deal.deal_type.startswith("green_"):
-            status_text = "Active" if deal.status == GovDealStatus.PENDING else "Concluded"
+        # B. If Pending/Applied/Cancelled (Confirmed record for the buyer)
+        elif deal.status in (GovDealStatus.PENDING, GovDealStatus.APPLIED, GovDealStatus.CANCELLED):
+            status_text = deal.status.value.capitalize()
+            prefix = "Government Accord"
+            severity = "success"
+            
+            if deal.deal_type.startswith("red_"):
+                prefix = "Offensive Protocol"
+                severity = "info"  # Not error, as the buyer bought it intentionally
+            elif deal.deal_type.startswith("blue_"):
+                prefix = "Intelligence Protocol"
+                severity = "info"
+                
+            clean_type = deal.deal_type.value.replace('green_', '').replace('red_', '').replace('blue_', '').replace('_', ' ').title()
+            
             notifications.append(NotificationOut(
-                id=f"deal-self-{deal.id}",
-                cycle_number=deal.negotiated_cycle.cycle_number,
+                id=f"deal-self-{deal.id}-{deal.status.value}",
+                cycle_number=cycle_num_map.get(deal.negotiated_cycle_id, 0),
                 type=NotificationType.BENEFIT,
-                title=f"Government Accord: {deal.deal_type.replace('green_', '').replace('_', ' ').title()}",
+                title=f"{prefix}: {clean_type}",
                 message=f"Agreement verified and recorded. Protocol Status: {status_text}.",
-                severity="success",
+                severity=severity,
                 payload=deal.effect_payload
             ))
 
@@ -130,7 +143,7 @@ def get_notifications(
     for deal in thwarted:
         notifications.append(NotificationOut(
             id=f"thwart-{deal.id}",
-            cycle_number=deal.negotiated_cycle.cycle_number + 1,
+            cycle_number=cycle_num_map.get(deal.negotiated_cycle_id, 0) + 1,
             type=NotificationType.DISCOVERY_THWARTED,
             title="Threat Neutralized",
             message=f"A hostile protocol targeting your organization was intercepted and nullified by security forces.",
@@ -244,7 +257,8 @@ def get_notifications(
         .filter(
             Event.target_team_id == team.id,
             Event.cycle_id.in_(cycle_ids),
-            Event.event_type == EventType.LOAN_REPAYMENT
+            Event.status == EventStatus.APPLIED,
+            Event.event_type.in_([EventType.LOAN_REPAYMENT, EventType.LOAN_INTEREST])
         )
         .all()
     )

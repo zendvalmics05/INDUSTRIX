@@ -635,7 +635,7 @@ def roll_discovery(db: Session, cycle) -> Dict:
 
         deal.cycles_active += 1
         
-        if target_inv and target_inv.discovery_boost_active:
+        if target_inv and target_inv.block_probability > 0:
             effective_p = DISCOVERY_BOOST_PROBABILITY
         else:
             effective_p = deal.discovery_probability * (
@@ -683,23 +683,24 @@ def cancel_pending_events(db: Session, deal: GovDeal) -> None:
 
 def apply_discovery(db: Session, deal: GovDeal) -> None:
     """
-    Actually apply the consequences of a discovery to a deal.
-    Shared logic between random roll and manual trigger.
+    Apply the consequences of a deal discovery.
+    Works for both PENDING deals (effect not yet fired) and
+    APPLIED deals (effect already fired — post-hoc discovery via code submission).
     """
-    if deal.status != GovDealStatus.PENDING:
+    if deal.status in (GovDealStatus.DISCOVERED, GovDealStatus.CANCELLED):
         return
 
     fine = round(deal.bribe_amount * DEAL_FINE_MULTIPLIER, 2)
-    inv = (
+    buyer_inv = (
         db.query(Inventory)
         .filter(Inventory.team_id == deal.buyer_team_id)
         .first()
     )
-    if inv:
-        inv.funds -= fine
-        inv.brand_score = max(0.0, inv.brand_score + BRAND_DELTA_DEAL_FOUND)
+    if buyer_inv:
+        buyer_inv.funds -= fine
+        buyer_inv.brand_score = max(0.0, buyer_inv.brand_score + BRAND_DELTA_DEAL_FOUND)
 
-    # Cancel all pending Event rows for this deal
+    # Cancel any still-PENDING Event rows for this deal (pre-effect discovery)
     (
         db.query(Event)
         .filter(
@@ -707,11 +708,50 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
             Event.status == EventStatus.PENDING,
         )
         .update(
-            {"status": EventStatus.APPLIED,
-             "applied_at": datetime.utcnow()},
+            {"status": EventStatus.APPLIED, "applied_at": datetime.utcnow()},
             synchronize_session=False,
         )
     )
+
+    # ── Victim restitution (Option A: 1× bribe returned to victim) ────────────
+    if deal.target_team_id:
+        victim_inv = (
+            db.query(Inventory)
+            .filter(Inventory.team_id == deal.target_team_id)
+            .first()
+        )
+        if victim_inv:
+            victim_inv.funds = round(victim_inv.funds + deal.bribe_amount, 2)
+
+        # Create a notification event for the victim so it shows in frontend
+        latest_cycle = (
+            db.query(Cycle)
+            .filter(Cycle.game_id == deal.game_id)
+            .order_by(Cycle.cycle_number.desc())
+            .first()
+        )
+        if latest_cycle:
+            restitution_note = (
+                f"Ministry investigation confirmed hostile interference by "
+                f"an external entity. Restitution of {deal.bribe_amount:,.0f} CU "
+                f"has been credited to your accounts."
+            )
+            ev_restitution = Event(
+                game_id        = deal.game_id,
+                cycle_id       = latest_cycle.id,
+                phase          = EventPhase.FINANCIAL,
+                event_type     = EventType.ASSET_EXCHANGE,
+                payload        = {
+                    "notes":     restitution_note,
+                    "direction": "inbound",
+                    "from":      "Ministry Directorate — Restitution",
+                },
+                target_team_id = deal.target_team_id,
+                source_team_id = None,
+                status         = EventStatus.APPLIED,
+                notes          = "Restitution following confirmed discovery of hostile deal.",
+            )
+            db.add(ev_restitution)
 
     deal.status = GovDealStatus.DISCOVERED
     deal.applied_at = datetime.utcnow()

@@ -19,6 +19,7 @@ export default {
         'on-surface-variant': '#cec2d5',
         outline: '#978d9e',
         'outline-variant': '#4b4453',
+        secondary: '#7dcaff',
         tertiary: '#efc050',
         error: '#ffb4ab',
         'error-container': '#93000a',

@@ -213,6 +213,40 @@ def create_inter_team_loan(
     if borrower_inv:
         borrower_inv.funds += body.principal
 
+    # Create immediate principal receipt notifications
+    from models.deals import Event
+    from core.enums import EventPhase, EventType, EventStatus
+
+    # Find the current cycle to anchor the receipts
+    current_cycle = (
+        db.query(Cycle)
+        .filter(Cycle.game_id == game.id)
+        .order_by(Cycle.cycle_number.desc())
+        .first()
+    )
+    cycle_id = current_cycle.id if current_cycle else None
+
+    if cycle_id:
+        # Receipt for borrower
+        ev_borrower = Event(
+            game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
+            event_type=EventType.ASSET_EXCHANGE,
+            payload={"notes": "Inter-team Loan Principal Received", "direction": "inbound", "from": lender.name},
+            target_team_id=borrower.id, source_team_id=lender.id,
+            status=EventStatus.APPLIED, notes=body.notes
+        )
+        db.add(ev_borrower)
+
+        # Receipt for lender
+        ev_lender = Event(
+            game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
+            event_type=EventType.ASSET_EXCHANGE,
+            payload={"notes": "Inter-team Loan Principal Disbursed", "direction": "outbound", "to": borrower.name},
+            target_team_id=lender.id, source_team_id=borrower.id,
+            status=EventStatus.APPLIED, notes=body.notes
+        )
+        db.add(ev_lender)
+
     # Find current cycle to know where to start interest events
     current_cycle = (
         db.query(Cycle)
@@ -283,6 +317,19 @@ def create_gov_loan(
         .order_by(Cycle.cycle_number.desc())
         .first()
     )
+    cycle_id = current_cycle.id if current_cycle else None
+
+    if cycle_id:
+        from models.deals import Event
+        from core.enums import EventPhase, EventType, EventStatus
+        ev_gov = Event(
+            game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
+            event_type=EventType.ASSET_EXCHANGE,
+            payload={"notes": "Ministry Support Loan Disbursed", "direction": "inbound", "from": "Ministry Directorate"},
+            target_team_id=borrower.id, source_team_id=None,
+            status=EventStatus.APPLIED, notes=body.notes
+        )
+        db.add(ev_gov)
 
     amount_per_cycle = round(body.principal * GOV_LOAN_INTEREST_RATE, 2)
     target_cycles    = _get_future_cycles(
@@ -391,67 +438,6 @@ def list_deals(
 
 # ── Get one GovDeal ───────────────────────────────────────────────────────────
 
-@router.get("/{deal_id}", response_model=GovDealOut,
-            summary="Get one GovDeal.")
-def get_deal(
-    deal_id: int,
-    game:    Game    = Depends(verify_organiser),
-    db:      Session = Depends(get_db),
-):
-    deal = db.query(GovDeal).filter(
-        GovDeal.id == deal_id, GovDeal.game_id == game.id
-    ).first()
-    if not deal:
-        raise HTTPException(404, "Deal not found.")
-    return deal
-
-
-# ── Cancel a GovDeal ─────────────────────────────────────────────────────────
-
-@router.delete("/{deal_id}", response_model=OkResponse,
-               summary="Cancel a PENDING GovDeal. No refund issued.")
-def cancel_deal(
-    deal_id: int,
-    game:    Game    = Depends(verify_organiser),
-    db:      Session = Depends(get_db),
-):
-    """
-    Cancels the GovDeal record and marks all its PENDING Event rows as APPLIED
-    (cancellation). The bribe already paid is not refunded.
-    """
-    deal = db.query(GovDeal).filter(
-        GovDeal.id == deal_id, GovDeal.game_id == game.id
-    ).first()
-    if not deal:
-        raise HTTPException(404, "Deal not found.")
-    if deal.status != GovDealStatus.PENDING:
-        raise HTTPException(
-            400,
-            f"Cannot cancel a deal with status '{deal.status.value}'. "
-            "Only PENDING deals can be cancelled.",
-        )
-
-    # Cancel pending Event rows
-    (
-        db.query(Event)
-        .filter(
-            Event.gov_deal_id == deal.id,
-            Event.status      == EventStatus.PENDING,
-        )
-        .update(
-            {"status": EventStatus.APPLIED,
-             "applied_at": datetime.utcnow()},
-            synchronize_session=False,
-        )
-    )
-
-    deal.status = GovDealStatus.CANCELLED
-    db.commit()
-    return OkResponse(message=f"Deal {deal_id} cancelled. Event rows nullified.")
-
-
-# ── Manual discovery roll ─────────────────────────────────────────────────────
-
 @router.post("/discover", response_model=Dict,
              summary="Manually trigger discovery rolls for all PENDING deals.")
 def trigger_discovery(
@@ -476,8 +462,6 @@ def trigger_discovery(
     db.commit()
     return result
 
-
-# ── Discovery Verification (Manual Identification) ───────────────────────────
 
 @router.get("/check-code/{code}", response_model=EventOut,
             summary="Identify the source of a sabotage using a discovery code.")
@@ -506,23 +490,26 @@ def manual_discovery(
 ):
     """
     Manually caught a team in a backroom deal (e.g. after successful identification).
-    Applies the fine and brand hit, and cancels any pending events from this deal.
+    Applies the fine to the aggressor and issues victim restitution equal to 1x the bribe.
+    Works for deals in PENDING (pre-effect) or APPLIED (post-effect) status.
     """
     deal = db.query(GovDeal).filter(
         GovDeal.id == deal_id, GovDeal.game_id == game.id
     ).first()
     if not deal:
         raise HTTPException(404, "Deal not found.")
-    
-    if deal.status != GovDealStatus.PENDING:
-        raise HTTPException(400, f"Cannot trigger discovery for deal in '{deal.status}' status.")
+
+    if deal.status in (GovDealStatus.DISCOVERED, GovDealStatus.CANCELLED):
+        raise HTTPException(
+            400,
+            f"Cannot trigger discovery: deal is already '{deal.status.value}'. "
+            "Only PENDING or APPLIED deals can be discovered."
+        )
 
     apply_discovery(db, deal)
     db.commit()
-    return OkResponse(message=f"Discovery applied to deal {deal_id}. Buyer penalized.")
+    return OkResponse(message=f"Discovery applied to deal {deal_id}. Buyer penalized and victim compensated.")
 
-
-# ── Event audit view ──────────────────────────────────────────────────────────
 
 @router.get("/events/current", response_model=List[EventOut],
             summary="List all Event rows for the current cycle (organiser audit).")
@@ -597,3 +584,61 @@ def list_all_events(
         .limit(500)
         .all()
     )
+
+
+# ── Get / Cancel one GovDeal (wildcard /{deal_id} — MUST stay last) ───────────
+
+@router.get("/{deal_id}", response_model=GovDealOut,
+            summary="Get one GovDeal.")
+def get_deal(
+    deal_id: int,
+    game:    Game    = Depends(verify_organiser),
+    db:      Session = Depends(get_db),
+):
+    deal = db.query(GovDeal).filter(
+        GovDeal.id == deal_id, GovDeal.game_id == game.id
+    ).first()
+    if not deal:
+        raise HTTPException(404, "Deal not found.")
+    return deal
+
+
+@router.delete("/{deal_id}", response_model=OkResponse,
+               summary="Cancel a PENDING GovDeal. No refund issued.")
+def cancel_deal(
+    deal_id: int,
+    game:    Game    = Depends(verify_organiser),
+    db:      Session = Depends(get_db),
+):
+    """
+    Cancels the GovDeal record and marks all its PENDING Event rows as APPLIED
+    (cancellation). The bribe already paid is not refunded.
+    """
+    deal = db.query(GovDeal).filter(
+        GovDeal.id == deal_id, GovDeal.game_id == game.id
+    ).first()
+    if not deal:
+        raise HTTPException(404, "Deal not found.")
+    if deal.status != GovDealStatus.PENDING:
+        raise HTTPException(
+            400,
+            f"Cannot cancel a deal with status '{deal.status.value}'. "
+            "Only PENDING deals can be cancelled.",
+        )
+
+    (
+        db.query(Event)
+        .filter(
+            Event.gov_deal_id == deal.id,
+            Event.status      == EventStatus.PENDING,
+        )
+        .update(
+            {"status": EventStatus.APPLIED,
+             "applied_at": datetime.utcnow()},
+            synchronize_session=False,
+        )
+    )
+
+    deal.status = GovDealStatus.CANCELLED
+    db.commit()
+    return OkResponse(message=f"Deal {deal_id} cancelled. Event rows nullified.")

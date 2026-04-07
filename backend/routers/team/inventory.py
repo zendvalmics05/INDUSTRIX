@@ -106,8 +106,9 @@ def get_components(
     inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
 
     return {
+        "drone_stock":       inv.drone_stock if inv and inv.drone_stock else [0]*101,
         "drone_stock_total": sum(inv.drone_stock[1:]) if inv and inv.drone_stock else 0,
-        "components": [_build_slot(db, slot) for slot in slots],
+        "components":        [_build_slot(db, slot) for slot in slots],
     }
 
 

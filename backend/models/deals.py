@@ -61,6 +61,7 @@ class Event(Base):
     # Which cycle this event fires in.
     cycle_id = Column(Integer, ForeignKey("cycle.id", ondelete="CASCADE"),
                       nullable=False, index=True)
+    cycle = relationship("Cycle")
 
     # Who is affected. NULL only for GLOBAL_MARKET_SHIFT.
     target_team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"),

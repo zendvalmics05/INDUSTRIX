@@ -118,6 +118,7 @@ export interface InventoryOut {
   funds: number;
   brand_score: number;
   brand_tier: string;
+  drone_stock: number[];
   drone_stock_total: number;
   workforce_size: number;
   skill_level: number;

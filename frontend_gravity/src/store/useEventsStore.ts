@@ -13,6 +13,7 @@ interface EventsState {
   production: ProductionSummary | null;
   sales: SalesSummary | null;
   notifications: NotificationOut[];
+  viewedNotificationIds: string[];
   backroomStatus: BackroomStatusOut | null;
   
   loadingProcurement: boolean;
@@ -24,14 +25,24 @@ interface EventsState {
   fetchNotifications: () => Promise<void>;
   fetchBackroomStatus: () => Promise<void>;
   buyIntel: () => Promise<void>;
+  markNotificationsAsViewed: (ids: string[]) => void;
+  getUnreadCount: () => number;
 }
 
-export const useEventsStore = create<EventsState>((set, get) => ({
-  procurement: null,
-  production: null,
-  sales: null,
-  notifications: [],
-  backroomStatus: null,
+export const useEventsStore = create<EventsState>((set, get) => {
+  const savedViewedIds = localStorage.getItem('industrix-viewed-notifications');
+  let initialViewedIds: string[] = [];
+  if (savedViewedIds) {
+    try { initialViewedIds = JSON.parse(savedViewedIds); } catch {}
+  }
+
+  return {
+    procurement: null,
+    production: null,
+    sales: null,
+    notifications: [],
+    viewedNotificationIds: initialViewedIds,
+    backroomStatus: null,
   
   loadingProcurement: false,
   loadingProduction: false,
@@ -112,4 +123,18 @@ export const useEventsStore = create<EventsState>((set, get) => ({
       }
     }
   },
-}));
+
+  markNotificationsAsViewed: (ids: string[]) => {
+    set((state) => {
+      const newIds = Array.from(new Set([...state.viewedNotificationIds, ...ids]));
+      localStorage.setItem('industrix-viewed-notifications', JSON.stringify(newIds));
+      return { viewedNotificationIds: newIds };
+    });
+  },
+
+  getUnreadCount: () => {
+    const { notifications, viewedNotificationIds } = get();
+    return notifications.filter(n => !viewedNotificationIds.includes(n.id)).length;
+  }
+  };
+});

@@ -147,7 +147,7 @@ const RejectActionCard = ({
 
 export const Sales = () => {
   const { phase, cycleNumber } = useGameStore();
-  const { brandScore, brandTier, droneBreakdown, components, fetchInventory } = useInventoryStore();
+  const { brandScore, brandTier, droneStock, components, fetchInventory } = useInventoryStore();
   const { addToast } = useNotificationStore();
   
   const salesSummary = useEventsStore(s => s.sales);
@@ -252,6 +252,24 @@ export const Sales = () => {
     return () => clearTimeout(timer);
   }, [currentUnitsToAssemble]);
 
+  // Classify current stock into tiers
+  const currentBreakdown = useMemo(() => {
+    const counts: Record<TierKey, number> = { reject: 0, substandard: 0, standard: 0, premium: 0 };
+    if (!droneStock) return counts;
+
+    const { qr_hard, qr_soft, qr_premium } = qrThresholds;
+
+    for (let g = 0; g <= 100; g++) {
+      const n = droneStock[g] || 0;
+      if (n === 0) continue;
+      if (g === 0 || g < qr_hard) counts.reject += n;
+      else if (g < qr_soft) counts.substandard += n;
+      else if (g < qr_premium) counts.standard += n;
+      else counts.premium += n;
+    }
+    return counts;
+  }, [droneStock, qrThresholds]);
+
   // Classify projection into tiers
   const projectedTierCounts = useMemo(() => {
     const counts: Record<TierKey, number> = { reject: 0, substandard: 0, standard: 0, premium: 0 };
@@ -272,7 +290,7 @@ export const Sales = () => {
   }, [projection, qrThresholds]);
 
   const getTierCount = (tier: TierKey) => {
-    const current = droneBreakdown[tier] || 0;
+    const current = currentBreakdown[tier] || 0;
     const projected = projectedTierCounts[tier] || 0;
     return current + projected;
   };
@@ -305,7 +323,7 @@ export const Sales = () => {
 
   const totalEstimate = useMemo(
     () => (['reject', 'substandard', 'standard', 'premium'] as TierKey[]).reduce((sum, t) => sum + estimateByTier(t), 0),
-    [decisions, droneBreakdown, projectedTierCounts, standardPrices]
+    [decisions, currentBreakdown, projectedTierCounts, standardPrices]
   );
 
   const onSubmit = async () => {
