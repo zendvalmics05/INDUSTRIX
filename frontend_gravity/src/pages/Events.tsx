@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import {
@@ -24,36 +24,40 @@ import {
 // News & Intelligence Section
 // ─────────────────────────────────────────────────────────────────────────────
 const IntelSection = ({ hasSabotage }: { hasSabotage: boolean }) => (
-  <div className={`border p-5 mb-6 transition-all ${
-    hasSabotage 
-      ? 'bg-error/5 border-error/30 shadow-[0_0_20px_rgba(var(--error-rgb),0.05)]' 
-      : 'bg-surface-low border-outline-variant'
-  }`}>
+  <div className={`border p-5 mb-6 transition-all bg-surface-low border-outline-variant`}>
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-sm font-medium font-mono text-primary uppercase tracking-[0.2em] flex items-center space-x-2">
-        <FiShield size={14} className={hasSabotage ? 'text-error' : 'text-primary'} />
-        <span>Intelligence & Reporting Protocol</span>
+        <FiShield size={14} className="text-primary" />
+        <span>The Ministry Directorate</span>
       </h2>
-      {hasSabotage && (
-        <div className="flex items-center space-x-2 bg-error/20 px-2 py-1 rounded text-[10px] font-bold text-error animate-pulse">
-          <FiAlertTriangle size={10} />
-          <span>SECURITY BREACH DETECTED</span>
-        </div>
-      )}
+    </div>
+
+    <div className="bg-error/5 border border-error/20 p-4 mb-6 shadow-[inset_0_0_20px_rgba(var(--error-rgb),0.05)] text-error opacity-90">
+      <p className="text-xs font-mono font-bold uppercase tracking-widest text-center mb-2 flex justify-center items-center space-x-2">
+        <FiAlertTriangle size={14} />
+        <span>Risk Advisory</span>
+        <FiAlertTriangle size={14} />
+      </p>
+      <p className="text-[11px] font-mono leading-relaxed text-center max-w-2xl mx-auto">
+        THE MINISTRY IS NOT YOUR FRIEND. THEY ARE THE MARKET. You may pay them, but you cannot buy them. Tread lightly. You are a small fish in an ocean they own. Every backroom deal or aggressive action carries an inherent risk of discovery and catastrophic fines. The state does not tolerate embarrassment.
+      </p>
     </div>
     
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-mono leading-relaxed">
       <div className="space-y-2">
-        <div className="text-on-surface-variant uppercase text-[10px] tracking-widest border-b border-outline-variant/30 pb-1">Counter-Intelligence Rule</div>
+        <div className="text-on-surface-variant uppercase text-[10px] tracking-widest border-b border-outline-variant/30 pb-1 flex justify-between">
+          <span>Counter-Intelligence</span>
+          {hasSabotage && <span className="text-error font-bold animate-pulse">BREACH DETECTED</span>}
+        </div>
         <p className="text-on-surface">
-          Sabotage is an offline mechanic. If your reports show "Sabotaged" units, another team or the organiser has interfered with your supply chain.
+          Sabotage is an offline mechanic. If your Resolution Reports mandate "Sabotaged" units, another corporation has compromised your supply chain under Ministry cover.
         </p>
       </div>
       <div className="space-y-2">
         <div className="text-on-surface-variant uppercase text-[10px] tracking-widest border-b border-outline-variant/30 pb-1">Restitution Protocol</div>
         <p className="text-on-surface">
-          Correctly identify the aggressor team to the Organiser during the <span className="text-primary font-bold">Backroom Phase</span>. 
-          Validated reports result in <span className="text-primary">full compensation</span> for your losses and <span className="text-error font-bold">heavy fines</span> for the aggressor.
+          Identify the aggressor to the Directorate during the <span className="text-primary font-bold">Backroom Phase</span>. 
+          Validated leads result in <span className="text-success font-bold">full compensation</span> and <span className="text-error font-bold">heavy penalties</span> against the aggressor.
         </p>
       </div>
     </div>
@@ -187,6 +191,7 @@ const BuyIntelCard = () => {
 // Main Events Page
 // ─────────────────────────────────────────────────────────────────────────────
 export const Events = () => {
+  const [activeTab, setActiveTab] = useState<'reports' | 'intelligence'>('reports');
   const { phase, cycleNumber } = useGameStore();
   
   const procurement = useEventsStore(s => s.procurement);
@@ -198,6 +203,7 @@ export const Events = () => {
   const loadingSales = useEventsStore(s => s.loadingSales);
   const loadingNotifications = useEventsStore(s => s.loadingNotifications);
   const fetchAll = useEventsStore(s => s.fetchAll);
+  const markNotificationsAsViewed = useEventsStore(s => s.markNotificationsAsViewed);
 
   const canSeeProcurement = ['production_open', 'sales_open', 'backroom', 'game_over'].includes(phase);
   const canSeeProduction  = ['sales_open', 'backroom', 'game_over'].includes(phase);
@@ -206,6 +212,12 @@ export const Events = () => {
   useEffect(() => {
     fetchAll(phase);
   }, [phase, fetchAll]);
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      markNotificationsAsViewed(notifications.map(n => n.id));
+    }
+  }, [notifications, markNotificationsAsViewed]);
 
   const hasSabotage = useMemo(() => {
     if (!procurement) return false;
@@ -231,16 +243,36 @@ export const Events = () => {
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
-        {/* Main Feed */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-2">
-              <FiPackage className="text-on-surface-variant/40" size={14} />
-              <h2 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.3em]">Resolution Reports</h2>
-              <div className="flex-1 h-[1px] bg-outline-variant/30" />
-            </div>
-            
+      {/* Tabs Switcher */}
+      <div className="flex space-x-4 border-b border-outline-variant/50 sticky top-0 bg-surface z-10 pt-2 pb-px">
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`flex items-center space-x-2 pb-3 px-2 font-display text-sm tracking-widest uppercase transition-all whitespace-nowrap ${
+            activeTab === 'reports'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-on-surface-variant hover:text-on-surface border-b-2 border-transparent hover:border-outline-variant'
+          }`}
+        >
+          <FiPackage size={14} />
+          <span>Resolution Reports</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('intelligence')}
+          className={`flex items-center space-x-2 pb-3 px-2 font-display text-sm tracking-widest uppercase transition-all whitespace-nowrap relative ${
+            activeTab === 'intelligence'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-on-surface-variant hover:text-on-surface border-b-2 border-transparent hover:border-outline-variant'
+          }`}
+        >
+          <FiShield size={14} />
+          <span>Intelligence Bureau</span>
+          {hasSabotage && <span className="absolute top-0 -right-2 w-2 h-2 bg-error rounded-full animate-pulse" />}
+        </button>
+      </div>
+
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {activeTab === 'reports' ? (
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 space-y-6 lg:max-w-4xl max-w-full">
             {/* Procurement */}
             {canSeeProcurement ? (
               loadingProcurement ? (
@@ -292,27 +324,22 @@ export const Events = () => {
               <PendingCard label="Sales Resolution" icon={<FiTrendingUp size={14} />} />
             )}
           </div>
-        </div>
-
-        {/* Intelligence Sidebar */}
-        <div className="w-full md:w-80 flex-shrink-0 flex flex-col overflow-hidden bg-surface-low/30 p-1 border-l border-outline-variant/20">
-          <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 px-2">
-            <h2 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.3em] pl-1 mb-4 flex items-center space-x-2">
-              <FiShield size={10} />
-              <span>Intelligence Bureau</span>
-            </h2>
-            
+        ) : (
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 px-2 lg:max-w-5xl max-w-full">
             <IntelSection hasSabotage={hasSabotage} />
             
             {phase === 'backroom' && <BuyIntelCard />}
 
-            <div className="space-y-1">
-              <div className="flex items-center justify-between pl-1 mb-3">
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2 mb-4">
                 <h3 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.2em] flex items-center space-x-2">
                   <FiClock size={10} />
-                  <span>Facility Log</span>
+                  <span>Facility Log & Deals</span>
                 </h3>
-                <span className="text-[8px] font-mono opacity-40 uppercase">Live Feed</span>
+                <span className="text-[8px] font-mono opacity-40 uppercase flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 bg-primary/80 rounded-full animate-ping" />
+                  <span>Live Event Feed</span>
+                </span>
               </div>
 
               {loadingNotifications && notifications.length === 0 ? (
@@ -321,16 +348,19 @@ export const Events = () => {
                   <p>Initializing Secure Connection...</p>
                 </div>
               ) : notifications.length > 0 ? (
-                notifications.map(n => <NotificationItem key={n.id} notification={n} />)
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                  {notifications.map(n => <NotificationItem key={n.id} notification={n} />)}
+                </div>
               ) : (
-                <div className="p-8 border border-dashed border-outline-variant/30 text-center space-y-3 opacity-40 grayscale group hover:grayscale-0 transition-all">
-                  <FiLock className="mx-auto" size={24} />
-                  <div className="text-[9px] font-mono uppercase tracking-[0.3em]">Encryption Holding · No Threats Detected</div>
+                <div className="p-12 border border-dashed border-outline-variant/30 text-center space-y-3 opacity-40 grayscale group hover:grayscale-0 transition-all flex flex-col justify-center items-center">
+                  <FiLock size={32} />
+                  <div className="text-[10px] font-mono uppercase tracking-[0.3em] mt-4">Encryption Holding</div>
+                  <p className="text-[8px] font-mono uppercase">No Traces or Threats Detected</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

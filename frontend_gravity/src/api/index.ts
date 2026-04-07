@@ -131,7 +131,11 @@ export const teamApi = {
 
   // Missing factory endpoints
   getComponents: async () => {
-    const { data } = await api.get<{ drone_stock_total: number; components: ComponentSlotData[] }>('/team/inventory/components');
+    const { data } = await api.get<{ 
+      drone_stock: number[]; 
+      drone_stock_total: number; 
+      components: ComponentSlotData[] 
+    }>('/team/inventory/components');
     return data;
   },
 

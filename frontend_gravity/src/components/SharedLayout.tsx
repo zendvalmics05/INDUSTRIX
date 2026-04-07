@@ -4,10 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MdFactory, MdCampaign, MdPrecisionManufacturing, MdLogout } from 'react-icons/md';
 import { useInventoryStore } from '../store';
 import { useNotificationStore } from '../store/useNotificationStore';
+import { useEventsStore } from '../store/useEventsStore';
 
 export const SharedLayout = () => {
   const { isLoggedIn, phase, cycleNumber, lastSyncTs, connectionOk, logout, pollStatus } = useGameStore();
   const { funds, brandScore, automationLevel, workforceSize, morale, skillLevel, fetchInventory } = useInventoryStore();
+  const { fetchNotifications, getUnreadCount } = useEventsStore();
   const { toasts, addToast, removeToast } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,6 +20,9 @@ export const SharedLayout = () => {
   const [nowTs, setNowTs] = useState<number>(Date.now());
   const negativeFundsToastRef = useRef<boolean>(false);
   const [expandedSideItem, setExpandedSideItem] = useState<string | null>(null);
+
+  const prevFundsRef = useRef<number | null>(null);
+  const [fundsAnimClass, setFundsAnimClass] = useState<string>('');
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -32,8 +37,12 @@ export const SharedLayout = () => {
         window.clearInterval(intervalRef.current);
       }
       pollStatus();
+      fetchNotifications();
+      fetchInventory().catch(() => { });
       intervalRef.current = window.setInterval(() => {
         pollStatus();
+        fetchNotifications();
+        fetchInventory().catch(() => { });
       }, pollIntervalMs) as unknown as number;
     };
 
@@ -77,7 +86,7 @@ export const SharedLayout = () => {
   // Keep global funds fresh periodically (no heavy polling)
   useEffect(() => {
     if (isLoggedIn) {
-      fetchInventory().catch(() => {});
+      fetchInventory().catch(() => { });
     }
   }, [isLoggedIn, fetchInventory, phase]);
 
@@ -89,6 +98,21 @@ export const SharedLayout = () => {
     if (funds >= 0) {
       negativeFundsToastRef.current = false;
     }
+
+    if (prevFundsRef.current !== null && prevFundsRef.current !== funds) {
+      const delta = funds - prevFundsRef.current;
+      const sign = delta > 0 ? '+' : '';
+      addToast(`Funds Update: ${sign}${delta.toLocaleString()} CU`, delta > 0 ? 'success' : 'error');
+
+      setFundsAnimClass(delta > 0
+        ? 'text-green-400 font-bold scale-110 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'
+        : 'text-red-400 font-bold scale-110 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]');
+
+      setTimeout(() => {
+        setFundsAnimClass('');
+      }, 2000);
+    }
+    prevFundsRef.current = funds;
   }, [funds, addToast]);
 
   if (!isLoggedIn) return null;
@@ -101,9 +125,9 @@ export const SharedLayout = () => {
   ];
 
   const sideItems = [
-    { 
-      id: 'factory', 
-      label: 'FACTORY OVERVIEW', 
+    {
+      id: 'factory',
+      label: 'FACTORY OVERVIEW',
       icon: <MdFactory />,
       details: (
         <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
@@ -113,9 +137,9 @@ export const SharedLayout = () => {
         </div>
       )
     },
-    { 
-      id: 'marketing', 
-      label: 'MARKETING', 
+    {
+      id: 'marketing',
+      label: 'MARKETING',
       icon: <MdCampaign />,
       details: (
         <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
@@ -123,9 +147,9 @@ export const SharedLayout = () => {
         </div>
       )
     },
-    { 
-      id: 'automation', 
-      label: 'AUTOMATION LEVEL', 
+    {
+      id: 'automation',
+      label: 'AUTOMATION LEVEL',
       icon: <MdPrecisionManufacturing />,
       details: (
         <div className="space-y-2 mt-2 pl-10 text-xs font-mono text-on-surface-variant">
@@ -145,17 +169,23 @@ export const SharedLayout = () => {
       {/* Top Navbar */}
       <nav className="flex justify-between items-center bg-surface-low px-6 py-4 border-b border-outline-variant">
         <div className="flex space-x-8">
-          {navItems.map(item => (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`font-display text-sm tracking-widest transition-colors ${
-                location.pathname === item.path ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          {navItems.map(item => {
+            const isEventTab = item.path === '/event';
+            const unread = isEventTab ? getUnreadCount() : 0;
+            return (
+              <button
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                className={`relative font-display text-sm tracking-widest transition-colors ${location.pathname === item.path ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+              >
+                {item.label}
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-3 w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
+                )}
+              </button>
+            );
+          })}
         </div>
         <div className="flex items-center space-x-8">
           <div className="text-on-surface-variant font-mono text-xs flex items-center space-x-2">
@@ -174,8 +204,10 @@ export const SharedLayout = () => {
             </span>
             <span className="ml-3 pl-3 border-l border-outline-variant">CYCLE <span className="text-on-surface ml-1">{cycleNumber || 0}</span></span>
           </div>
-          <div className="text-on-surface font-mono text-xs">
-            <span className={`${funds < 0 ? 'text-error' : 'text-on-surface'}`}>${funds.toLocaleString()}</span>
+          <div className={`text-on-surface font-mono text-xs transition-all duration-300 ${fundsAnimClass}`}>
+            <span className={`${funds < 0 && !fundsAnimClass ? 'text-error' : !fundsAnimClass ? 'text-on-surface' : ''}`}>
+              ${funds.toLocaleString()}
+            </span>
           </div>
           {/* Sync status indicator */}
           <div className="flex items-center space-x-2 font-mono text-xs">
@@ -200,15 +232,14 @@ export const SharedLayout = () => {
           {toasts.slice(-3).map((t) => (
             <div
               key={t.id}
-              className={`px-3 py-2 border flex items-center justify-between ${
-                t.type === 'success'
+              className={`px-3 py-2 border flex items-center justify-between ${t.type === 'success'
                   ? 'border-primary text-primary'
                   : t.type === 'error'
                     ? 'border-error text-error'
                     : t.type === 'warning'
                       ? 'border-tertiary text-tertiary'
                       : 'border-outline-variant text-on-surface'
-              }`}
+                }`}
             >
               <span>{t.message}</span>
               <button className="text-on-surface-variant hover:text-on-surface" onClick={() => removeToast(t.id)}>
