@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiCheckCircle, FiCircle, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiCheckCircle, FiCircle } from 'react-icons/fi';
 import { useProcurementStore, useGameStore, useInventoryStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
@@ -35,7 +35,7 @@ export const Procurement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [lastSavedAt, setLastSavedAt] = useState('');
-  const [showTransportDetails, setShowTransportDetails] = useState(false);
+
 
   const isProcurementOpen = phase === 'procurement_open';
 
@@ -170,7 +170,7 @@ export const Procurement = () => {
     );
   };
 
-  const currentTransportData = transports[currentDecision.transport];
+
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -319,60 +319,63 @@ export const Procurement = () => {
                 </div>
               </div>
 
-              {/* Transport Toggle & Projected Item Cost */}
+              {/* Transport Mode with Hover Cards */}
               <div className="space-y-4 flex-shrink-0">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold font-mono text-on-surface-variant uppercase tracking-widest">
                     TRANSPORT MODE
                   </label>
-                  <div className="flex space-x-2 relative">
-                    {(Object.keys(transports) || []).map(mode => (
-                      <button
-                        key={mode}
-                        disabled={!isProcurementOpen}
-                        onClick={() => setDecision(selectedComponent, 'transport', mode)}
-                        className={`flex-1 py-3 text-sm font-semibold font-mono uppercase tracking-widest transition-colors border
-                          ${currentDecision.transport === mode
-                            ? 'bg-surface-highest text-primary border-primary ring-1 ring-primary'
-                            : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-low'
-                          }
-                          ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}
-                        `}
-                      >
-                        {mode}
-                      </button>
-                    ))}
+                  <div className="flex space-x-2">
+                    {(Object.keys(transports) || []).map(mode => {
+                      const tData = transports[mode];
+                      const isSelected = currentDecision.transport === mode;
+                      return (
+                        <div key={mode} className="flex-1 relative group/transport">
+                          <button
+                            disabled={!isProcurementOpen}
+                            onClick={() => setDecision(selectedComponent, 'transport', mode)}
+                            className={`w-full py-3 text-sm font-semibold font-mono uppercase tracking-widest transition-colors border
+                              ${isSelected
+                                ? 'bg-surface-highest text-primary border-primary ring-1 ring-primary'
+                                : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-low'
+                              }
+                              ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}
+                            `}
+                          >
+                            {mode}
+                          </button>
 
-                    <button
-                      onClick={() => setShowTransportDetails(!showTransportDetails)}
-                      className="flex items-center justify-center w-12 bg-surface-low border border-outline-variant hover:bg-surface-high transition-colors"
-                    >
-                      {showTransportDetails ? <FiChevronUp className="text-xl" /> : <FiChevronDown className="text-xl" />}
-                    </button>
-
-                    {showTransportDetails && currentTransportData && (
-                      <div className="absolute right-0 bottom-full mb-2 w-72 bg-surface-highest border border-primary p-4 z-10 shadow-lg font-mono text-sm font-medium space-y-2 animate-fade-in">
-                        <div className="flex justify-between items-center border-b border-outline-variant pb-2 mb-2">
-                          <span className="font-bold text-base text-primary uppercase">{currentDecision.transport} DATA</span>
+                          {/* Hover Card */}
+                          {tData && (
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 opacity-0 pointer-events-none group-hover/transport:opacity-100 group-hover/transport:pointer-events-auto transition-opacity duration-200 z-20">
+                              <div className="bg-surface-highest border border-outline p-3 shadow-[0_4px_24px_rgba(0,0,0,0.5)] space-y-1.5">
+                                <div className="text-xs font-bold font-mono text-primary uppercase tracking-widest border-b border-outline-variant/40 pb-1.5 mb-1">{mode}</div>
+                                <div className="flex justify-between text-xs font-mono">
+                                  <span className="text-on-surface-variant">Base Cost</span>
+                                  <span className="text-on-surface font-semibold">${tData.base_cost}</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-mono">
+                                  <span className="text-on-surface-variant">Var. Cost</span>
+                                  <span className="text-on-surface font-semibold">${tData.var_cost}/u·km</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-mono">
+                                  <span className="text-on-surface-variant">σ Spread</span>
+                                  <span className="text-on-surface font-semibold">+{tData.sigma_add.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-mono">
+                                  <span className="text-error">Damage %</span>
+                                  <span className="text-error font-bold">{(tData.p_damage * 100).toFixed(1)}%</span>
+                                </div>
+                              </div>
+                              {/* Arrow pointing down */}
+                              <div className="flex justify-center">
+                                <div className="w-2.5 h-2.5 bg-surface-highest border-r border-b border-outline rotate-45 -mt-[6px]"></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Base Cost</span>
-                          <span>${currentTransportData.base_cost} / dispatch</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Variable Cost</span>
-                          <span>${currentTransportData.var_cost} / unit·km</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Quality Spread Add</span>
-                          <span>+{currentTransportData.sigma_add.toFixed(2)} σ</span>
-                        </div>
-                        <div className="flex justify-between text-error font-bold">
-                          <span className="text-on-surface-variant text-error">Damage Prob.</span>
-                          <span>{(currentTransportData.p_damage * 100).toFixed(1)}%</span>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
                 </div>
 
