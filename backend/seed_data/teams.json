@@ -1,7 +1,42 @@
 [
-  {"name": "Team Alpha",   "pin": "alpha2026"},
-  {"name": "Team Beta",    "pin": "beta2026"},
-  {"name": "Team Gamma",   "pin": "gamma2026"},
-  {"name": "Team Delta",   "pin": "delta2026"},
-  {"name": "Team Epsilon", "pin": "epsilon2026"}
+  {
+    "name": "Team Alpha",
+    "pin": "alpha2026"
+  },
+  {
+    "name": "Team Beta",
+    "pin": "beta2026"
+  },
+  {
+    "name": "Team Gamma",
+    "pin": "gamma2026"
+  },
+  {
+    "name": "Team Delta",
+    "pin": "delta2026"
+  },
+  {
+    "name": "Team Epsilon",
+    "pin": "epsilon2026"
+  }
+  {
+    "name": "Team Zeta",
+    "pin": "zeta2026"
+  },
+  {
+    "name": "Team Eta",
+    "pin": "eta2026"
+  },
+  {
+    "name": "Team Theta",
+    "pin": "theta2026"
+  },
+  {
+    "name": "Team Iota",
+    "pin": "iota2026"
+  },
+  {
+    "name": "Team Kappa",
+    "pin": "kappa2026"
+  }
 ]
