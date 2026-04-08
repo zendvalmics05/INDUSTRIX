@@ -5,6 +5,7 @@ import { MdFactory, MdCampaign, MdPrecisionManufacturing, MdLogout } from 'react
 import { useInventoryStore } from '../store';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useEventsStore } from '../store/useEventsStore';
+import { PillNav } from './PillNav';
 
 export const SharedLayout = () => {
   const { isLoggedIn, phase, cycleNumber, lastSyncTs, connectionOk, logout, pollStatus } = useGameStore();
@@ -118,10 +119,10 @@ export const SharedLayout = () => {
   if (!isLoggedIn) return null;
 
   const navItems = [
-    { path: '/', label: 'HOME' },
-    { path: '/market', label: 'MARKET' },
-    { path: '/inventory', label: 'INVENTORY' },
-    { path: '/event', label: 'EVENT' },
+    { href: '/', label: 'HOME' },
+    { href: '/market', label: 'MARKET' },
+    { href: '/inventory', label: 'INVENTORY' },
+    { href: '/event', label: 'EVENTS' },
   ];
 
   const sideItems = [
@@ -167,61 +168,60 @@ export const SharedLayout = () => {
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Top Navbar */}
-      <nav className="flex justify-between items-center bg-surface-low px-6 py-4 border-b border-outline-variant">
-        <div className="flex space-x-8">
-          {navItems.map(item => {
-            const isEventTab = item.path === '/event';
-            const unread = isEventTab ? getUnreadCount() : 0;
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`relative font-display text-sm tracking-widest transition-colors ${location.pathname === item.path ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-              >
-                {item.label}
-                {unread > 0 && (
-                  <span className="absolute -top-1 -right-3 w-2 h-2 bg-yellow-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex items-center space-x-8">
-          <div className="text-on-surface-variant font-mono text-xs flex items-center space-x-2">
+      <nav className="flex justify-between items-center bg-surface-low px-6 py-5 border-b border-outline-variant">
+        <PillNav
+          items={navItems}
+          activeHref={location.pathname}
+          onNavigate={(href) => navigate(href)}
+          ease="power3.out"
+          pillColor="rgba(218, 185, 255, 0.18)"
+          pillTextColor="#e1e2e7"
+          baseColor="#978d9e"
+          hoveredPillTextColor="#dab9ff"
+          initialLoadAnimation
+          badges={{ '/event': getUnreadCount() }}
+        />
+        <div className="flex items-center space-x-3">
+          {/* Phase breadcrumb + Cycle compartment */}
+          <div className="bg-surface-highest/60 border border-outline-variant/40 rounded-lg px-4 py-2.5 text-on-surface-variant font-mono text-sm flex items-center space-x-2">
             <span className="flex items-center space-x-2 uppercase tracking-wider font-bold">
               <span className="opacity-50">...</span>
-              <span className="opacity-50">&gt;</span>
+              <span className="opacity-40">&gt;</span>
               <span className={phase === 'procurement_open' ? 'text-primary' : 'opacity-40 hover:opacity-80 transition-opacity'}>PROCUREMENT</span>
-              <span className="opacity-50">&gt;</span>
+              <span className="opacity-40">&gt;</span>
               <span className={phase === 'production_open' ? 'text-primary' : 'opacity-40 hover:opacity-80 transition-opacity'}>PRODUCTION</span>
-              <span className="opacity-50">&gt;</span>
+              <span className="opacity-40">&gt;</span>
               <span className={phase === 'sales_open' ? 'text-primary' : 'opacity-40 hover:opacity-80 transition-opacity'}>SALES</span>
-              <span className="opacity-50">&gt;</span>
+              <span className="opacity-40">&gt;</span>
               <span className={phase === 'backroom' ? 'text-primary' : 'opacity-40 hover:opacity-80 transition-opacity'}>BACKROOM</span>
-              <span className="opacity-50">&gt;</span>
+              <span className="opacity-40">&gt;</span>
               <span className="opacity-50">...</span>
             </span>
-            <span className="ml-3 pl-3 border-l border-outline-variant">CYCLE <span className="text-on-surface ml-1">{cycleNumber || 0}</span></span>
+            <span className="ml-2 pl-3 border-l border-outline-variant/60">CYCLE <span className="text-on-surface ml-1 font-bold">{cycleNumber || 0}</span></span>
           </div>
-          <div className={`text-on-surface font-mono text-xs transition-all duration-300 ${fundsAnimClass}`}>
+
+          {/* Funds compartment */}
+          <div className={`bg-surface-highest/60 border border-outline-variant/40 rounded-lg px-4 py-2.5 font-mono text-sm font-bold transition-all duration-300 ${fundsAnimClass}`}>
             <span className={`${funds < 0 && !fundsAnimClass ? 'text-error' : !fundsAnimClass ? 'text-on-surface' : ''}`}>
               ${funds.toLocaleString()}
             </span>
           </div>
-          {/* Sync status indicator */}
-          <div className="flex items-center space-x-2 font-mono text-xs">
-            <span className={`inline-block w-2 h-2 rounded-full ${connectionOk ? (syncAgeSeconds !== null && syncAgeSeconds > 15 ? 'bg-tertiary' : 'bg-primary') : 'bg-error'}`} />
+
+          {/* Sync status compartment */}
+          <div className="bg-surface-highest/60 border border-outline-variant/40 rounded-lg px-4 py-2.5 flex items-center space-x-2 font-mono text-sm">
+            <span className={`inline-block w-2.5 h-2.5 rounded-full ${connectionOk ? (syncAgeSeconds !== null && syncAgeSeconds > 15 ? 'bg-tertiary' : 'bg-primary') : 'bg-error'}`} />
             <span className="text-on-surface-variant">
-              Last synced {syncAgeSeconds ?? '—'}s ago
+              {syncAgeSeconds ?? '—'}s ago
             </span>
           </div>
+
+          {/* Logout compartment */}
           <button
             onClick={logout}
-            className="flex items-center space-x-2 text-on-surface-variant hover:text-error transition-colors"
+            className="bg-surface-highest/60 border border-outline-variant/40 rounded-lg px-4 py-2.5 flex items-center space-x-2 text-on-surface-variant hover:text-error hover:border-error/40 transition-all"
           >
-            <span className="font-display text-sm tracking-widest">LOGOUT</span>
-            <MdLogout />
+            <span className="font-display text-sm font-bold tracking-widest">LOGOUT</span>
+            <MdLogout size={16} />
           </button>
         </div>
       </nav>

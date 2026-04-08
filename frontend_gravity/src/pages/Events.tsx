@@ -78,34 +78,34 @@ const NotificationItem = ({ notification }: { notification: any }) => {
   };
 
   return (
-    <div className={`border p-4 mb-3 rounded-sm transition-all group hover:scale-[1.02] active:scale-[0.98] ${getColors()}`}>
+    <div className={`border p-5 mb-4 rounded-sm transition-all group hover:scale-[1.02] active:scale-[0.98] ${getColors()}`}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center space-x-2 overflow-hidden">
-          {notification.type === 'sabotage' && <FiAlertTriangle size={14} className="animate-bounce" />}
-          {notification.type === 'discovery_self' && <FiLock size={14} />}
-          {notification.type === 'discovery_thwarted' && <FiShield size={14} className="text-success" />}
-          {notification.type === 'benefit' && <FiCheckCircle size={14} className="text-success" />}
-          {notification.type === 'intel_report' && <FiEye size={14} className="text-primary animate-pulse" />}
-          {notification.type === 'operational_loss' && <FiAlertTriangle size={14} className="text-error" />}
-          <span className="font-display text-sm uppercase tracking-tight truncate font-bold">{notification.title}</span>
+          {notification.type === 'sabotage' && <FiAlertTriangle size={18} className="animate-bounce" />}
+          {notification.type === 'discovery_self' && <FiLock size={18} />}
+          {notification.type === 'discovery_thwarted' && <FiShield size={18} className="text-success" />}
+          {notification.type === 'benefit' && <FiCheckCircle size={18} className="text-success" />}
+          {notification.type === 'intel_report' && <FiEye size={18} className="text-primary animate-pulse" />}
+          {notification.type === 'operational_loss' && <FiAlertTriangle size={18} className="text-error" />}
+          <span className="font-display text-base uppercase tracking-tight truncate font-bold">{notification.title}</span>
         </div>
         <div className="flex flex-col items-end flex-shrink-0 ml-2">
-          <span className="font-mono text-[9px] uppercase tracking-widest opacity-40">TIMESTAMP</span>
-          <span className="font-mono text-[10px] font-bold">C{notification.cycle_number}·PRTC-EX</span>
+          <span className="font-mono text-xs uppercase tracking-widest opacity-40">TIMESTAMP</span>
+          <span className="font-mono text-sm font-bold">C{notification.cycle_number}·PRTC-EX</span>
         </div>
       </div>
-      <p className="text-xs opacity-90 leading-tight mb-3 font-mono">{notification.message}</p>
+      <p className="text-sm opacity-90 leading-relaxed mb-3 font-mono">{notification.message}</p>
       
       {notification.discovery_code && (
         <div className="mt-2 flex flex-col space-y-1 bg-black/40 p-2 rounded border border-white/10 group-hover:border-error/30 transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FiEye size={12} className="opacity-60" />
-              <span className="text-[9px] uppercase tracking-widest opacity-60">Trace ID:</span>
-              <span className="font-mono text-xs font-bold tracking-[0.2em] text-white selection:bg-error selection:text-white">{notification.discovery_code}</span>
+              <FiEye size={14} className="opacity-60" />
+              <span className="text-xs uppercase tracking-widest opacity-60">Trace ID:</span>
+              <span className="font-mono text-sm font-bold tracking-[0.2em] text-white selection:bg-error selection:text-white">{notification.discovery_code}</span>
             </div>
           </div>
-          <span className="text-[8px] opacity-40 italic uppercase tracking-tighter">Submit to Terminal for Restitution</span>
+          <span className="text-[11px] opacity-40 italic uppercase tracking-tighter">Submit to Terminal for Restitution</span>
         </div>
       )}
 
@@ -113,8 +113,8 @@ const NotificationItem = ({ notification }: { notification: any }) => {
         <div className="mt-2 grid grid-cols-2 gap-2">
           {Object.entries(notification.payload).map(([k, v]) => (
             <div key={k} className="bg-white/5 px-2 py-1 rounded flex flex-col">
-              <span className="text-[8px] uppercase opacity-40 tracking-widest truncate">{k.replace(/_/g, ' ')}</span>
-              <span className="text-[10px] font-mono font-bold truncate">
+              <span className="text-[11px] uppercase opacity-40 tracking-widest truncate">{k.replace(/_/g, ' ')}</span>
+              <span className="text-sm font-mono font-bold truncate">
                 {typeof v === 'object' && v !== null 
                   ? JSON.stringify(v) 
                   : typeof v === 'number' 
@@ -332,18 +332,18 @@ export const Events = () => {
 
             <div className="space-y-4 mt-8">
               <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2 mb-4">
-                <h3 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.2em] flex items-center space-x-2">
-                  <FiClock size={10} />
+                <h3 className="text-sm font-mono text-on-surface-variant uppercase tracking-[0.2em] flex items-center space-x-2">
+                  <FiClock size={14} />
                   <span>Facility Log & Deals</span>
                 </h3>
-                <span className="text-[8px] font-mono opacity-40 uppercase flex items-center space-x-1">
+                <span className="text-xs font-mono opacity-40 uppercase flex items-center space-x-1">
                   <span className="w-1.5 h-1.5 bg-primary/80 rounded-full animate-ping" />
                   <span>Live Event Feed</span>
                 </span>
               </div>
 
               {loadingNotifications && notifications.length === 0 ? (
-                <div className="p-10 border border-outline-variant/20 bg-surface-low/50 animate-pulse text-[9px] font-mono text-on-surface-variant text-center uppercase tracking-[0.2em] space-y-4">
+                <div className="p-10 border border-outline-variant/20 bg-surface-low/50 animate-pulse text-sm font-mono text-on-surface-variant text-center uppercase tracking-[0.2em] space-y-4">
                   <FiZap className="mx-auto text-primary" size={24} />
                   <p>Initializing Secure Connection...</p>
                 </div>
@@ -353,9 +353,9 @@ export const Events = () => {
                 </div>
               ) : (
                 <div className="p-12 border border-dashed border-outline-variant/30 text-center space-y-3 opacity-40 grayscale group hover:grayscale-0 transition-all flex flex-col justify-center items-center">
-                  <FiLock size={32} />
-                  <div className="text-[10px] font-mono uppercase tracking-[0.3em] mt-4">Encryption Holding</div>
-                  <p className="text-[8px] font-mono uppercase">No Traces or Threats Detected</p>
+                  <FiLock size={36} />
+                  <div className="text-sm font-mono uppercase tracking-[0.3em] mt-4">Encryption Holding</div>
+                  <p className="text-xs font-mono uppercase">No Traces or Threats Detected</p>
                 </div>
               )}
             </div>
