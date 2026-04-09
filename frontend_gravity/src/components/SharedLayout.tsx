@@ -416,6 +416,12 @@ export const SharedLayout = () => {
             )}
           </div>
 
+          {/* Sponsor Logo */}
+          <div className="mt-8 px-6 pb-2 text-center opacity-80 hover:opacity-100 transition-opacity flex flex-col items-center shrink-0">
+            <div className="text-[9px] text-on-surface-variant font-mono uppercase tracking-[0.2em] mb-3">Powered By Sponsor</div>
+            <img src="/sponsor_logo.png" alt="Sponsor Logo" className="w-full max-w-[200px] drop-shadow-md object-contain" />
+          </div>
+
         </aside>
 
         {/* Main Content */}
