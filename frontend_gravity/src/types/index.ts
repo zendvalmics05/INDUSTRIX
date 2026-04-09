@@ -142,11 +142,11 @@ export interface LeaderboardRow {
   rank: number;
   team_name: string;
   composite_score: number;
-  closing_funds: number;
-  cumulative_profit: number;
+  net_margin: number;
+  enterprise_value: number;
+  market_share: number;
   brand_score: number;
-  quality_avg: number;
-  inventory_penalty: number;
+  operational_efficiency: number;
 }
 
 export interface Award {

@@ -10,7 +10,8 @@ import {
   RND_CONSISTENCY_BONUS,
   CONDITION_GRADE_EXPONENT,
   MACHINE_TIERS,
-  RND_QUALITY_BONUS
+  RND_QUALITY_BONUS,
+  COMPONENT_COMPLEXITY
 } from '../constants/production';
 
 /**
@@ -43,10 +44,16 @@ export const calculateMoraleDelta = (wageLevel: string, understaffingPct: number
 /**
  * Calculates projected sigma (variance).
  */
-export const calculateProjectedSigma = (automation: string, skill: number, rndConsistency: number): number => {
+export const calculateProjectedSigma = (automation: string, skill: number, rndConsistency: number, component?: string): number => {
   let sigma = BASE_SIGMA * (AUTOMATION_SIGMA_MULT[automation as keyof typeof AUTOMATION_SIGMA_MULT] || 1.0);
   const skillFactor = Math.max(0.1, Math.min(1.0, skill / 100.0));
   sigma *= (1.0 - skillFactor * SKILL_SIGMA_REDUCTION);
+  
+  if (component) {
+    const mult = COMPONENT_COMPLEXITY[component]?.sigma_mult || 1.0;
+    sigma *= mult;
+  }
+
   sigma -= rndConsistency * RND_CONSISTENCY_BONUS;
   return Math.max(2.0, sigma);
 };
@@ -54,7 +61,7 @@ export const calculateProjectedSigma = (automation: string, skill: number, rndCo
 /**
  * Calculates effective output grade for a collection of machines.
  */
-export const calculateEffectiveGrade = (machines: any[], rndQuality: number): number => {
+export const calculateEffectiveGrade = (machines: any[], rndQuality: number, component?: string): number => {
   if (!machines || machines.length === 0) return 0;
   let totalTp = 0;
   let gradeSum = 0.0;
@@ -67,5 +74,7 @@ export const calculateEffectiveGrade = (machines: any[], rndQuality: number): nu
   });
 
   const base = totalTp > 0 ? gradeSum / totalTp : 0.0;
-  return base + rndQuality * RND_QUALITY_BONUS;
+  const offset = component ? (COMPONENT_COMPLEXITY[component]?.grade_offset || 0) : 0;
+  
+  return base + offset + rndQuality * RND_QUALITY_BONUS;
 };

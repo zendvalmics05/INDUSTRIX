@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FiClock } from 'react-icons/fi';
 
 interface PhaseTimerProps {
@@ -16,15 +16,14 @@ export const PhaseTimer: React.FC<PhaseTimerProps> = ({ openedAt, duration, phas
     return () => clearInterval(timer);
   }, []);
 
-  const { remaining, total, progress, isLow } = useMemo(() => {
+  const { remaining, progress, isLow } = useMemo(() => {
     if (!openedAt || !duration || phase === 'game_over' || phase === 'no_active_game') {
-      return { remaining: 0, total: 0, progress: 0, isLow: false };
+      return { remaining: 0, progress: 0, isLow: false };
     }
     const rem = Math.max(0, duration - (now - openedAt));
     const prog = (rem / duration) * 100;
     return {
       remaining: rem,
-      total: duration,
       progress: prog,
       isLow: rem < 120 // Less than 2 minutes
     };

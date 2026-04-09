@@ -25,6 +25,19 @@ def compute_leaderboard(
         .all()
     )
 
+    # Pre-calculate total units sold by all teams for market share
+    all_logs = db.query(CyclePhaseLog).join(Cycle).filter(Cycle.game_id == game.id).all()
+    team_units_sold = {team.id: 0 for team in teams}
+    for log in all_logs:
+        sales_summary = log.sales_summary or {}
+        for t_id_str, s in sales_summary.items():
+            t_id = int(t_id_str)
+            if t_id in team_units_sold:
+                team_units_sold[t_id] += s.get("units_sold", 0) + s.get("black_market_sold", 0) # black market counts or just units_sold?
+                # Actually "units_sold" in sales_summary already is typical market sales, let's just use it
+    
+    total_units_sold_all = sum(team_units_sold.values())
+
     rows = []
     for team in teams:
         inv: Inventory = (
@@ -32,23 +45,62 @@ def compute_leaderboard(
         )
         if inv is None:
             continue
+            
+        drone_stock = inv.drone_stock or [0] * 101
 
-        drone_stock       = inv.drone_stock or [0] * 101
-        inventory_penalty = float(sum(drone_stock[1:]))
-
-        # Quality weighted average from drone_stock
-        total_units = sum(drone_stock[1:])
-        if total_units > 0:
-            quality_avg = sum(g * drone_stock[g] for g in range(1, 101)) / total_units
+        # Calculate Net Margin
+        if inv.cumulative_revenue > 0:
+            net_margin = (inv.cumulative_revenue - inv.cumulative_production_cost) / inv.cumulative_revenue
         else:
-            quality_avg = 0.0
+            net_margin = 0.0
+
+        # Calculate Enterprise Value
+        # 1. Closing funds
+        ev_funds = inv.funds
+        
+        # 2. Machine value
+        from models.procurement import Machine
+        from core.config import MACHINE_TIERS, PRICE_PREMIUM_NORMAL, PRICE_STANDARD, PRICE_SUBSTANDARD, PRICE_REJECT_SCRAP
+        active_machines = db.query(Machine).filter(Machine.team_id == team.id, Machine.is_active == True).all()
+        machine_value = sum((m.condition / 100.0) * MACHINE_TIERS.get(m.tier, MACHINE_TIERS["standard"])["buy"] for m in active_machines)
+        
+        # 3. Drone stock value
+        from services.sales import classify_drones
+        tiers = classify_drones(drone_stock, game.qr_hard, game.qr_soft, game.qr_premium)
+        drone_stock_value = (
+            tiers.get("premium", 0) * PRICE_PREMIUM_NORMAL +
+            tiers.get("standard", 0) * PRICE_STANDARD +
+            tiers.get("substandard", 0) * PRICE_SUBSTANDARD +
+            tiers.get("reject", 0) * PRICE_REJECT_SCRAP
+        )
+        
+        # 4. Outstanding loans
+        from models.deals import EventStatus, EventPhase
+        pending_repayments = db.query(Event).filter(
+            Event.target_team_id == team.id,
+            Event.event_type == EventType.LOAN_REPAYMENT,
+            Event.status == EventStatus.PENDING
+        ).all()
+        outstanding_loans = sum(ev.payload.get("amount", 0.0) for ev in pending_repayments if ev.payload)
+        
+        enterprise_value = ev_funds + machine_value + drone_stock_value - outstanding_loans
+        
+        # Calculate Market Share
+        units_sold = team_units_sold.get(team.id, 0)
+        market_share = units_sold / total_units_sold_all if total_units_sold_all > 0 else 0.0
+        
+        # Calculate Operational Efficiency
+        if inv.cumulative_production_cost > 0:
+            operational_efficiency = inv.cumulative_units_produced / inv.cumulative_production_cost
+        else:
+            operational_efficiency = 0.0
 
         raw = {
-            "closing_funds":     inv.funds,
-            "cumulative_profit": inv.cumulative_profit,
-            "brand_score":       inv.brand_score,
-            "quality_avg":       quality_avg,
-            "inventory_penalty": inventory_penalty,
+            "net_margin":             net_margin,
+            "enterprise_value":       enterprise_value,
+            "market_share":           market_share,
+            "brand_score":            inv.brand_score,
+            "operational_efficiency": operational_efficiency,
         }
 
         norm = {
@@ -59,13 +111,15 @@ def compute_leaderboard(
         composite = sum(
             norm[k] * w for k, w in LEADERBOARD_WEIGHTS.items()
         )
-        composite = max(-1.0, composite)
+        # We don't cap at -1.0 strictly anymore unless requested, 
+        # but let's keep it bounded just in case it's huge negative.
+        # Actually margins can drag it down. Let's just not max it.
 
         rows.append({
             "team_id":          team.id,
             "team_name":        team.name,
             "composite_score":  round(composite, 4),
-            **{k: round(v, 2) for k, v in raw.items()},
+            **{k: round(v, 4) if "share" in k or "margin" in k or "efficiency" in k else round(v, 2) for k, v in raw.items()},
         })
 
     rows.sort(key=lambda r: r["composite_score"], reverse=True)

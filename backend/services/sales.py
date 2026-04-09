@@ -613,6 +613,7 @@ def resolve_sales(
             slots[comp_val].finished_stock = new_stock
 
     drones_assembled = sum(drone_arr[1:])
+    inventory.cumulative_units_produced += drones_assembled
 
     # Merge newly assembled drones into existing drone_stock
     existing_drone_stock = inventory.drone_stock or [0] * 101
@@ -841,6 +842,9 @@ def resolve_sales(
     inventory.funds            = round(inventory.funds + final_net_revenue, 2)
     inventory.cumulative_profit = round(
         inventory.cumulative_profit + final_net_revenue, 2
+    )
+    inventory.cumulative_revenue = round(
+        inventory.cumulative_revenue + total_revenue_gross, 2
     )
 
     db.flush()

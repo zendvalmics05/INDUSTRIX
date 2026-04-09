@@ -84,14 +84,15 @@ class SalesPricesOut(BaseModel):
 # ── Leaderboard ───────────────────────────────────────────────────────────────
 
 class LeaderboardRow(BaseModel):
-    rank:              int
-    team_name:         str
-    composite_score:   float
-    closing_funds:     float
-    cumulative_profit: float
-    brand_score:       float
-    quality_avg:       float
-    inventory_penalty: float
+    rank:                   int
+    team_id:                int
+    team_name:              str
+    composite_score:        float
+    net_margin:             float
+    enterprise_value:       float
+    market_share:           float
+    brand_score:            float
+    operational_efficiency: float
 
 
 class Award(BaseModel):

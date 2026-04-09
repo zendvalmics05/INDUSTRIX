@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useGameStore } from '../store';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MdFactory, MdCampaign, MdPrecisionManufacturing, MdLogout } from 'react-icons/md';
+import { MdLogout } from 'react-icons/md';
 import { useInventoryStore } from '../store';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useEventsStore } from '../store/useEventsStore';
@@ -14,7 +14,7 @@ import type { CycleBriefingOut } from '../types';
 
 export const SharedLayout = () => {
   const { isLoggedIn, phase, cycleNumber, lastSyncTs, connectionOk, logout, pollStatus, phaseOpenedAt, phaseDuration, lastBriefedCycle, setLastBriefedCycle } = useGameStore();
-  const { funds, brandScore, automationLevel, workforceSize, morale, skillLevel, fetchInventory } = useInventoryStore();
+  const { funds, fetchInventory } = useInventoryStore();
   const { notifications, viewedNotificationIds, markNotificationsAsViewed, fetchNotifications, fetchNews, getUnreadCount } = useEventsStore();
   const { toasts, addToast, removeToast } = useNotificationStore();
   const navigate = useNavigate();
@@ -73,13 +73,13 @@ export const SharedLayout = () => {
       }
       pollStatus();
       fetchNotifications();
-      fetchNews(true);
+      fetchNews();
       fetchInventory().catch(() => { });
       fetchSidebarData().catch(() => { });
       intervalRef.current = window.setInterval(() => {
         pollStatus();
         fetchNotifications();
-        fetchNews(true);
+        fetchNews();
         fetchInventory().catch(() => { });
         fetchSidebarData().catch(() => { });
       }, pollIntervalMs) as unknown as number;
@@ -157,7 +157,7 @@ export const SharedLayout = () => {
   const sabotageNotification = useMemo(() => {
     return notifications.find(n => 
       !viewedNotificationIds.includes(n.id) && 
-      n.type === 'OPERATIONAL_LOSS'
+      n.type === 'operational_loss'
     );
   }, [notifications, viewedNotificationIds]);
 
@@ -192,7 +192,7 @@ export const SharedLayout = () => {
     { path: '/event', label: 'EVENT' },
   ];
 
-  const unreadNotifs = useMemo(() => notifications.filter(n => !n.viewed), [notifications]);
+  const unreadNotifs = useMemo(() => notifications.filter(n => !viewedNotificationIds.includes(n.id)), [notifications, viewedNotificationIds]);
 
   const syncAgeSeconds = useMemo(() => {
     if (!lastSyncTs) return null;
@@ -406,7 +406,7 @@ export const SharedLayout = () => {
                   <div className="space-y-3">
                     {unreadNotifs.map(n => (
                       <div key={n.id} className="text-[10px] border-l-2 border-error pl-2 break-words">
-                        <span className="font-bold text-on-surface block mb-0.5">{n.event_type.replace(/_/g, ' ')}</span>
+                        <span className="font-bold text-on-surface block mb-0.5">{n.type.replace(/_/g, ' ')}</span>
                         <span className="text-on-surface-variant font-mono">{n.message}</span>
                       </div>
                     ))}

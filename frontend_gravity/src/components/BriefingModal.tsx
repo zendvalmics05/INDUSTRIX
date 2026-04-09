@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiFileText, FiTrendingUp, FiTrendingDown, FiActivity,
-  FiBriefcase, FiZap, FiGlobe, FiX, FiCheckCircle, FiInfo, FiAlertTriangle
+  FiZap, FiGlobe, FiX, FiCheckCircle, FiInfo, FiAlertTriangle
 } from 'react-icons/fi';
 import type { CycleBriefingOut } from '../types';
 

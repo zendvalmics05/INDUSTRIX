@@ -2,7 +2,79 @@ import { useEffect, useMemo } from 'react';
 import { useResultsStore, useGameStore } from '../store';
 import { StatusChip } from '../components/SharedComponents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCrown, FaArrowUp, FaAward, FaUserSecret, FaFingerprint, FaNetworkWired, FaServer, FaGem, FaSkull, FaBiohazard, FaGhost, FaSkullCrossbones } from 'react-icons/fa';
+import { FaCrown, FaArrowUp, FaAward, FaUserSecret, FaFingerprint, FaNetworkWired, FaServer, FaGem, FaBiohazard, FaGhost, FaSkullCrossbones, FaChartPie } from 'react-icons/fa';
+
+const MarketShareChart = ({ rows }: { rows: import('../types').LeaderboardRow[] }) => {
+  const colors = ['#DAB9FF', '#EFC050', '#8A63D2', '#FF8E8B', '#54C6EB', '#4ADE80', '#A78BFA', '#F472B6', '#34D399'];
+  let cumulativePercent = 0;
+  
+  const getCoordinatesForPercent = (percent: number) => {
+    const x = Math.cos(2 * Math.PI * percent);
+    const y = Math.sin(2 * Math.PI * percent);
+    return [x, y];
+  };
+
+  const validRows = rows.filter(r => r.market_share > 0);
+  
+  if (validRows.length === 0) {
+    return <div className="h-full flex items-center justify-center text-[10px] text-on-surface-variant uppercase tracking-widest pt-4">No Market Data</div>;
+  }
+
+  return (
+    <div className="flex h-full w-full mx-auto items-center justify-center gap-10">
+      <div className="w-48 h-48 shrink-0 relative flex items-center justify-center">
+        <svg viewBox="-1.1 -1.1 2.2 2.2" className="w-full h-full transform -rotate-90 drop-shadow-[0_0_12px_rgba(218,185,255,0.15)]">
+          {validRows.map((row, index) => {
+            const share = row.market_share;
+            if (share > 0.999) {
+               return <circle key={row.team_name} cx="0" cy="0" r="1" fill={colors[index % colors.length]} />;
+            }
+            
+            const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
+            cumulativePercent += share;
+            const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+            
+            const largeArcFlag = share > 0.5 ? 1 : 0;
+            const pathData = [
+              `M 0 0`,
+              `L ${startX} ${startY}`,
+              `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+              `Z`,
+            ].join(' ');
+
+            return (
+              <path
+                key={row.team_name}
+                d={pathData}
+                fill={colors[index % colors.length]}
+                className="stroke-surface-low stroke-[0.015] hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                <title>{row.team_name}: {(share * 100).toFixed(1)}%</title>
+              </path>
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-16 h-16 rounded-full bg-surface-low border-[3px] border-surface-low"></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 w-full max-w-2xl px-2">
+        {validRows.sort((a, b) => b.market_share - a.market_share).map((row, index) => (
+          <div key={row.team_name} className="flex flex-col bg-surface-high/20 px-4 py-3 border border-outline-variant/10 rounded transition-colors hover:bg-surface-high/40">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: colors[index % colors.length] }}></span>
+              <span className="truncate opacity-70 text-[10px] font-display uppercase tracking-widest leading-none">{row.team_name}</span>
+            </div>
+            <span className="font-bold font-mono text-tertiary text-base leading-none ml-4 flex items-center gap-2">
+              {(row.market_share * 100).toFixed(1)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 export const Results = () => {
   const { phase, teamName } = useGameStore();
@@ -49,11 +121,12 @@ export const Results = () => {
 
       <AnimatePresence>
         {(phase === 'backroom' || phase === 'game_over') && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono overflow-hidden py-2"
-          >
+          <>
+            <motion.div
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono overflow-hidden py-2"
+            >
             {/* Panel 1: Main Status */}
             <div className="bg-surface-low border border-primary/30 p-5 backdrop-blur-xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-primary/20 transition-all duration-1000"></div>
@@ -91,22 +164,22 @@ export const Results = () => {
                </div>
                {ownRow ? (
                  <div className="grid grid-cols-2 gap-4 relative z-10">
-                   <div>
-                     <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Liquidity</div>
-                     <div className="text-xl font-display font-medium text-primary shadow-primary/20 drop-shadow-md">
-                       ${ownRow.closing_funds?.toLocaleString()}
-                     </div>
-                   </div>
-                   <div>
-                     <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Current Rank</div>
-                     <div className="text-xl font-display font-black text-on-surface">
-                       #{ownRow.rank}
-                     </div>
-                   </div>
-                   <div className="col-span-2 bg-black/20 p-2 rounded text-[10px] flex justify-between items-center border border-white/5">
-                     <span className="uppercase opacity-60">Composite Score</span>
-                     <span className="font-bold">{ownRow.composite_score?.toFixed(1)} Pts</span>
-                   </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Ent. Value</div>
+                      <div className="text-xl font-display font-medium text-primary shadow-primary/20 drop-shadow-md truncate">
+                        ${ownRow.enterprise_value?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Current Rank</div>
+                      <div className="text-xl font-display font-black text-on-surface">
+                        #{ownRow.rank}
+                      </div>
+                    </div>
+                    <div className="col-span-2 bg-black/20 p-2 rounded text-[10px] flex justify-between items-center border border-white/5">
+                      <span className="uppercase opacity-60">Composite Score</span>
+                      <span className="font-bold">{ownRow.composite_score?.toFixed(1)} Pts</span>
+                    </div>
                  </div>
                ) : (
                  <div className="h-full flex items-center justify-center text-[10px] text-on-surface-variant uppercase tracking-widest animate-pulse">Syncing Telemetry...</div>
@@ -131,6 +204,28 @@ export const Results = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Market Share Visualization Row */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-surface-low border border-outline-variant/20 p-6 backdrop-blur-xl flex flex-col relative group rounded-sm shadow-xl mt-2 mb-2"
+          >
+            <div className="flex items-center justify-between mb-4 relative z-10 w-full">
+              <div className="flex items-center space-x-3">
+                <FaChartPie className="text-tertiary text-xl" />
+                <h3 className="font-display font-black tracking-widest uppercase text-base bg-gradient-to-r from-tertiary to-tertiary/70 bg-clip-text text-transparent">Global Market Share</h3>
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-on-surface-variant bg-surface-high/50 border border-outline-variant/10 px-3 py-1.5 rounded">
+                Live Distribution
+              </div>
+            </div>
+            <div className="w-full flex align-center justify-center relative z-10 py-6 pl-4 border-t border-outline-variant/10">
+              <MarketShareChart rows={sortedRows} />
+            </div>
+          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -145,11 +240,11 @@ export const Results = () => {
                 <th className="py-6 pl-6 font-bold uppercase">Rank</th>
                 <th className="py-6 px-4 font-bold uppercase">Team Authority</th>
                 <th className="py-6 px-4 font-bold uppercase text-right">Composite</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Liquidity</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Profit</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Advantage</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Quality</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Penalty</th>
+                <th className="py-6 px-4 font-bold uppercase text-right">Net Margin</th>
+                <th className="py-6 px-4 font-bold uppercase text-right">Ent. Value</th>
+                <th className="py-6 px-4 font-bold uppercase text-right">Brand</th>
+                <th className="py-6 px-4 font-bold uppercase text-right">Ops Efficiency</th>
+                <th className="py-6 px-4 font-bold uppercase text-right">Market Share</th>
               </tr>
             </thead>
             <tbody>
@@ -217,27 +312,28 @@ export const Results = () => {
                         {row.composite_score?.toFixed(1) || 0}
                       </span>
                     </td>
-                    <td className="py-6 px-4 text-right text-on-surface-variant font-mono">
-                      <span className="opacity-40 text-[10px] mr-1">$</span>
-                      {row.closing_funds?.toLocaleString()}
+                    <td className="py-6 px-4 text-right text-on-surface-variant font-mono text-base">
+                      <span className={`font-bold ${row.net_margin < 0 ? 'text-error/80' : 'text-primary/90'}`}>
+                        {(row.net_margin * 100).toFixed(1)}%
+                      </span>
                     </td>
-                    <td className={`py-6 px-4 text-right font-bold font-mono text-base
-                      ${row.cumulative_profit < 0 ? 'text-error' : 'text-primary'}
-                    `}>
+                    <td className={`py-6 px-4 text-right font-bold font-mono text-base text-on-surface`}>
                       <span className="opacity-60 text-[10px] mr-0.5">$</span>
-                      {row.cumulative_profit?.toLocaleString()}
+                      {row.enterprise_value?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </td>
                     <td className="py-6 px-4 text-right text-on-surface font-mono">
                       <div className="flex items-center justify-end gap-1.5">
                         <span className="text-base">{row.brand_score?.toFixed(1) || 0}</span>
-                        {row.brand_score > 50 && <FaArrowUp className="text-[10px] text-primary animate-bounce" />}
+                        {row.brand_score > 50 && <FaArrowUp className="text-[10px] text-primary animate-bounce opacity-80" />}
                       </div>
                     </td>
                     <td className="py-6 px-4 text-right text-on-surface font-mono text-base">
-                      {row.quality_avg?.toFixed(1) || 0}
+                       {row.operational_efficiency > 0 ? (
+                         <>{(row.operational_efficiency * 10000).toFixed(2)} <span className="text-[10px] opacity-50 block leading-tight">U/${'10k'}</span></>
+                       ) : '0'}
                     </td>
-                    <td className="py-6 px-4 text-right text-error/60 font-mono text-xs">
-                      -{row.inventory_penalty > 0 ? `$${row.inventory_penalty?.toLocaleString()}` : '0'}
+                    <td className="py-6 px-4 text-right text-tertiary font-mono text-base font-bold">
+                      {(row.market_share * 100).toFixed(1)}%
                     </td>
                   </motion.tr>
                 );
