@@ -43,6 +43,7 @@ from core.config import (
     OVERHAUL_RECOVERY_CAP, QUALITY_MAX,
     RND_CONSISTENCY_BONUS, RND_CYCLES_PER_LEVEL,
     RND_QUALITY_BONUS, RND_YIELD_BONUS, RND_COST_PER_LEVEL,
+    COMPONENT_COMPLEXITY,
     RIOT_SURVIVAL, RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
     RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
     SKILL_GAIN_LOW_MORALE, SKILL_SIGMA_REDUCTION,
@@ -158,6 +159,7 @@ def total_throughput(machines: List[Machine]) -> int:
 def _effective_grade_for_machines(
     machines:       List[Machine],
     rnd_quality:    int,
+    component:      str,
 ) -> float:
     """
     Weighted average effective output grade across all active machines.
@@ -178,17 +180,21 @@ def _effective_grade_for_machines(
         total_tp  += tp
 
     base = grade_sum / total_tp if total_tp > 0 else 0.0
-    return base + rnd_quality * RND_QUALITY_BONUS
+    offset = COMPONENT_COMPLEXITY.get(component, {}).get("grade_offset", 0)
+    return base + offset + rnd_quality * RND_QUALITY_BONUS
 
 
 def _compute_sigma(
     automation_level: str,
     skill:            float,
     rnd_consistency:  int,
+    component:        str,
 ) -> float:
     sigma = BASE_SIGMA * AUTOMATION_SIGMA_MULT.get(automation_level, 1.0)
     skill_factor = max(0.1, min(1.0, skill / 100.0))
     sigma *= (1.0 - skill_factor * SKILL_SIGMA_REDUCTION)
+    mult   = COMPONENT_COMPLEXITY.get(component, {}).get("sigma_mult", 1.0)
+    sigma *= mult
     sigma -= rnd_consistency * RND_CONSISTENCY_BONUS
     return max(2.0, sigma)
 
@@ -265,7 +271,6 @@ def _draw_component_array(
     for v in draws:
         g = int(np.clip(v, 0, QUALITY_MAX))
         arr[g] += 1
-    arr[0] += arr[0]
     return arr
 
 
@@ -313,6 +318,8 @@ def resolve_production(
     )
     if inventory is None:
         return {}
+
+    initial_funds = inventory.funds
 
     slots: Dict[str, ComponentSlot] = {
         s.component.value: s
@@ -552,17 +559,22 @@ def resolve_production(
         # ── Compute throughput and output parameters ──────────────────────────
         tp_total  = int(total_throughput(machines) * labour_factor * production_survival)
             
-        eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality)
+        eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality, comp_val)
         eff_grade += fast_quality_bonus   # bonus only if a machine was bought
 
         sigma     = _compute_sigma(automation_level, inventory.skill_level,
-                                    slot.rnd_consistency)
+                                    slot.rnd_consistency, comp_val)
         yield_reduction = slot.rnd_yield * RND_YIELD_BONUS
 
         # ── Player-chosen units_to_produce ────────────────────────────────────
-        # Clamp to [0, tp_total]. None means use full throughput.
+        # Clamp to [0, tp_total]. None means use full throughput constrained by stock.
         if units_to_produce is None:
-            requested = tp_total
+            raw_total = sum(slot.raw_stock[1:])
+            # Max final units we can produce given materials and yield bonus
+            # Formula: final_units * (1 - yield_reduction) <= raw_total
+            # => final_units <= raw_total / (1 - yield_reduction)
+            materials_max = int(raw_total / max(0.01, (1.0 - yield_reduction)))
+            requested = min(tp_total, materials_max)
         else:
             requested = max(0, min(units_to_produce, tp_total))
 
@@ -584,7 +596,7 @@ def resolve_production(
             "total_throughput": tp_total,
             "requested":        requested,
             "machines_active":  len(machines),
-            "effective_grade_mean": round(eff_grade, 1),
+            "effective_grade_mean": round(blended_mean, 1),
             "effective_sigma":  round(sigma, 2),
             "rm_consumed":      consumed,
             "fin_stock_total":  sum(slot.finished_stock[1:]),
@@ -597,6 +609,11 @@ def resolve_production(
 
     # ── Mark events applied ───────────────────────────────────────────────────
     _mark_applied(events)
+    
+    funds_spent = initial_funds - inventory.funds
+    if funds_spent > 0:
+        inventory.cumulative_production_cost = round(inventory.cumulative_production_cost + funds_spent, 2)
+
     db.flush()
 
     return {
@@ -732,7 +749,7 @@ def calculate_projections(
         machines = list(all_machines.get(comp_val, []))
         
         cost_maint = MAINTENANCE_COST.get(maint, 0.0) * len(machines)
-        cost_rnd = (rnd.get("levels", 1) * 10000.0) if rnd else 0.0
+        cost_rnd = (rnd.get("levels", 1) * RND_COST_PER_LEVEL) if rnd else 0.0
         cost_buy = 0.0
         
         if buy:
@@ -744,8 +761,8 @@ def calculate_projections(
         total_outflow += cost_maint + cost_rnd + cost_buy
         
         tp_max = int(total_throughput(machines) * labour_factor)
-        eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality)
-        sigma = _compute_sigma(upgrade_auto, inventory.skill_level, slot.rnd_consistency)
+        eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality, comp_val)
+        sigma = _compute_sigma(upgrade_auto, inventory.skill_level, slot.rnd_consistency, comp_val)
         
         comp_projections[comp_val] = {
             "throughput_max": tp_max,

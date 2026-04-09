@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useProductionStore, useGameStore, useInventoryStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
@@ -17,7 +18,10 @@ import {
   WAGE_COSTS,
   AUTOMATION_UPGRADE_COST,
   RND_COST_PER_LEVEL,
-  AUTOMATION_LABOUR_MULT
+  AUTOMATION_LABOUR_MULT,
+  RND_YIELD_BONUS,
+  COMPONENT_COMPLEXITY,
+  RM_WEIGHT
 } from '../constants/production';
 
 import {
@@ -31,13 +35,46 @@ import {
 // Sub-components
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Tooltip = ({ text, title }: { text: string; title?: string }) => (
-  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 hidden group-hover:block z-50 bg-surface-highest border border-outline-variant p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 pointer-events-none">
-    {title && <div className="text-base font-semibold font-medium font-mono text-primary uppercase mb-1 font-bold tracking-widest">{title}</div>}
-    <p className="text-base font-semibold font-medium font-mono text-on-surface leading-relaxed opacity-90 normal-case">{text}</p>
-    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-outline-variant"></div>
-  </div>
-);
+const Tooltip = ({ text, title, children, className = "" }: { text: string; title?: string; children?: React.ReactNode; className?: string }) => {
+  const [coords, setCoords] = useState<{ top: number, left: number } | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top,
+        left: rect.left + rect.width / 2
+      });
+    }
+  };
+
+  return (
+    <div 
+      ref={triggerRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setCoords(null)}
+      className={`relative ${children ? 'inline' : 'inline-block'} ${className}`}
+    >
+      {children || <FiInfo size={11} className="text-on-surface-variant cursor-help inline-block align-middle ml-1 opacity-70 hover:opacity-100 transition-opacity" />}
+      {coords && createPortal(
+        <div 
+          className="fixed z-[100] w-64 bg-surface-highest border border-outline-variant p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-1 pointer-events-none"
+          style={{ 
+            top: coords.top - 12, 
+            left: coords.left, 
+            transform: 'translateX(-50%) translateY(-100%)' 
+          }}
+        >
+          {title && <div className="text-base font-semibold font-medium font-mono text-primary uppercase mb-1 font-bold tracking-widest">{title}</div>}
+          <p className="text-base font-semibold font-medium font-mono text-on-surface leading-relaxed opacity-90 normal-case">{text}</p>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-outline-variant"></div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
 
 const HealthBar = ({ current, projected, label }: { current: number, projected: number, label?: string }) => {
   const isRecovery = projected > current;
@@ -47,11 +84,8 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
     <div className="space-y-1">
       {label && <div className="flex justify-between text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono">
         <span className="flex items-center space-x-1">
-            <span>{label}</span>
-            <div className="group relative">
-                <FiInfo size={10} className="text-on-surface-variant" />
-                <Tooltip text="Indicates the structural integrity of this machine. Maintenance protocol affects the rate of decay per cycle." />
-            </div>
+          <span>{label}</span>
+          <Tooltip text="Indicates the structural integrity of this machine. Maintenance protocol affects the rate of decay per cycle." />
         </span>
         <span className={projected < 40 ? 'text-error font-bold' : 'text-on-surface font-bold'}>{projected.toFixed(1)}%</span>
       </div>}
@@ -61,12 +95,12 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
           style={{ width: `${current}%` }}
         />
         {isRecovery ? (
-          <div 
+          <div
             className="absolute top-0 h-full bg-primary/40 animate-pulse"
             style={{ left: `${current}%`, width: `${delta}%` }}
           />
         ) : (
-          <div 
+          <div
             className="absolute top-0 h-full bg-black/40"
             style={{ left: `${projected}%`, width: `${delta}%` }}
           />
@@ -76,81 +110,81 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
   );
 };
 
-const MetricBox = ({ label, value, subvalue, icon: Icon, color = 'text-primary', tooltip }: any) => (
-  <div className="bg-surface-low border border-outline-variant p-4 flex items-start space-x-4 group relative cursor-help">
-    <div className={`p-2.5 rounded-lg bg-surface-highest ${color} border border-outline-variant/50 flex-shrink-0`}>
-      <Icon size={22} />
+const MetricBox = ({ label, value, subvalue, icon: Icon, color = 'text-primary', tooltip }: any) => {
+  const content = (
+    <div className="bg-surface-low border border-outline-variant p-4 flex items-start space-x-4 cursor-help h-full">
+      <div className={`p-2.5 rounded-lg bg-surface-highest ${color} border border-outline-variant/50 flex-shrink-0`}>
+        <Icon size={22} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
+        <div className="text-3xl font-bold font-display text-on-surface leading-tight truncate">{value}</div>
+        {subvalue && <div className="text-base font-semibold font-mono text-on-surface-variant mt-0.5 opacity-80">{subvalue}</div>}
+      </div>
     </div>
-    <div className="min-w-0 flex-1">
-      <div className="text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
-      <div className="text-3xl font-bold font-display text-on-surface leading-tight truncate">{value}</div>
-      {subvalue && <div className="text-base font-semibold font-mono text-on-surface-variant mt-0.5 opacity-80">{subvalue}</div>}
-    </div>
-    {tooltip && <Tooltip text={tooltip} title={label} />}
-  </div>
-);
+  );
 
-const StockHistogram = ({ stock, label }: { stock: number[] | undefined, label: string }) => {
-    if (!stock || stock.length !== 101) return <div className="h-24 flex items-center justify-center border border-dashed border-outline-variant text-base font-semibold font-medium uppercase font-mono opacity-50">Assembly Buffer Empty</div>;
-
-    const unusableStock = stock[0];
-    const deciles = Array(25).fill(0);
-    for (let i = 1; i <= 100; i++) {
-        const idx = Math.min(24, Math.floor((i - 1) / 4));
-        deciles[idx] += stock[i];
-    }
-    const maxVal = Math.max(...deciles, 1);
-    const totalItems = deciles.reduce((acc, curr) => acc + curr, 0);
-
-    return (
-        <div className="pt-2 flex flex-col space-y-2 relative flex-1">
-            <div className="flex justify-between items-center text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono">
-                <span className="flex items-center space-x-1">
-                    <span>{label}</span>
-                    <div className="group relative">
-                        <FiInfo size={10} className="text-on-surface-variant" />
-                        <Tooltip text="Histogram representing the quality distribution (Grade 1-100) of currently stored finished components." />
-                    </div>
-                </span>
-                <span>Ready: {totalItems}</span>
-            </div>
-
-            <div className="flex items-end h-[60px] w-full space-x-[1px] mt-1 mb-1">
-                {deciles.map((val, idx) => (
-                    <div key={idx} className="flex-1 bg-surface-highest transition-colors flex flex-col justify-end h-full group/col relative">
-                        <div className="w-full bg-primary/60 transition-all duration-300 group-hover/col:bg-primary rounded-t-sm" style={{ height: `${(val / maxVal) * 100}%` }}></div>
-                        <div className="absolute bottom-full mb-1 hidden group-hover/col:block bg-surface p-1 text-base font-semibold font-mono z-10 border border-outline-variant whitespace-nowrap shadow-lg text-primary">
-                            Gr {idx * 4 + 1}-{idx * 4 + 4}: {val}u
-                        </div>
-                    </div>
-                ))}
-            </div>
-            <div className="flex justify-between text-base font-semibold font-medium text-on-surface-variant font-mono opacity-50">
-                <span>Grade 1</span>
-                <span>Grade 100</span>
-            </div>
-
-            {unusableStock > 0 && (
-                <div className="text-base font-semibold font-medium text-error font-mono mt-1 pt-1 border-t border-error/20 flex justify-between">
-                    <span>SCRAPPED (GRADE 0)</span>
-                    <span className="font-bold">{unusableStock}u</span>
-                </div>
-            )}
-        </div>
-    );
+  return tooltip ? <Tooltip text={tooltip} title={label} className="block">{content}</Tooltip> : content;
 };
 
-const ProductionDropdown = ({ 
-  label, 
-  value, 
-  options, 
-  onChange, 
+const StockHistogram = ({ stock, label }: { stock: number[] | undefined, label: string }) => {
+  if (!stock || stock.length !== 101) return <div className="h-24 flex items-center justify-center border border-dashed border-outline-variant text-base font-semibold font-medium uppercase font-mono opacity-50">Assembly Buffer Empty</div>;
+
+  const unusableStock = stock[0];
+  const deciles = Array(25).fill(0);
+  for (let i = 1; i <= 100; i++) {
+    const idx = Math.min(24, Math.floor((i - 1) / 4));
+    deciles[idx] += stock[i];
+  }
+  const maxVal = Math.max(...deciles, 1);
+  const totalItems = deciles.reduce((acc, curr) => acc + curr, 0);
+
+  return (
+    <div className="pt-2 flex flex-col space-y-2 relative flex-1">
+      <div className="flex justify-between items-center text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono">
+        <span className="flex items-center space-x-1">
+          <span>{label}</span>
+          <Tooltip text="Histogram representing the quality distribution (Grade 1-100) of currently stored finished components." />
+        </span>
+        <span>Ready: {totalItems}</span>
+      </div>
+
+      <div className="flex items-end h-[60px] w-full space-x-[1px] mt-1 mb-1">
+        {deciles.map((val, idx) => (
+          <div key={idx} className="flex-1 bg-surface-highest transition-colors flex flex-col justify-end h-full group/col relative">
+            <div className="w-full bg-primary/60 transition-all duration-300 group-hover/col:bg-primary rounded-t-sm" style={{ height: `${(val / maxVal) * 100}%` }}></div>
+            <div className="absolute bottom-full mb-1 hidden group-hover/col:block bg-surface p-1 text-base font-semibold font-mono z-10 border border-outline-variant whitespace-nowrap shadow-lg text-primary">
+              Gr {idx * 4 + 1}-{idx * 4 + 4}: {val}u
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between text-base font-semibold font-medium text-on-surface-variant font-mono opacity-50">
+        <span>Grade 1</span>
+        <span>Grade 100</span>
+      </div>
+
+      {unusableStock > 0 && (
+        <div className="text-base font-semibold font-medium text-error font-mono mt-1 pt-1 border-t border-error/20 flex justify-between">
+          <span>SCRAPPED (GRADE 0)</span>
+          <span className="font-bold">{unusableStock}u</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ProductionDropdown = ({
+  label,
+  value,
+  options,
+  onChange,
   disabled,
   tooltip
-}: { 
-  label: string, 
-  value: string, 
-  options: { value: string; label: string; info: string; cost?: number }[], 
+}: {
+  label: string,
+  value: string,
+  options: { value: string; label: string; info: string; cost?: number }[],
   onChange: (v: any) => void,
   disabled: boolean,
   tooltip?: string
@@ -162,15 +196,14 @@ const ProductionDropdown = ({
     <div className="space-y-2">
       <div className="flex items-center space-x-1">
         <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
-        {tooltip && <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text={tooltip} /></div>}
+        {tooltip && <Tooltip text={tooltip} />}
       </div>
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full flex items-center justify-between bg-surface border p-3.5 font-mono text-base font-semibold font-medium uppercase transition-all ${
-            isOpen ? 'border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' : 'border-outline-variant/30 hover:border-outline-variant'
-          }`}
+          className={`w-full flex items-center justify-between bg-surface border p-3.5 font-mono text-base font-semibold font-medium uppercase transition-all ${isOpen ? 'border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' : 'border-outline-variant/30 hover:border-outline-variant'
+            }`}
         >
           <span className="text-on-surface font-bold tracking-wider">{selected.label}</span>
           <div className="flex items-center space-x-3">
@@ -185,9 +218,8 @@ const ProductionDropdown = ({
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setIsOpen(false); }}
-                className={`w-full p-4 text-left border-b border-outline-variant/20 last:border-0 hover:bg-primary/5 transition-colors group ${
-                  value === opt.value ? 'bg-primary/10' : ''
-                }`}
+                className={`w-full p-4 text-left border-b border-outline-variant/20 last:border-0 hover:bg-primary/5 transition-colors group ${value === opt.value ? 'bg-primary/10' : ''
+                  }`}
               >
                 <div className="flex justify-between items-center mb-1.5">
                   <span className={`text-base font-bold uppercase transition-colors ${value === opt.value ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
@@ -207,25 +239,25 @@ const ProductionDropdown = ({
   );
 };
 
-const DiscreteStepBar = ({ 
-  label, 
-  currentLevel, 
+const DiscreteStepBar = ({
+  label,
+  currentLevel,
   projectedLevel,
-  maxLevels, 
-  isUpgradeLocked, 
+  maxLevels,
+  isUpgradeLocked,
   cost,
-  onAdd, 
+  onAdd,
   disabled,
   info,
   tooltip
-}: { 
-  label: string, 
-  currentLevel: number, 
+}: {
+  label: string,
+  currentLevel: number,
   projectedLevel: number,
-  maxLevels: number, 
-  isUpgradeLocked: boolean, 
+  maxLevels: number,
+  isUpgradeLocked: boolean,
   cost?: number,
-  onAdd: () => void, 
+  onAdd: () => void,
   disabled: boolean,
   info?: string,
   tooltip?: string
@@ -238,58 +270,56 @@ const DiscreteStepBar = ({
         <div className="space-y-0.5">
           <div className="flex items-center space-x-1">
             <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
-            {tooltip && <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text={tooltip} /></div>}
+            {tooltip && <Tooltip text={tooltip} />}
           </div>
           {info && <div className="text-base font-semibold font-medium font-mono text-on-surface-variant opacity-60 italic">{info}</div>}
         </div>
         <div className="text-base font-semibold font-medium font-mono text-on-surface font-bold">Lvl {currentLevel}/{maxLevels}</div>
       </div>
-      
+
       <div className="flex items-center space-x-5">
         <div className="flex-1 flex items-center space-x-1 relative h-6">
           <div className="absolute left-0 right-0 h-[2px] bg-outline-variant/30 top-1/2 -translate-y-1/2" />
-          <div 
-            className="absolute left-0 h-[2px] bg-primary top-1/2 -translate-y-1/2 transition-all duration-700" 
-            style={{ width: `${(currentLevel / maxLevels) * 100}%` }} 
+          <div
+            className="absolute left-0 h-[2px] bg-primary top-1/2 -translate-y-1/2 transition-all duration-700"
+            style={{ width: `${(currentLevel / maxLevels) * 100}%` }}
           />
           {isDecisionMade && (
-            <div 
-              className="absolute h-[2px] bg-primary/40 top-1/2 -translate-y-1/2 transition-all duration-300 animate-pulse border-b border-t border-dashed border-primary/60" 
-              style={{ left: `${(currentLevel / maxLevels) * 100}%`, width: `${(1 / maxLevels) * 100}%` }} 
+            <div
+              className="absolute h-[2px] bg-primary/40 top-1/2 -translate-y-1/2 transition-all duration-300 animate-pulse border-b border-t border-dashed border-primary/60"
+              style={{ left: `${(currentLevel / maxLevels) * 100}%`, width: `${(1 / maxLevels) * 100}%` }}
             />
           )}
           {Array.from({ length: maxLevels + 1 }).map((_, i) => (
-            <div 
+            <div
               key={i}
-              className={`z-10 w-3 h-3 rounded-full border-2 transition-all duration-500 transform ${
-                i <= currentLevel 
-                  ? 'bg-primary border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] scale-110' 
+              className={`z-10 w-3 h-3 rounded-full border-2 transition-all duration-500 transform ${i <= currentLevel
+                  ? 'bg-primary border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] scale-110'
                   : i === projectedLevel
-                  ? 'bg-primary/30 border-primary/60 border-dashed animate-pulse scale-105'
-                  : 'bg-surface border-outline-variant/50'
-              }`}
+                    ? 'bg-primary/30 border-primary/60 border-dashed animate-pulse scale-105'
+                    : 'bg-surface border-outline-variant/50'
+                }`}
               style={{ position: 'absolute', left: `${(i / maxLevels) * 100}%`, marginLeft: i === maxLevels ? '-12px' : i === 0 ? '0' : '-6px' }}
             />
           ))}
         </div>
 
-        <div className="flex-shrink-0 group relative">
-          <button
-            onClick={onAdd}
-            disabled={disabled || isUpgradeLocked || (currentLevel >= maxLevels && !isDecisionMade)}
-            className={`p-2 rounded-md border transition-all ${
-              isUpgradeLocked 
-                ? 'bg-tertiary/10 border-tertiary/40 text-tertiary cursor-not-allowed' 
-                : isDecisionMade
-                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.25)]'
-                : currentLevel >= maxLevels
-                ? 'bg-surface-highest border-outline-variant/20 text-on-surface-variant cursor-not-allowed opacity-30'
-                : 'bg-surface border-outline-variant text-on-surface hover:bg-primary/10 hover:border-primary hover:text-primary'
-            }`}
-          >
-            {isUpgradeLocked ? <FiLock size={16} /> : isDecisionMade ? <FiX size={16} /> : <FiPlus size={16} />}
-            {isUpgradeLocked && <Tooltip title="Upgrade Locked" text="Hardware evolution in progress. Completion expected at the end of the next cycle." />}
-          </button>
+          <Tooltip text={isUpgradeLocked ? "Hardware evolution in progress. Completion expected at the end of the next cycle." : ""} title={isUpgradeLocked ? "Upgrade Locked" : ""}>
+            <button
+              onClick={onAdd}
+              disabled={disabled || isUpgradeLocked || (currentLevel >= maxLevels && !isDecisionMade)}
+              className={`p-2 rounded-md border transition-all ${isUpgradeLocked
+                  ? 'bg-tertiary/10 border-tertiary/40 text-tertiary cursor-not-allowed'
+                  : isDecisionMade
+                    ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.25)]'
+                    : currentLevel >= maxLevels
+                      ? 'bg-surface-highest border-outline-variant/20 text-on-surface-variant cursor-not-allowed opacity-30'
+                      : 'bg-surface border-outline-variant text-on-surface hover:bg-primary/10 hover:border-primary hover:text-primary'
+                }`}
+            >
+              {isUpgradeLocked ? <FiLock size={16} /> : isDecisionMade ? <FiX size={16} /> : <FiPlus size={16} />}
+            </button>
+          </Tooltip>
           {!isUpgradeLocked && currentLevel < maxLevels && cost && (
             <div className={`absolute -bottom-5 right-0 text-base font-semibold font-medium font-mono transition-opacity whitespace-nowrap ${isDecisionMade ? 'text-primary' : 'text-on-surface-variant opacity-0 group-hover:opacity-100'}`}>
               {isDecisionMade ? `Allocated: $${cost.toLocaleString()}` : `Cost: $${cost.toLocaleString()}`}
@@ -297,20 +327,19 @@ const DiscreteStepBar = ({
           )}
         </div>
       </div>
-    </div>
   );
 };
 
-const BottleneckSlider = ({ 
-  label, 
-  value, 
-  onChange, 
-  throughputLimit, 
+const BottleneckSlider = ({
+  label,
+  value,
+  onChange,
+  throughputLimit,
   stockLimit,
-  disabled 
-}: { 
-  label: string, 
-  value: number | null, 
+  disabled
+}: {
+  label: string,
+  value: number | null,
   onChange: (v: number | null) => void,
   throughputLimit: number,
   stockLimit: number,
@@ -324,8 +353,8 @@ const BottleneckSlider = ({
     <div className="space-y-4">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
-            <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text="Target number of components to produce this cycle. Limited by both machine capacity and raw material stock." /></div>
+          <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+          <Tooltip text="Target number of components to produce this cycle. Limited by both machine capacity and raw material stock." />
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold font-display text-on-surface">{currentVal.toLocaleString()}</div>
@@ -335,7 +364,7 @@ const BottleneckSlider = ({
         </div>
       </div>
       <div className="relative pt-2">
-        <input 
+        <input
           type="range"
           min="0"
           max={maxPossible || 1}
@@ -353,26 +382,26 @@ const BottleneckSlider = ({
   );
 };
 
-const HeadcountSlider = ({ 
-  value, 
-  required, 
-  onChange, 
-  disabled 
-}: { 
-  value: number, 
-  required: number, 
+const HeadcountSlider = ({
+  value,
+  required,
+  onChange,
+  disabled
+}: {
+  value: number,
+  required: number,
   onChange: (v: number) => void,
   disabled: boolean
 }) => {
-  const maxVal = required > 0 ? required * 2 : 100;
-  const minVal = 0;
-  
+  const maxVal = required > 0 ? required : 100;
+  const minVal = 1;
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
-            <div className="group relative"><FiInfo size={10} className="text-on-surface-variant" /><Tooltip text="Assign your active workforce to maintenance and production. Understaffing will reduce effective throughput proportionately." /></div>
+          <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
+          <Tooltip text="Assign your active workforce to maintenance and production. Understaffing will reduce effective throughput proportionately." />
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold font-display text-on-surface">{value} <span className="text-base font-semibold font-medium text-on-surface-variant uppercase font-mono opacity-80">Staff</span></div>
@@ -381,15 +410,8 @@ const HeadcountSlider = ({
           </div>
         </div>
       </div>
-      <div className="relative pt-6">
-        <div 
-          className="absolute -top-1 w-1 h-8 bg-primary z-10 border-x border-surface"
-          style={{ left: `${(required / maxVal) * 100}%` }}
-        >
-          <div className="absolute top-[-16px] left-[-30px] w-15 text-center text-base font-bold text-primary uppercase tracking-tighter">EQUILIBRIUM</div>
-        </div>
-
-        <input 
+      <div className="relative pt-2">
+        <input
           type="range"
           min={minVal}
           max={maxVal}
@@ -399,8 +421,7 @@ const HeadcountSlider = ({
           className="w-full h-2 bg-surface-highest rounded-lg appearance-none cursor-pointer accent-primary border border-outline-variant/30"
         />
         <div className="flex justify-between mt-2 text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-60">
-          <span>0 (Min)</span>
-          <span className="text-center font-bold text-primary opacity-100">Optimal ({required})</span>
+          <span>1 (Min)</span>
           <span>Max ({maxVal})</span>
         </div>
       </div>
@@ -408,18 +429,18 @@ const HeadcountSlider = ({
   );
 };
 
-const ContextualStats = ({ 
-  title, 
+const ContextualStats = ({
+  title,
   stock,
-  maintCost, 
-  rndCost, 
-  buyCost 
-}: { 
-  title: string, 
+  maintCost,
+  rndCost,
+  buyCost
+}: {
+  title: string,
   stock: number[] | undefined,
-  maintCost: number, 
-  rndCost: number, 
-  buyCost: number 
+  maintCost: number,
+  rndCost: number,
+  buyCost: number
 }) => (
   <div className="bg-surface-low border border-outline-variant overflow-hidden">
     <div className="bg-surface-highest/50 px-4 py-2 border-b border-outline-variant flex justify-between items-center">
@@ -527,10 +548,15 @@ export const Production = () => {
 
     const rnd_q = (factoryCompData?.rnd_quality || 0);
     const rnd_c = (factoryCompData?.rnd_consistency || 0);
-    const projSigma = calculateProjectedSigma(upgradeAutomation, skillLevel || 0, rnd_c);
-    const projMean = calculateEffectiveGrade(simulatedMachines, rnd_q);
+    const projSigma = calculateProjectedSigma(upgradeAutomation, skillLevel || 0, rnd_c, selectedComponent);
+    const mean_rm = factoryCompData?.raw_stock ? factoryCompData.raw_stock.reduce((s, c, i) => s + c * i, 0) / (factoryCompData.raw_stock_total || 1) : 0;
+    const eff_grade = calculateEffectiveGrade(simulatedMachines, rnd_q, selectedComponent);
+    const projMean = mean_rm * RM_WEIGHT + eff_grade * (1 - RM_WEIGHT);
     const tp_base = simulatedMachines.reduce((s, m) => s + (MACHINE_TIERS[m.tier as keyof typeof MACHINE_TIERS]?.throughput || 0), 0);
     const projThroughput = tp_base * labourFactor;
+
+    const yieldReduction = (factoryCompData?.rnd_yield || 0) * RND_YIELD_BONUS;
+    const yieldAdjustedStockLimit = Math.floor((factoryCompData?.raw_stock_total || 0) / Math.max(0.01, (1.0 - yieldReduction)));
 
     const selectedCompMaint = MAINTENANCE_COSTS[currentComp.maintenance as keyof typeof MAINTENANCE_COSTS] * (factoryCompData?.machine_count || 0);
     const selectedCompRnd = currentComp.rnd_invest ? currentComp.rnd_invest.levels * RND_COST_PER_LEVEL : 0;
@@ -541,7 +567,7 @@ export const Production = () => {
       totalRequiredLabour, labourGap, understaffingPct, labourFactor,
       projectedMorale, projectedMoraleDelta,
       projSigma, projMean, projThroughput,
-      stockLimit: (factoryCompData?.raw_stock_total || 0),
+      stockLimit: yieldAdjustedStockLimit,
       selectedCompMaint, selectedCompRnd, selectedCompBuy,
       remainingFunds: (funds || 0) - totalOutflow,
       fundUsagePct: (funds || 0) > 0 ? (totalOutflow / funds) * 100 : 100
@@ -573,21 +599,21 @@ export const Production = () => {
         <div className="animate-in fade-in slide-in-from-top-4 duration-700 mb-2">
           <h2 className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-[0.3em] mb-3 pl-1">Resolution Report</h2>
           {loadingSummary ? (
-             <div className="text-base font-semibold font-medium font-mono text-on-surface-variant animate-pulse px-5 py-8 border border-outline-variant/20 bg-surface-low items-center justify-center flex">
-                Decrypting production summary...
-             </div>
+            <div className="text-base font-semibold font-medium font-mono text-on-surface-variant animate-pulse px-5 py-8 border border-outline-variant/20 bg-surface-low items-center justify-center flex">
+              Decrypting production summary...
+            </div>
           ) : productionSummary ? (
             <ProductionCard data={productionSummary} />
           ) : (
-             <div className="text-base font-semibold font-medium font-mono text-on-surface-variant px-5 py-8 border border-outline-variant/20 bg-surface-low opacity-60">
-                Production summary payload not found for this cycle.
-             </div>
+            <div className="text-base font-semibold font-medium font-mono text-on-surface-variant px-5 py-8 border border-outline-variant/20 bg-surface-low opacity-60">
+              Production summary payload not found for this cycle.
+            </div>
           )}
         </div>
       )}
 
       <ComponentTabs selected={selectedComponent} onSelect={setComponent} />
-      
+
       <div className="flex justify-between items-end flex-shrink-0">
         <div>
           <h1 className="font-display text-4xl uppercase tracking-tighter">DECISION COCKPIT</h1>
@@ -610,7 +636,7 @@ export const Production = () => {
               <FiSettings size={16} /> <span>{selectedComponent.replace('_', ' ')} Directives</span>
             </h2>
 
-            <ProductionDropdown 
+            <ProductionDropdown
               label="Fleet Maintenance Protocol"
               value={currentComp.maintenance}
               disabled={!isProductionOpen}
@@ -624,7 +650,7 @@ export const Production = () => {
               ]}
             />
 
-            <BottleneckSlider 
+            <BottleneckSlider
               label="Production Target Allocation"
               value={currentComp.units_to_produce}
               throughputLimit={factoryCompData?.total_throughput || 0}
@@ -637,7 +663,7 @@ export const Production = () => {
               <h3 className="text-base font-semibold font-medium font-mono text-tertiary uppercase tracking-widest flex items-center space-x-2">
                 <FiZap size={14} /> <span>Hardware Innovation Tracks</span>
               </h3>
-              <DiscreteStepBar 
+              <DiscreteStepBar
                 label="Mean Output Grade"
                 currentLevel={factoryCompData?.rnd_quality || 0}
                 projectedLevel={currentComp.rnd_invest?.focus === 'quality' ? (factoryCompData?.rnd_quality || 0) + 1 : (factoryCompData?.rnd_quality || 0)}
@@ -651,7 +677,7 @@ export const Production = () => {
                 tooltip="Increases the target baseline quality for all units produced in this slot."
                 info="Structural reinforcement & surface finish optimization."
               />
-              <DiscreteStepBar 
+              <DiscreteStepBar
                 label="Process Consistency"
                 currentLevel={factoryCompData?.rnd_consistency || 0}
                 projectedLevel={currentComp.rnd_invest?.focus === 'consistency' ? (factoryCompData?.rnd_consistency || 0) + 1 : (factoryCompData?.rnd_consistency || 0)}
@@ -665,7 +691,7 @@ export const Production = () => {
                 tooltip="Reduces output variance (Sigma), results in more predictable quality tiers."
                 info="Calibrated sensor loops & predictive timing."
               />
-              <DiscreteStepBar 
+              <DiscreteStepBar
                 label="Raw Material Yield"
                 currentLevel={factoryCompData?.rnd_yield || 0}
                 projectedLevel={currentComp.rnd_invest?.focus === 'yield' ? (factoryCompData?.rnd_yield || 0) + 1 : (factoryCompData?.rnd_yield || 0)}
@@ -686,7 +712,7 @@ export const Production = () => {
             <h2 className="text-base font-semibold font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
               <FiUsers size={16} /> <span>Enterprise Operations</span>
             </h2>
-            <ProductionDropdown 
+            <ProductionDropdown
               label="Compensation Tier Selection"
               value={wageLevel}
               disabled={!isProductionOpen}
@@ -698,13 +724,13 @@ export const Production = () => {
                 { value: 'above_market', label: 'Premium Incentive', info: 'Boosts morale and productivity metrics.', cost: WAGE_COSTS.above_market }
               ]}
             />
-            <HeadcountSlider 
+            <HeadcountSlider
               value={targetHeadcount}
               required={liveStats.totalRequiredLabour}
               onChange={setHeadcount}
               disabled={!isProductionOpen}
             />
-            <DiscreteStepBar 
+            <DiscreteStepBar
               label="Facility Automation Tier"
               currentLevel={automationLevel === 'manual' ? 0 : automationLevel === 'semi_auto' ? 1 : 2}
               projectedLevel={
@@ -742,19 +768,20 @@ export const Production = () => {
                 <FiTool size={16} /> <span>Active System Health</span>
               </h2>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto space-y-4 p-6 custom-scrollbar">
               {factoryCompData?.machines?.map((mac, idx) => {
                 const projected = calculateProjectedCondition(mac.condition, currentComp.maintenance, mac.tier);
                 return (
-                  <div key={idx} className="bg-surface/50 border border-outline-variant/30 p-4 space-y-4 shadow-sm group relative cursor-help">
-                    <div className="flex justify-between items-center text-base font-semibold font-medium font-mono font-bold">
-                      <span className="uppercase text-primary">{mac.tier} Grade {mac.source}</span>
-                      <span className="text-on-surface-variant bg-surface-highest px-2 py-0.5 rounded">TP: {MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.throughput}</span>
+                  <Tooltip key={idx} title={`Machine #${mac.id || idx + 1}`} text={`Throughput: ${MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.throughput} units/cycle. Base Grade: ${MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.grade}. Current condition affects output quality.`} className="block">
+                    <div className="bg-surface/50 border border-outline-variant/30 p-4 space-y-4 shadow-sm relative cursor-help">
+                      <div className="flex justify-between items-center text-base font-semibold font-medium font-mono font-bold">
+                        <span className="uppercase text-primary">{mac.tier} Grade {mac.source}</span>
+                        <span className="text-on-surface-variant bg-surface-highest px-2 py-0.5 rounded">TP: {MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.throughput}</span>
+                      </div>
+                      <HealthBar current={mac.condition} projected={projected} label="Hardware Health Status" />
                     </div>
-                    <HealthBar current={mac.condition} projected={projected} label="Hardware Health Status" />
-                    <Tooltip title={`Machine #${mac.id || idx+1}`} text={`Throughput: ${MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.throughput} units/cycle. Base Grade: ${MACHINE_TIERS[mac.tier as keyof typeof MACHINE_TIERS]?.grade}. Current condition affects output quality.`} />
-                  </div>
+                  </Tooltip>
                 );
               })}
 
@@ -768,7 +795,7 @@ export const Production = () => {
                           <div className="flex justify-between items-center mb-1">
                             <span className={`text-base font-bold uppercase ${currentComp.buy_machine?.tier === tier ? 'text-tertiary' : 'text-on-surface'}`}>{tier}</span>
                           </div>
-                          <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-80">Cost: ${(cfg.buy/1000).toFixed(0)}k · TP: {cfg.throughput}</div>
+                          <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase opacity-80">Cost: ${(cfg.buy / 1000).toFixed(0)}k · TP: {cfg.throughput}</div>
                           {currentComp.buy_machine?.tier === tier && <div className="absolute top-1 right-1 text-tertiary font-bold animate-pulse text-base font-semibold font-medium">ACTIVE</div>}
                         </button>
                       ))}
@@ -794,13 +821,13 @@ export const Production = () => {
 
             {/* Contextual Status Strip */}
             <div className="p-4 bg-surface-highest/20 border-t border-outline-variant/30 space-y-4">
-                <ContextualStats 
-                    title={selectedComponent.replace('_', ' ')}
-                    stock={factoryCompData?.finished_stock}
-                    maintCost={liveStats.selectedCompMaint}
-                    rndCost={liveStats.selectedCompRnd}
-                    buyCost={liveStats.selectedCompBuy}
-                />
+              <ContextualStats
+                title={selectedComponent.replace('_', ' ')}
+                stock={factoryCompData?.finished_stock}
+                maintCost={liveStats.selectedCompMaint}
+                rndCost={liveStats.selectedCompRnd}
+                buyCost={liveStats.selectedCompBuy}
+              />
             </div>
           </div>
         </div>
@@ -809,76 +836,78 @@ export const Production = () => {
       {/* Global Fund Summary & Decision Commit */}
       <div className="bg-surface-container border border-outline-variant p-6 flex flex-col space-y-4 flex-shrink-0">
         <div className="flex justify-between items-center">
-            <div className="flex space-x-12">
-                <div className="flex flex-col group relative cursor-help">
-                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
-                        <span>Maintenance</span>
-                        <FiInfo size={10} />
-                    </span>
-                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${liveStats.totalMaint.toLocaleString()}</span>
-                    <Tooltip text="Cumulative maintenance cost for all components across all machines." />
-                </div>
-                <div className="flex flex-col group relative cursor-help">
-                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
-                        <span>R&D / CapEx</span>
-                        <FiInfo size={10} />
-                    </span>
-                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold text-tertiary">${(liveStats.totalRnd + liveStats.totalBuy).toLocaleString()}</span>
-                    <Tooltip text="Total capital expenditure for R&D levels and new machine purchases." />
-                </div>
-                <div className="flex flex-col group relative cursor-help">
-                    <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
-                        <span>Labour Net</span>
-                        <FiInfo size={10} />
-                    </span>
-                    <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${(liveStats.wageCost + liveStats.automationUpgradeCost).toLocaleString()}</span>
-                    <Tooltip text="Personnel costs including wages and automation integration fees." />
-                </div>
-            </div>
+          <div className="flex space-x-12">
+            <Tooltip text="Cumulative maintenance cost for all components across all machines.">
+              <div className="flex flex-col cursor-help">
+                <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                  <span>Maintenance</span>
+                </span>
+                <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${liveStats.totalMaint.toLocaleString()}</span>
+              </div>
+            </Tooltip>
+            <Tooltip text="Total capital expenditure for R&D levels and new machine purchases.">
+              <div className="flex flex-col cursor-help">
+                <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                  <span>R&D / CapEx</span>
+                </span>
+                <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold text-tertiary">${(liveStats.totalRnd + liveStats.totalBuy).toLocaleString()}</span>
+              </div>
+            </Tooltip>
+            <Tooltip text="Personnel costs including wages and automation integration fees.">
+              <div className="flex flex-col cursor-help">
+                <span className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-widest font-mono flex items-center space-x-1">
+                  <span>Labour Net</span>
+                </span>
+                <span className="text-3xl font-bold font-bold font-mono text-on-surface font-bold">${(liveStats.wageCost + liveStats.automationUpgradeCost).toLocaleString()}</span>
+              </div>
+            </Tooltip>
+          </div>
 
-            <div className="flex items-center space-x-10">
-                <div className="text-right">
-                    <div className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-[0.2em] font-bold">CYCLE CASH OUTFLOW</div>
-                    <div className={`text-4xl font-display ${isOverflowing ? 'text-error animate-pulse' : 'text-primary'}`}>${liveStats.totalOutflow.toLocaleString()}</div>
-                </div>
-                <div className="w-72">
-                    <SendDecisionsButton onClick={handleSubmit} disabled={!isProductionOpen} loading={isSubmitting} />
-                </div>
+          <div className="flex items-center space-x-10">
+            <div className="text-right">
+              <div className="text-base font-semibold font-medium text-on-surface-variant uppercase tracking-[0.2em] font-bold">CYCLE CASH OUTFLOW</div>
+              <div className={`text-4xl font-display ${isOverflowing ? 'text-error animate-pulse' : 'text-primary'}`}>${liveStats.totalOutflow.toLocaleString()}</div>
             </div>
+            <div className="w-72">
+              <SendDecisionsButton onClick={handleSubmit} disabled={!isProductionOpen} loading={isSubmitting} />
+            </div>
+          </div>
         </div>
 
         {/* Global Fund Utilization Bar */}
         <div className="space-y-2 pt-2 border-t border-outline-variant/30">
-            <div className="flex justify-between items-center text-base font-semibold font-mono uppercase tracking-widest">
-                <span className="flex items-center space-x-2">
-                    <FiDollarSign className={isOverflowing ? 'text-error' : 'text-primary'} />
-                    <span className="text-on-surface-variant">Global Fund Utilisation ({fundUsagePct.toFixed(1)}%)</span>
-                </span>
-                <span className={isOverflowing ? 'text-error font-bold' : 'text-primary font-bold'}>
-                    {isOverflowing ? `DEFICIT: $${Math.abs(liveStats.remainingFunds).toLocaleString()}` : `SURPLUS: $${liveStats.remainingFunds.toLocaleString()}`}
-                </span>
-            </div>
-            
-            <div className="w-full bg-surface h-3.5 border border-outline-variant relative overflow-hidden rounded-sm group">
-                <div className={`h-full ${progressColor} transition-all duration-500 ease-out`} style={{ width: `${Math.min(fundUsagePct, 100)}%` }} />
-                {isOverflowing && (
-                  <div className="absolute inset-0 bg-error/40 animate-pulse" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px)' }}></div>
-                )}
-                <Tooltip title="Liquidity Meter" text={`Your current liquid funds: $${(funds || 0).toLocaleString()}. Projected surplus/deficit after this cycle takes all costs into account.`} />
-            </div>
+          <div className="flex justify-between items-center text-base font-semibold font-mono uppercase tracking-widest">
+            <span className="flex items-center space-x-2">
+              <FiDollarSign className={isOverflowing ? 'text-error' : 'text-primary'} />
+              <span className="text-on-surface-variant">Global Fund Utilisation ({fundUsagePct.toFixed(1)}%)</span>
+            </span>
+            <span className={isOverflowing ? 'text-error font-bold' : 'text-primary font-bold'}>
+              {isOverflowing ? `DEFICIT: $${Math.abs(liveStats.remainingFunds).toLocaleString()}` : `SURPLUS: $${liveStats.remainingFunds.toLocaleString()}`}
+            </span>
+          </div>
 
+          <div className="w-full bg-surface h-3.5 border border-outline-variant relative overflow-hidden rounded-sm group">
+            <div className={`h-full ${progressColor} transition-all duration-500 ease-out`} style={{ width: `${Math.min(fundUsagePct, 100)}%` }} />
             {isOverflowing && (
-              <div className="flex justify-between items-center bg-error/10 border-l-4 border-error p-3 rounded-r animate-in slide-in-from-left-2">
-                <div className="flex items-center space-x-3">
-                  <FiAlertCircle className="text-error" size={18} />
-                  <div>
-                    <span className="text-error font-bold text-base font-semibold font-medium uppercase block tracking-widest">CASH CRUNCH DETECTED</span>
-                    <span className="text-on-surface text-base font-semibold font-medium opacity-80 font-mono">Expenditure exceeds project reserves. Emergency loans will be triggered upon resolution.</span>
-                  </div>
-                </div>
-                <div className="text-error font-mono font-bold text-base font-semibold font-medium">-${Math.abs(liveStats.remainingFunds).toLocaleString()}</div>
-              </div>
+              <div className="absolute inset-0 bg-error/40 animate-pulse" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px)' }}></div>
             )}
+            <Tooltip title="Liquidity Meter" text={`Your current liquid funds: $${(funds || 0).toLocaleString()}. Projected surplus/deficit after this cycle takes all costs into account.`}>
+               <div className="absolute inset-0" />
+            </Tooltip>
+          </div>
+
+          {isOverflowing && (
+            <div className="flex justify-between items-center bg-error/10 border-l-4 border-error p-3 rounded-r animate-in slide-in-from-left-2">
+              <div className="flex items-center space-x-3">
+                <FiAlertCircle className="text-error" size={18} />
+                <div>
+                  <span className="text-error font-bold text-base font-semibold font-medium uppercase block tracking-widest">CASH CRUNCH DETECTED</span>
+                  <span className="text-on-surface text-base font-semibold font-medium opacity-80 font-mono">Expenditure exceeds project reserves. Emergency loans will be triggered upon resolution.</span>
+                </div>
+              </div>
+              <div className="text-error font-mono font-bold text-base font-semibold font-medium">-${Math.abs(liveStats.remainingFunds).toLocaleString()}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

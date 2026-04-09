@@ -55,8 +55,11 @@ class Inventory(Base):
     automation_level = Column(SAEnum(AutomationLevel), nullable=False,
                                default=AutomationLevel.MANUAL)
 
-    # Running total for leaderboard composite score.
-    cumulative_profit = Column(Float, nullable=False, default=0.0)
+    # Running totals for leaderboard composite score.
+    cumulative_profit          = Column(Float, nullable=False, default=0.0)
+    cumulative_revenue         = Column(Float, nullable=False, default=0.0)
+    cumulative_production_cost = Column(Float, nullable=False, default=0.0)
+    cumulative_units_produced  = Column(Integer, nullable=False, default=0)
 
     # True while any government loan is outstanding.
     # Blocks backroom deals while active.

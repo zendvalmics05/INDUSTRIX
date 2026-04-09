@@ -106,9 +106,21 @@ SKILL_SIGMA_REDUCTION:  float = 0.50
 ASSEMBLY_LAMBDA:        float = 0.60
 ASSEMBLY_BETA:          float = 0.30
 
+# ── Component complexity ──────────────────────────────────────────────────────
+# Multiplier for sigma and subtractor for grade.
+# Differentiates component difficulty so stats aren't identical.
+COMPONENT_COMPLEXITY: Dict[str, Dict] = {
+    "airframe":         {"sigma_mult": 1.0, "grade_offset":  0},
+    "propulsion":       {"sigma_mult": 1.3, "grade_offset": -5},
+    "avionics":         {"sigma_mult": 1.6, "grade_offset": -8},
+    "fire_suppression": {"sigma_mult": 0.8, "grade_offset":  2},
+    "sensing_safety":   {"sigma_mult": 1.4, "grade_offset": -4},
+    "battery":          {"sigma_mult": 1.1, "grade_offset": -2},
+}
+
 # ── R&D ───────────────────────────────────────────────────────────────────────
 MAX_RND_LEVEL:           int   = 5
-RND_COST_PER_LEVEL:      float = 75_000.0
+RND_COST_PER_LEVEL:      float = 100_000.0
 RND_CYCLES_PER_LEVEL:    int   = 2
 RND_DECAY_PROBABILITY:   float = 0.05
 
@@ -195,21 +207,20 @@ DEAL_BASE_DISCOVERY: Dict[str, float] = {
     "green_quality_waiver": 0.09, "green_tax_evasion": 0.11,
 }
 
-# ── Leaderboard weights ───────────────────────────────────────────────────────
-# All weights sum to 1.0 (inventory_penalty is subtracted).
+# All weights sum to 1.0
 LEADERBOARD_WEIGHTS: Dict[str, float] = {
-    "closing_funds":     0.25,
-    "cumulative_profit": 0.30,
-    "brand_score":       0.20,
-    "quality_avg":       0.15,
-    "inventory_penalty": -0.10,
+    "net_margin":             0.30,
+    "enterprise_value":       0.25,
+    "market_share":           0.20,
+    "brand_score":            0.15,
+    "operational_efficiency": 0.10,
 }
 LEADERBOARD_NORMALISE: Dict[str, float] = {
-    "closing_funds":     500_000.0,
-    "cumulative_profit": 300_000.0,
-    "brand_score":       100.0,
-    "quality_avg":       100.0,
-    "inventory_penalty": 5_000.0,
+    "net_margin":             1.0,         # e.g., 0.4 means 40% margin
+    "enterprise_value":       2_000_000.0, # Typical big earner
+    "market_share":           1.0,         # 0.0 to 1.0 (proportion)
+    "brand_score":            100.0,
+    "operational_efficiency": 0.01,        # ~0.0005 to 0.005 units/CU
 }
 # ── Market factions ───────────────────────────────────────────────────────────
 # Default faction definitions seeded on game creation.

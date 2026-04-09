@@ -21,7 +21,6 @@ import {
   FiDollarSign,
   FiGlobe,
   FiActivity,
-  FiFileText,
 } from 'react-icons/fi';
 
 // ─────────────────────────────────────────────────────────────────────────────

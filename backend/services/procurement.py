@@ -366,6 +366,7 @@ def resolve_procurement(
     # Deduct total procurement cost (allow going negative — dealt with in backroom)
     if inventory:
         inventory.funds = round(inventory.funds - total_cost, 2)
+        inventory.cumulative_production_cost = round(inventory.cumulative_production_cost + total_cost, 2)
 
     # ── Mark all procurement events as applied ────────────────────────────────
     _mark_applied(events)
