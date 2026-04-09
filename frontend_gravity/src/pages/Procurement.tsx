@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FiCheckCircle, FiCircle } from 'react-icons/fi';
 import { useProcurementStore, useGameStore, useInventoryStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
-import { ComponentTabs, SendDecisionsButton } from '../components/SharedComponents';
+import { ComponentTabs, SendDecisionsButton, Tooltip } from '../components/SharedComponents';
 import { ProcurementCard } from '../components/PhaseSummaries';
+import { getConsistencyLabel, getTransportSpreadLabel } from '../utils/procurementLabels';
 
 export const Procurement = () => {
   const {
@@ -72,15 +74,7 @@ export const Procurement = () => {
     setDecision(selectedComponent, 'quantity', newSource.min_order);
   };
 
-  const handleQuantityBlur = () => {
-    if (!selectedSource) return;
-    let qty = currentDecision.quantity;
-    if (qty < selectedSource.min_order) qty = selectedSource.min_order;
-    if (qty > selectedSource.max_order) qty = selectedSource.max_order;
-    if (qty !== currentDecision.quantity) {
-      setDecision(selectedComponent, 'quantity', qty);
-    }
-  };
+
 
   // Computations
   const totalProcurementCost = projectedCosts?.total_cost || 0;
@@ -225,36 +219,39 @@ export const Procurement = () => {
       </div>
 
       {buyingCurrentComponent && (
-        <div className="flex flex-1 overflow-hidden space-x-6 animate-fade-in min-h-0">
+        <div className="flex flex-1 overflow-hidden space-x-4 animate-fade-in min-h-0">
           {/* INPUT SECTION (LEFT) */}
-          <div className="w-[60%] flex flex-col space-y-6 min-h-0">
-            <div className="bg-surface-container p-6 space-y-6 flex-1 flex flex-col border border-outline-variant min-h-0">
+          <div className="flex-[6] flex flex-col space-y-6 min-h-0">
+            <div className="bg-surface-container p-4 space-y-6 flex-1 flex flex-col border border-outline-variant min-h-0">
 
-              <div className="flex space-x-6 flex-shrink-0 h-[320px]">
-                <div className="w-1/2 flex flex-col space-y-2 h-full">
+              <div className="flex space-x-4 flex-shrink-0 h-[320px]">
+                <div className="flex-1 flex flex-col space-y-2 h-full">
                   <label className="block text-sm font-bold font-mono text-on-surface-variant uppercase tracking-widest flex-shrink-0">
                     SUPPLIER SOURCE
                   </label>
                   <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar relative">
-                    {activeSources.map((s) => {
+                    {activeSources.map((s, i) => {
                       const isSelected = currentDecision.source_id === s.id;
                       const isSaved = initialDecisions[selectedComponent]?.source_id === s.id && initialDecisions[selectedComponent]?.quantity > 0;
                       return (
-                        <div
+                        <motion.div
                           key={s.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
                           onClick={() => handleSourceSelect(s.id)}
                           className={`relative p-3 border font-mono text-sm cursor-pointer transition-colors ${isSelected ? 'bg-surface-highest border-primary font-medium' : 'bg-surface border-outline-variant hover:bg-surface-high'} ${isSaved ? 'ring-1 ring-tertiary ring-offset-1 ring-offset-surface-container' : ''}`}
                         >
                           <div className="flex justify-between items-center mb-1">
-                            <span className={isSelected ? 'text-primary font-bold text-base' : 'text-on-surface font-semibold text-base'}>{s.name}</span>
+                            <span className={isSelected ? 'text-primary font-bold text-sm' : 'text-on-surface font-semibold text-sm'}>{s.name}</span>
                             <span className="text-xs text-on-surface-variant">${s.base_cost_per_unit}/u</span>
                           </div>
                           <div className="flex justify-between text-xs text-on-surface-variant font-medium">
                             <span>Dist: {s.distance}km</span>
-                            <span>Q: {s.quality_mean.toFixed(1)} ± {s.quality_sigma.toFixed(1)}</span>
+                            <span>{s.quality_mean.toFixed(0)} GR · <span className={getConsistencyLabel(s.quality_sigma).color}>{getConsistencyLabel(s.quality_sigma).text}</span></span>
                           </div>
                           {isSaved && <div className="absolute -top-2 -right-2 bg-tertiary text-[#000] text-[10px] px-1 font-bold">SAVED</div>}
-                        </div>
+                        </motion.div>
                       );
                     })}
                     {activeSources.length === 0 && (
@@ -263,59 +260,89 @@ export const Procurement = () => {
                   </div>
                 </div>
 
-                <div className="w-1/2 flex flex-col space-y-6 h-full overflow-y-auto custom-scrollbar pr-2">
-                  {selectedSource ? (
-                    <div className="bg-surface-low border border-outline-variant p-4 space-y-3 font-mono text-sm flex-1 flex flex-col font-medium">
-                      <h3 className="text-primary text-base border-b border-outline-variant/50 pb-2 mb-2 font-bold uppercase">{selectedSource.name}</h3>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">DISTANCE</span>
-                        <span>{selectedSource.distance} km</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">ORDER LIMITS</span>
-                        <span>{selectedSource.min_order} - {selectedSource.max_order}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">QUALITY MEAN</span>
-                        <span>{selectedSource.quality_mean.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">CONSISTENCY</span>
-                        <span>±{selectedSource.quality_sigma.toFixed(2)} σ</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">UNIT BASE COST</span>
-                        <span className="text-tertiary font-bold">${selectedSource.base_cost_per_unit.toFixed(2)}</span>
-                      </div>
+                <div className="flex-1 flex flex-col space-y-6 h-full overflow-y-auto custom-scrollbar pr-2">
+                  <AnimatePresence mode="wait">
+                    {selectedSource ? (
+                      <motion.div 
+                        key={selectedSource.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-surface-low border border-outline-variant p-3 space-y-2.5 font-mono text-xs flex-1 flex flex-col font-medium"
+                      >
+                        <h3 className="text-primary text-sm border-b border-outline-variant/50 pb-2 mb-2 font-bold uppercase">{selectedSource.name}</h3>
+                        <div className="flex justify-between items-center">
+                          <span className="text-on-surface-variant flex items-center space-x-1">
+                            <span>DISTANCE</span>
+                            <Tooltip text="Physical displacement from facility. Increases variable transport costs and baseline logistics complexity." />
+                          </span>
+                          <span>{selectedSource.distance} km</span>
+                        </div>
 
-                      <div className="pt-4 border-t border-outline-variant/50 mt-auto">
-                        <label className="block text-xs font-bold font-mono text-on-surface-variant uppercase tracking-widest mb-2">
-                          PROCURING QUANTITY
-                        </label>
-                        <input
-                          type="number"
-                          min={selectedSource.min_order || 0}
-                          max={selectedSource.max_order || 10000}
-                          step="1"
-                          value={currentDecision.quantity}
-                          onBlur={handleQuantityBlur}
-                          onChange={e => {
-                            let val = parseInt(e.target.value) || 0;
-                            setDecision(selectedComponent, 'quantity', val);
-                          }}
-                          disabled={!isProcurementOpen}
-                          className="w-full bg-surface border border-outline-variant p-3 font-mono text-3xl font-bold text-primary"
-                        />
-                        {currentDecision.quantity < selectedSource.min_order || currentDecision.quantity > selectedSource.max_order ? (
-                          <p className="text-error text-xs mt-1 font-semibold">Order clamped at min limits on losing focus.</p>
-                        ) : null}
+                        <div className="flex justify-between items-center">
+                          <span className="text-on-surface-variant flex items-center space-x-1">
+                            <span>QUALITY MEAN</span>
+                            <Tooltip text="The average base grade of materials. Represents the foundation for your final product's quality potential." />
+                          </span>
+                          <span>{selectedSource.quality_mean.toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-on-surface-variant flex items-center space-x-1">
+                            <span>CONSISTENCY</span>
+                            <Tooltip text="Statistical output variance. High stability ensures predictable grades, while variance invites quality gambling." />
+                          </span>
+                          <span className={`font-bold ${getConsistencyLabel(selectedSource.quality_sigma).color}`}>{getConsistencyLabel(selectedSource.quality_sigma).text}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-on-surface-variant flex items-center space-x-1">
+                            <span>UNIT BASE COST</span>
+                            <Tooltip text="Raw purchase price per component unit. Does not include transport or specialized handling fees." />
+                          </span>
+                          <span className="text-tertiary font-bold">${selectedSource.base_cost_per_unit.toFixed(2)}</span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-end">
+                            <label className="block text-xs font-bold font-mono text-on-surface-variant uppercase tracking-widest">
+                              PROCURING QUANTITY
+                            </label>
+                            <motion.span 
+                              key={currentDecision.quantity}
+                              initial={{ scale: 1.2, color: '#3b82f6' }}
+                              animate={{ scale: 1, color: '#3b82f6' }}
+                              className="text-2xl font-bold font-display text-primary inline-block"
+                            >
+                              {currentDecision.quantity.toLocaleString()}
+                            </motion.span>
+                          </div>
+                          <div className="relative pt-2">
+                            <input
+                              type="range"
+                              min={selectedSource.min_order || 0}
+                              max={selectedSource.max_order || 10000}
+                              step="1"
+                              value={currentDecision.quantity}
+                              onChange={e => {
+                                let val = parseInt(e.target.value) || 0;
+                                setDecision(selectedComponent, 'quantity', val);
+                              }}
+                              disabled={!isProcurementOpen}
+                              className="premium-slider w-full h-1.5 bg-surface-highest rounded-lg appearance-none cursor-pointer accent-primary border border-outline-variant/30"
+                            />
+                            <div className="flex justify-between mt-2 text-[10px] font-bold font-mono text-on-surface-variant uppercase tracking-tighter opacity-70">
+                              <span>Min: {selectedSource.min_order || 0}</span>
+                              <span>Max: {selectedSource.max_order || 10000}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <div className="bg-surface-low border border-outline-variant p-4 flex items-center justify-center text-on-surface-variant font-mono text-sm flex-1 italic">
+                        Select a source
                       </div>
-                    </div>
-                  ) : (
-                    <div className="bg-surface-low border border-outline-variant p-4 flex items-center justify-center text-on-surface-variant font-mono text-sm flex-1 italic">
-                      Select a source
-                    </div>
-                  )}
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
@@ -330,26 +357,11 @@ export const Procurement = () => {
                       const tData = transports[mode];
                       const isSelected = currentDecision.transport === mode;
                       return (
-                        <div key={mode} className="flex-1 relative group/transport">
-                          <button
-                            disabled={!isProcurementOpen}
-                            onClick={() => setDecision(selectedComponent, 'transport', mode)}
-                            className={`w-full py-3 text-sm font-semibold font-mono uppercase tracking-widest transition-colors border
-                              ${isSelected
-                                ? 'bg-surface-highest text-primary border-primary ring-1 ring-primary'
-                                : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-low'
-                              }
-                              ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}
-                            `}
-                          >
-                            {mode}
-                          </button>
-
-                          {/* Hover Card */}
-                          {tData && (
-                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 opacity-0 pointer-events-none group-hover/transport:opacity-100 group-hover/transport:pointer-events-auto transition-opacity duration-200 z-20">
-                              <div className="bg-surface-highest border border-outline p-3 shadow-[0_4px_24px_rgba(0,0,0,0.5)] space-y-1.5">
-                                <div className="text-xs font-bold font-mono text-primary uppercase tracking-widest border-b border-outline-variant/40 pb-1.5 mb-1">{mode}</div>
+                        <div key={mode} className="flex-1">
+                          <Tooltip
+                            className="w-full"
+                            text={
+                              <div className="space-y-1.5 min-w-[200px]">
                                 <div className="flex justify-between text-xs font-mono">
                                   <span className="text-on-surface-variant">Base Cost</span>
                                   <span className="text-on-surface font-semibold">${tData.base_cost}</span>
@@ -359,20 +371,33 @@ export const Procurement = () => {
                                   <span className="text-on-surface font-semibold">${tData.var_cost}/u·km</span>
                                 </div>
                                 <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-on-surface-variant">σ Spread</span>
-                                  <span className="text-on-surface font-semibold">+{tData.sigma_add.toFixed(2)}</span>
+                                  <span className="text-on-surface-variant">Spread σ</span>
+                                  <span className={`font-semibold ${getTransportSpreadLabel(tData.sigma_add).color}`}>{getTransportSpreadLabel(tData.sigma_add).text}</span>
                                 </div>
                                 <div className="flex justify-between text-xs font-mono">
                                   <span className="text-error">Damage %</span>
                                   <span className="text-error font-bold">{(tData.p_damage * 100).toFixed(1)}%</span>
                                 </div>
                               </div>
-                              {/* Arrow pointing down */}
-                              <div className="flex justify-center">
-                                <div className="w-2.5 h-2.5 bg-surface-highest border-r border-b border-outline rotate-45 -mt-[6px]"></div>
-                              </div>
-                            </div>
-                          )}
+                            }
+                            title={mode}
+                          >
+                            <motion.button
+                              whileHover={{ scale: 1.02, boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)' }}
+                              whileTap={{ scale: 0.98 }}
+                              disabled={!isProcurementOpen}
+                              onClick={() => setDecision(selectedComponent, 'transport', mode)}
+                              className={`w-full py-3 text-sm font-semibold font-mono uppercase tracking-widest transition-colors border
+                                ${isSelected
+                                  ? 'bg-surface-highest text-primary border-primary ring-1 ring-primary'
+                                  : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-low'
+                                }
+                                ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}
+                              `}
+                            >
+                              {mode}
+                            </motion.button>
+                          </Tooltip>
                         </div>
                       );
                     })}
@@ -386,9 +411,14 @@ export const Procurement = () => {
                       <span>Projected Total Cost</span>
                       <span className="bg-primary/20 text-primary rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">i</span>
                     </span>
-                    <span className="font-mono text-2xl text-primary font-bold">
+                    <motion.span 
+                      key={componentCost}
+                      initial={{ scale: 1.1, color: '#3b82f6' }}
+                      animate={{ scale: 1, color: '#3b82f6' }}
+                      className="font-mono text-2xl text-primary font-bold"
+                    >
                       ${componentCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+                    </motion.span>
                     <div className="absolute left-1/4 bottom-full hidden group-hover:block bg-surface-highest p-3 border border-outline-variant shadow-lg text-xs font-mono text-on-surface whitespace-nowrap z-50 normal-case">
                       <div className="border-b border-outline-variant/30 pb-2 mb-2 font-bold uppercase tracking-widest text-primary">Cost Breakdown</div>
                       <div className="flex justify-between mb-1 space-x-6"><span className="text-on-surface-variant">Material Subtotal:</span> <span className="font-semibold">${currentProjections.material_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
@@ -408,7 +438,7 @@ export const Procurement = () => {
           </div>
 
           {/* TOTALS & FACTORY IMPACT PANEL (RIGHT) */}
-          <div className="w-[40%] flex flex-col space-y-6 min-h-0 overflow-y-auto custom-scrollbar pr-2">
+          <div className="flex-[4] flex flex-col space-y-6 min-h-0 overflow-y-auto custom-scrollbar pr-2">
             <div className="bg-surface-low p-6 border border-outline-variant space-y-6 flex-1 flex flex-col">
               <h2 className="font-display text-base font-bold uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 flex items-center justify-between group relative cursor-help">
                 <span>ORDER SUMMARY</span>
@@ -442,9 +472,14 @@ export const Procurement = () => {
 
                   <div className={`flex justify-between items-end ${isOverflowing ? 'text-error font-bold' : 'text-on-surface'}`}>
                     <span className="text-sm font-bold uppercase">PROJECTED SURPLUS</span>
-                    <span className="text-2xl font-bold">
+                    <motion.span 
+                      key={remainingFunds}
+                      initial={{ scale: 1.1, color: isOverflowing ? '#ef4444' : '#10b981' }}
+                      animate={{ scale: 1, color: isOverflowing ? '#ef4444' : '#f8fafc' }}
+                      className="text-2xl font-bold"
+                    >
                       ${remainingFunds.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+                    </motion.span>
                   </div>
 
                   {isOverflowing && (
@@ -468,7 +503,14 @@ export const Procurement = () => {
               <span>GLOBAL SPEND PROJECTION</span>
               {projectedCosts ? <FiCheckCircle className="text-primary text-sm" /> : null}
             </div>
-            <div className={`font-mono text-3xl font-bold ${isOverflowing ? 'text-error' : 'text-on-surface'}`}>${totalProcurementCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <motion.div 
+              key={totalProcurementCost}
+              initial={{ scale: 1.05, color: isOverflowing ? '#ef4444' : '#3b82f6' }}
+              animate={{ scale: 1, color: isOverflowing ? '#ef4444' : '#f8fafc' }}
+              className={`font-mono text-3xl font-bold ${isOverflowing ? 'text-error' : 'text-on-surface'}`}
+            >
+              ${totalProcurementCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </motion.div>
             {lastSavedAt && <div className="absolute top-full mt-2 text-on-surface-variant font-mono text-xs font-semibold">Saved at {lastSavedAt}</div>}
           </div>
         </div>
