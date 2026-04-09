@@ -8,6 +8,7 @@ export default defineConfig({
     port: 5180,
     strictPort: true,
     host: true,
-    allowedHosts: ["*"],
+    allowedHosts: ["lasandra-irrevocable-marian.ngrok-free.dev"],
+    //allowedHosts: ["*"],
   }
 })
