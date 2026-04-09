@@ -36,10 +36,10 @@ MIN_USABLE_GRADE: int = 1
 # mean_reduce      : subtracted from source quality_mean during draw
 # p_damage         : probability of partial damage event
 TRANSPORT: Dict[str, Dict] = {
-    "air":   {"base_cost": 3000, "var_cost": 0.10,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
-    "water": {"base_cost": 1500, "var_cost": 0.005, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
-    "rail":  {"base_cost": 500,  "var_cost": 0.02,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
-    "road":  {"base_cost": 100,  "var_cost": 0.04,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
+    "air":   {"base_cost": 30000, "var_cost": 200,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
+    "water": {"base_cost": 8000, "var_cost": 20, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
+    "rail":  {"base_cost": 4000,  "var_cost": 60,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
+    "road":  {"base_cost": 1000,  "var_cost": 100,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
 }
 
 PARTIAL_DAMAGE_FRACTION: float = 0.25
@@ -49,10 +49,10 @@ PARTIAL_DAMAGE_PENALTY:  int   = 20
 # Keys: starting_grade, throughput, labour_required, degradation_rate,
 #       purchase_cost, scrap_value
 MACHINE_TIERS: Dict[str, Dict] = {
-    "basic":      {"grade": 40, "throughput": 200,  "labour": 4,  "degrade": 5.0, "buy": 25_000,   "scrap": 2_000},
-    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 4.0, "buy": 85_000,   "scrap": 6_000},
-    "industrial": {"grade": 75, "throughput": 700,  "labour": 12, "degrade": 3.0, "buy": 220_000,  "scrap": 20_000},
-    "precision":  {"grade": 90, "throughput": 1000, "labour": 25, "degrade": 2.5, "buy": 550_000,  "scrap": 60_000},
+    "basic":      {"grade": 40, "throughput": 200,  "labour": 4,  "degrade": 4.0, "buy": 15_000,   "scrap": 1_000},
+    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 3.0, "buy": 35_000,   "scrap": 3_000},
+    "industrial": {"grade": 75, "throughput": 700,  "labour": 10, "degrade": 2.0, "buy": 80_000,  "scrap": 8_000},
+    "precision":  {"grade": 90, "throughput": 1000, "labour": 20, "degrade": 1.2, "buy": 180_000,  "scrap": 25_000},
 }
 MACHINE_MAX_CONDITION:    float = 100.0
 MACHINE_DEGRADED_AT:      float = 40.0
@@ -74,7 +74,7 @@ AUTOMATION_SIGMA_MULT: Dict[str, float] = {
     "manual": 1.0, "semi_auto": 0.65, "full_auto": 0.35,
 }
 AUTOMATION_UPGRADE_COST: Dict[str, float] = {
-    "manual": 0.0, "semi_auto": 400_000.0, "full_auto": 1_200_000.0,
+    "manual": 0.0, "semi_auto": 200_000.0, "full_auto": 600_000.0,
 }
 
 # ── Labour ────────────────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ WAGE_MORALE_DELTA: Dict[str, float] = {
     "below_market": -10.0, "market": 0.0, "above_market": 8.0,
 }
 WAGE_COST_PER_WORKER: Dict[str, float] = {
-    "below_market": 800.0, "market": 1_200.0, "above_market": 1_800.0,
+    "below_market": 300.0, "market": 500.0, "above_market": 750.0,
 }
 UNDERSTAFFING_MORALE_PENALTY: float = 0.20  # per 1% understaffed
 
@@ -129,20 +129,20 @@ RND_CONSISTENCY_BONUS: float = 2.0   # per level: -2 sigma (floor 2.0)
 RND_YIELD_BONUS:       float = 0.04  # per level: -4% raw material consumed
 
 # ── Sales & market ────────────────────────────────────────────────────────────
-PRICE_REJECT_SCRAP:     float = 300.0
+PRICE_REJECT_SCRAP:     float = 200.0
 PRICE_REJECT_REWORK:    float = 600.0
-PRICE_REJECT_BLACK_MKT: float = 900.0
-PRICE_SUBSTANDARD:      float = 1_800.0
-PRICE_STANDARD:         float = 4_200.0
-PRICE_PREMIUM_NORMAL:   float = 5_500.0
-PRICE_PREMIUM_SELL:     float = 8_500.0
+PRICE_REJECT_BLACK_MKT: float = 600.0
+PRICE_SUBSTANDARD:      float = 1_400.0
+PRICE_STANDARD:         float = 3_000.0
+PRICE_PREMIUM_NORMAL:   float = 3_000.0
+PRICE_PREMIUM_SELL:     float = 4_800.0
 
-HOLDING_COST_PER_UNIT:  float = 60.0
+HOLDING_COST_PER_UNIT:  float = 40.0
 
 BLACK_MKT_DISCOVERY_BASE:     float = 0.55
 BLACK_MKT_FINE_MULTIPLIER:    float = 3.0
 
-BRAND_DECAY:                  float = 0.92
+BRAND_DECAY:                  float = 0.94
 BRAND_DELTA_PREMIUM_SELL:     float = 6.0
 BRAND_DELTA_STANDARD_SELL:    float = 1.5
 BRAND_DELTA_SUBSTANDARD_SELL: float = -5.0
