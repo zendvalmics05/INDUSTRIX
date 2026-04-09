@@ -22,6 +22,15 @@ interface StandardPrices {
   premium: number;
 }
 
+const isSellingAction = (action: SalesAction) => 
+  ['sell_market', 'sell_premium', 'sell_discounted'].includes(action);
+
+const getDefaultSellAction = (tier: TierKey): SalesAction => {
+  if (tier === 'premium') return 'sell_premium';
+  if (tier === 'substandard') return 'sell_discounted';
+  return 'sell_market';
+};
+
 // ── Components ───────────────────────────────────────────────────────────────
 
 const PriceSlider = ({ 
@@ -581,78 +590,106 @@ export const Sales = () => {
             </div>
           </section>
 
-          {/* 2. SUBSTANDARD / STANDARD / PREMIUM TIERS */}
           {(['substandard', 'standard', 'premium'] as TierKey[]).map((tier) => {
              const count = getTierCount(tier);
              const tierColor = tier === 'premium' ? 'text-secondary' : tier === 'standard' ? 'text-primary' : 'text-on-surface-variant';
              const tierBg = tier === 'premium' ? 'bg-secondary/5 border-secondary/20' : tier === 'standard' ? 'bg-primary/5 border-primary/20' : 'bg-surface-low border-outline-variant';
+             const isSelling = isSellingAction(decisions[tier].action);
 
              return (
                <section key={tier} className={`${tierBg} border p-8 animate-in fade-in slide-in-from-bottom-4 duration-700 rounded-sm`}>
-                  <div className="flex justify-between items-start mb-10">
+                  <div className="flex justify-between items-start mb-8">
                     <div>
                       <div className="flex items-center space-x-3 mb-2">
                         <h2 className={`text-3xl font-bold font-display uppercase tracking-tight ${tierColor}`}>{tier} Tier</h2>
                         <span className={`px-2 py-0.5 border rounded-full text-[10px] font-mono font-bold uppercase tracking-widest ${tierColor} opacity-70`}>Quality Threshold Met</span>
                       </div>
                       <p className="text-sm font-semibold font-mono text-on-surface-variant uppercase tracking-wider">
-                        Ready For Dispatch: <span className="text-on-surface">{count} Units</span>
+                        Available Stock: <span className="text-on-surface">{count} Units</span>
                       </p>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Projected Tier Revenue</span>
+                      <span className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Estimated Revenue</span>
                       <div className={`text-3xl font-display ${tierColor}`}>${estimateByTier(tier).toLocaleString()}</div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                    <div className="lg:col-span-7">
-                      {standardPrices && (
-                        <PriceSlider 
-                          label={tier}
-                          value={decisions[tier].price_override ?? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard)}
-                          min={1}
-                          max={Math.round((standardPrices?.premium || 4800) * 1.5)}
-                          standardPrices={standardPrices}
-                          disabled={!isSalesOpen}
-                          onChange={(val) => setDecisions(s => ({ ...s, [tier]: { ...s[tier], price_override: val, action: 'sell_market' as SalesAction } }))}
-                        />
-                      )}
-                    </div>
-                    <div className="lg:col-span-5 space-y-4">
-                      <div className="bg-surface p-5 border border-outline-variant/30 space-y-4 shadow-inner">
-                         <div className="flex items-center space-x-2 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest font-bold border-b border-outline-variant/20 pb-2">
-                            <FiDollarSign className={tierColor} />
-                            <span>Revenue Architecture</span>
-                         </div>
-                         <div className="flex justify-between items-center text-xs font-mono uppercase">
-                            <span className="opacity-60 text-[10px]">Unit Valuation</span>
-                            <span className="text-on-surface font-bold text-lg">
-                              ${(decisions[tier].price_override || (standardPrices ? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard) : 0)).toLocaleString()}
-                            </span>
-                         </div>
-                         <div className="flex justify-between items-center text-xs font-mono uppercase">
-                            <span className="opacity-60 text-[10px]">Efficiency Delta</span>
-                            <span className="text-secondary">+12.4% vs Baseline</span>
-                         </div>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => setDecisions(s => ({ ...s, [tier]: { ...s[tier], action: 'hold' } }))}
-                          className={`flex-1 py-3 px-3 border font-mono text-[10px] font-bold uppercase tracking-widest transition-all ${decisions[tier].action === 'hold' ? 'bg-on-surface text-surface border-on-surface' : 'bg-transparent border-outline-variant text-on-surface-variant hover:border-on-surface'}`}
-                        >
-                          Hold Inventory
-                        </button>
-                        <button 
-                          onClick={() => setDecisions(s => ({ ...s, [tier]: { ...s[tier], action: 'scrap' } }))}
-                          className={`flex-1 py-3 px-3 border font-mono text-[10px] font-bold uppercase tracking-widest transition-all ${decisions[tier].action === 'scrap' ? 'bg-error text-surface border-error' : 'bg-transparent border-outline-variant text-on-surface-variant hover:border-error text-error'}`}
-                        >
-                          Liquidate Scrub
-                        </button>
-                      </div>
-                    </div>
+                  {/* Protocol Selector */}
+                  <div className="flex space-x-3 mb-10">
+                    {[
+                      { id: 'hold', label: 'Hold Inventory', icon: FiPackage },
+                      { id: 'scrap', label: 'Liquidate Scrub', icon: FiAlertTriangle },
+                      { id: 'sell', label: 'Market Sell', icon: FiTrendingUp }
+                    ].map(opt => {
+                       const isActive = opt.id === 'sell' ? isSelling : decisions[tier].action === opt.id;
+                       const targetAction = opt.id === 'sell' ? getDefaultSellAction(tier) : opt.id as SalesAction;
+                       return (
+                         <button 
+                           key={opt.id}
+                           onClick={() => setDecisions(s => ({ ...s, [tier]: { ...s[tier], action: targetAction } }))}
+                           disabled={!isSalesOpen}
+                           className={`flex-1 flex items-center justify-center space-x-3 py-4 border font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+                             isActive 
+                               ? 'bg-on-surface text-surface border-on-surface shadow-lg' 
+                               : 'bg-surface/40 border-outline-variant text-on-surface-variant hover:border-on-surface hover:bg-surface-high'
+                           } ${!isSalesOpen && 'opacity-50 pointer-events-none'}`}
+                         >
+                           <opt.icon className={isActive ? 'text-surface' : ''} size={16} />
+                           <span>{opt.label}</span>
+                         </button>
+                       );
+                    })}
                   </div>
+
+                  {/* Content grid - only visible when selling */}
+                  {isSelling ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center animate-in fade-in slide-in-from-top-4 duration-500">
+                      <div className="lg:col-span-7">
+                        {standardPrices && (
+                          <PriceSlider 
+                            label={tier}
+                            value={decisions[tier].price_override ?? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard)}
+                            min={1}
+                            max={Math.round((standardPrices?.premium || 4800) * 1.5)}
+                            standardPrices={standardPrices}
+                            disabled={!isSalesOpen}
+                            onChange={(val) => setDecisions(s => ({ ...s, [tier]: { ...s[tier], price_override: val, action: isSellingAction(s[tier].action) ? s[tier].action : getDefaultSellAction(tier) } }))}
+                          />
+                        )}
+                      </div>
+                      <div className="lg:col-span-5 space-y-4">
+                        <div className="bg-surface p-5 border border-outline-variant/30 space-y-4 shadow-inner">
+                           <div className="flex items-center space-x-2 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest font-bold border-b border-outline-variant/20 pb-2">
+                              <FiDollarSign className={tierColor} />
+                              <span>Pricing Architecture</span>
+                           </div>
+                           <div className="flex justify-between items-center text-xs font-mono uppercase">
+                              <span className="opacity-60 text-[10px]">Asking Price</span>
+                              <span className="text-on-surface font-bold text-lg">
+                                ${((decisions[tier].price_override === null || decisions[tier].price_override === undefined) ? (standardPrices ? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard) : 0) : (decisions[tier].price_override || 0)).toLocaleString()}
+                              </span>
+                           </div>
+                           <div className="flex justify-between items-center text-xs font-mono uppercase">
+                              <span className="opacity-60 text-[10px]">Market Outlook</span>
+                              <span className="text-secondary">Optimal Conversion</span>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-10 border border-dashed border-outline-variant/50 bg-surface/20 rounded-sm flex items-center justify-center animate-in fade-in duration-300">
+                      <div className="text-center space-y-2">
+                        <div className={`text-sm font-bold font-mono uppercase tracking-widest ${decisions[tier].action === 'hold' ? 'text-on-surface' : 'text-error'}`}>
+                          Protocol: {decisions[tier].action === 'hold' ? 'Inventory Buffer Engaged' : 'Asset Liquidation Confirmed'}
+                        </div>
+                        <div className="text-[10px] font-mono text-on-surface-variant uppercase opacity-60 max-w-xs mx-auto">
+                          {decisions[tier].action === 'hold' 
+                            ? 'Stock will be carried over for future market distribution. Daily holding fees apply.' 
+                            : 'Units will be permanently deconstructed for salvage. Revenue recovered per scrap table.'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                </section>
              );
           })}

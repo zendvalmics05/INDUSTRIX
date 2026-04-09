@@ -511,6 +511,24 @@ def _resolve_financial_events(
                 )
                 if lender_inv:
                     lender_inv.funds += amount
+            else:
+                # Government loan: check for any other pending gov loan events
+                from core.enums import EventStatus
+                remaining_debt = (
+                    db.query(Event)
+                    .filter(
+                        Event.target_team_id == inventory.team_id,
+                        Event.event_type.in_(
+                            [EventType.LOAN_INTEREST, EventType.LOAN_REPAYMENT]
+                        ),
+                        Event.source_team_id == None,
+                        Event.status == EventStatus.PENDING,
+                        Event.id != ev.id,
+                    )
+                    .count()
+                )
+                if remaining_debt == 0:
+                    inventory.has_gov_loan = False
         elif ev.event_type == EventType.ARBITRARY_FINE:
             fine             = p.get("fine_amount", 0.0)
             inventory.funds -= fine
