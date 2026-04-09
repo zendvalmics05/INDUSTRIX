@@ -13,6 +13,7 @@ import type {
   CostProjectionOut,
   NotificationOut,
   BackroomStatusOut,
+  CycleBriefingOut,
 } from '../types';
 
 // Thin wrapper around backend endpoints. No hardcoded data.
@@ -175,6 +176,11 @@ export const teamApi = {
     return data;
   },
 
+  getNews: async (): Promise<any[]> => {
+    const { data } = await api.get<any[]>('/team/events/news');
+    return data;
+  },
+
   getBackroomStatus: async (): Promise<BackroomStatusOut> => {
     const { data } = await api.get<BackroomStatusOut>('/team/events/backroom-status');
     return data;
@@ -182,6 +188,20 @@ export const teamApi = {
 
   buyIntel: async () => {
     const { data } = await api.post('/team/events/buy-intel');
+    return data;
+  },
+
+  getTeamMembers: async (): Promise<any[]> => {
+    const { data } = await api.get<any[]>('/team/members');
+    return data;
+  },
+
+  addTeamMember: async (name: string, role?: string): Promise<any> => {
+    const { data } = await api.post('/team/members', { name, role });
+    return data;
+  },
+  getBriefing: async (): Promise<CycleBriefingOut> => {
+    const { data } = await api.get<CycleBriefingOut>('/team/briefing');
     return data;
   }
 };

@@ -20,7 +20,7 @@ export const Market = () => {
       <div>
         <h1 className="font-display text-4xl uppercase tracking-tighter">MARKET ANALYSIS</h1>
         <p className="font-mono text-base font-semibold text-on-surface-variant mt-2">
-          Current market factions and their buying parameters. Use this to inform your production and pricing strategies.
+          Current market intelligence estimates. Faction parameters are projected with a margin of error based on recent cycles. Use this to inform your production and pricing strategies.
         </p>
       </div>
 
@@ -41,12 +41,12 @@ export const Market = () => {
                   <span className="text-on-surface font-bold capitalize">{faction.tier_preference}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-outline-variant/30 pb-2">
-                  <span className="text-on-surface-variant text-base font-semibold font-medium uppercase">Price Ceiling</span>
-                  <span className="text-primary">${faction.price_ceiling.toLocaleString()}</span>
+                  <span className="text-on-surface-variant text-base font-semibold font-medium uppercase">Expected Ceiling</span>
+                  <span className="text-primary">${faction.projected_ceiling_min.toLocaleString()} - ${faction.projected_ceiling_max.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-outline-variant/30 pb-2">
-                  <span className="text-on-surface-variant text-base font-semibold font-medium uppercase">Target Volume</span>
-                  <span className="text-on-surface">{faction.volume.toLocaleString()} units</span>
+                  <span className="text-on-surface-variant text-base font-semibold font-medium uppercase">Est. Target Volume</span>
+                  <span className="text-on-surface">{faction.projected_volume_min.toLocaleString()} - {faction.projected_volume_max.toLocaleString()} units</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-outline-variant/30 pb-2">
                   <span className="text-on-surface-variant text-base font-semibold font-medium uppercase">Min Brand Score</span>
@@ -65,7 +65,7 @@ export const Market = () => {
       </div>
 
       <div className="bg-surface-low border border-outline-variant p-4 font-mono text-base font-semibold font-medium text-on-surface-variant mt-auto">
-        <span className="font-bold">Tips:</span> Factions buy their preferred tier first. If supply runs out, they may buy lower tiers depending on their flexibility. If your brand score is below their minimum, they will not buy from you.
+        <span className="font-bold text-primary">Intelligence Note:</span> Factions default to their preferred tier if the price is right. Exact ceiling limits and volume capacities vary per cycle. Your intelligence forecasts map the ±15% variance zone to help you price strategically. They will NOT buy if your brand score falls below their minimum.
       </div>
     </div>
   );

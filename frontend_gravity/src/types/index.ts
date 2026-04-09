@@ -102,13 +102,14 @@ export interface SalesMemoryOut {
   decisions: Record<string, SalesDecision>;
 }
 
-// Market Factions
 export interface MarketFaction {
   id: number;
   name: string;
   tier_preference: string;
-  price_ceiling: number;
-  volume: number;
+  projected_ceiling_min: number;
+  projected_ceiling_max: number;
+  projected_volume_min: number;
+  projected_volume_max: number;
   flexibility: number;
   brand_min: number;
 }
@@ -148,24 +149,34 @@ export interface LeaderboardRow {
   inventory_penalty: number;
 }
 
+export interface Award {
+  category: string;
+  team_name: string;
+  description: string;
+  icon?: string;
+}
+
 export interface LeaderboardOut {
   cycle_number: number;
   is_final: boolean;
   rows: LeaderboardRow[];
+  awards?: Award[];
 }
 
 export interface GameStatusOut {
   game_name: string;
   cycle_number: number;
   phase:
-    | 'procurement_open'
-    | 'production_open'
-    | 'sales_open'
-    | 'backroom'
-    | 'game_over'
-    | 'waiting_for_first_cycle'
-    | 'no_active_game';
+  | 'procurement_open'
+  | 'production_open'
+  | 'sales_open'
+  | 'backroom'
+  | 'game_over'
+  | 'waiting_for_first_cycle'
+  | 'no_active_game';
   game_active: boolean;
+  phase_opened_at?: number | null;
+  phase_duration?: number | null;
 }
 
 // ── Phase Resolution Summaries ────────────────────────────────────────────────
@@ -257,4 +268,35 @@ export interface BackroomStatusOut {
   discovery_boost_active: boolean;
   boost_cost: number;
   boost_probability: number;
+}
+
+// ── Briefing ──────────────────────────────────────────────────────────────────
+
+export interface LastCycleStats {
+  cycle_number: number;
+  revenue:      number;
+  expenses:     number;
+  net_profit:   number;
+  units_sold:   number;
+  brand_delta:  number;
+  brand_score:  number;
+}
+
+export interface OperationalUpdate {
+  title:       string;
+  description: string;
+  type:        'rnd' | 'infra' | 'staffing';
+}
+
+export interface MarketIntel {
+  title:    string;
+  message:  string;
+  severity: 'info' | 'warning' | 'success';
+}
+
+export interface CycleBriefingOut {
+  cycle_number:       number;
+  last_cycle_stats?:  LastCycleStats | null;
+  operational_updates: OperationalUpdate[];
+  market_intelligence: MarketIntel[];
 }

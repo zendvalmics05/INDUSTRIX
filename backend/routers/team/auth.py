@@ -8,10 +8,12 @@ GET  /team/me      — return team's own inventory snapshot
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from datetime import timezone
 from core.auth import verify_team
 from core.database import get_db
 from models.game import Cycle, CyclePhaseLog, Game, Team
 from models.procurement import Inventory
+from core.config import PHASE_DURATIONS
 from schemas.common import OkResponse, PhaseStatusResponse
 from schemas.game import TeamLoginResponse
 from schemas.sales import InventoryOut
@@ -52,12 +54,32 @@ def game_status(db: Session = Depends(get_db)):
             game_name=game.name, cycle_number=0,
             phase="waiting_for_first_cycle", game_active=True,
         )
+    # Find the opening timestamp for the current phase
+    opened_at = None
+    duration  = None
+    if cycle.phase_log:
+        current_phase = cycle.phase_log.current_phase.value
+        ts_field = {
+            "procurement_open": "procurement_opened_at",
+            "production_open":  "production_opened_at",
+            "sales_open":       "sales_opened_at",
+            "backroom":         "backroom_opened_at",
+        }.get(current_phase)
+        
+        if ts_field:
+            dt = getattr(cycle.phase_log, ts_field)
+            if dt:
+                # Naive utcnow from DB must be explicitly marked as UTC
+                opened_at = dt.replace(tzinfo=timezone.utc).timestamp()
+            duration = PHASE_DURATIONS.get(current_phase)
+
     return PhaseStatusResponse(
-        game_name    = game.name,
-        cycle_number = cycle.cycle_number,
-        phase        = cycle.phase_log.current_phase.value
-                       if cycle.phase_log else "unknown",
-        game_active  = game.is_active,
+        game_name       = game.name,
+        cycle_number    = cycle.cycle_number,
+        phase           = cycle.phase_log.current_phase.value if cycle.phase_log else "unknown",
+        game_active     = game.is_active,
+        phase_opened_at = opened_at,
+        phase_duration  = duration,
     )
 
 

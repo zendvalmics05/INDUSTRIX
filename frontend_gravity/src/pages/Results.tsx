@@ -2,11 +2,11 @@ import { useEffect, useMemo } from 'react';
 import { useResultsStore, useGameStore } from '../store';
 import { StatusChip } from '../components/SharedComponents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCrown, FaArrowUp, FaAward } from 'react-icons/fa';
+import { FaCrown, FaArrowUp, FaAward, FaUserSecret, FaFingerprint, FaNetworkWired, FaServer, FaGem, FaSkull, FaBiohazard, FaGhost, FaSkullCrossbones } from 'react-icons/fa';
 
 export const Results = () => {
   const { phase, teamName } = useGameStore();
-  const { cycleNumber, isFinal, rows, fetchLeaderboard } = useResultsStore();
+  const { cycleNumber, isFinal, rows, awards, fetchLeaderboard } = useResultsStore();
 
   useEffect(() => {
     fetchLeaderboard();
@@ -16,6 +16,8 @@ export const Results = () => {
 
   // Sort rows by rank just in case, though API usually handles this
   const sortedRows = useMemo(() => [...rows].sort((a, b) => (a.rank || 0) - (b.rank || 0)), [rows]);
+
+  const ownRow = useMemo(() => sortedRows.find(r => r.team_name === teamName), [sortedRows, teamName]);
 
   return (
     <div className="flex flex-col min-h-full space-y-6">
@@ -48,17 +50,85 @@ export const Results = () => {
       <AnimatePresence>
         {(phase === 'backroom' || phase === 'game_over') && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="bg-surface-low border border-outline-variant/50 p-4 font-mono text-xs text-on-surface-variant backdrop-blur-xl relative overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+            animate={{ opacity: 1, height: 'auto', scale: 1 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono overflow-hidden py-2"
           >
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary/50"></div>
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="flex space-x-1">
-                <span className="w-2 h-2 rounded-full bg-error animate-pulse"></span>
-                <span className="w-2 h-2 rounded-full bg-error animate-pulse delay-75"></span>
+            {/* Panel 1: Main Status */}
+            <div className="bg-surface-low border border-primary/30 p-5 backdrop-blur-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-primary/20 transition-all duration-1000"></div>
+              <div className="flex items-center space-x-3 mb-4">
+                <FaUserSecret className="text-primary text-2xl" />
+                <h3 className="text-primary font-bold tracking-widest uppercase text-sm">Liaison Status</h3>
               </div>
-              <span className="uppercase tracking-widest text-primary font-bold">LIVE AUDIT IN PROGRESS — ORGANISER DESK IS NOW OPEN FOR SETTLEMENTS</span>
+              <div className="space-y-4 relative z-10">
+                <div className="flex items-center space-x-2">
+                   <span className="w-2 h-2 rounded-full bg-error animate-pulse shadow-[0_0_8px_rgba(255,0,0,0.8)]"></span>
+                   <span className="uppercase text-xs text-on-surface font-bold tracking-[0.2em]">Desk is OPEN</span>
+                </div>
+                <p className="text-[10px] text-on-surface-variant leading-relaxed">
+                  The Organiser is accepting backroom deals, bribes, and sabotage requests. Approach the desk physically to initiate protocols.
+                </p>
+                <div className="h-[2px] w-full bg-gradient-to-r from-primary/50 to-transparent"></div>
+                <div className="text-[9px] uppercase tracking-widest opacity-50 flex items-center space-x-2">
+                  <FaServer />
+                  <span className="animate-pulse">Awaiting manual cycle resolution...</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel 2: Live Operation Snapshot */}
+            <div className="bg-surface-low border border-outline-variant/30 p-5 backdrop-blur-xl relative overflow-hidden">
+               <div className="absolute -bottom-4 -right-4 text-[100px] text-primary/5 pointer-events-none font-black font-display rotate-12">
+                 C{cycleNumber}
+               </div>
+               <div className="flex items-center justify-between mb-4 relative z-10">
+                 <h3 className="text-on-surface font-bold tracking-widest uppercase text-sm flex items-center space-x-2">
+                   <FaFingerprint className="text-on-surface-variant" />
+                   <span>Unit Audit</span>
+                 </h3>
+                 <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded uppercase tracking-widest">Live</span>
+               </div>
+               {ownRow ? (
+                 <div className="grid grid-cols-2 gap-4 relative z-10">
+                   <div>
+                     <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Liquidity</div>
+                     <div className="text-xl font-display font-medium text-primary shadow-primary/20 drop-shadow-md">
+                       ${ownRow.closing_funds?.toLocaleString()}
+                     </div>
+                   </div>
+                   <div>
+                     <div className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Current Rank</div>
+                     <div className="text-xl font-display font-black text-on-surface">
+                       #{ownRow.rank}
+                     </div>
+                   </div>
+                   <div className="col-span-2 bg-black/20 p-2 rounded text-[10px] flex justify-between items-center border border-white/5">
+                     <span className="uppercase opacity-60">Composite Score</span>
+                     <span className="font-bold">{ownRow.composite_score?.toFixed(1)} Pts</span>
+                   </div>
+                 </div>
+               ) : (
+                 <div className="h-full flex items-center justify-center text-[10px] text-on-surface-variant uppercase tracking-widest animate-pulse">Syncing Telemetry...</div>
+               )}
+            </div>
+
+            {/* Panel 3: Intelligence Wire */}
+            <div className="bg-surface-low border border-outline-variant/30 p-5 backdrop-blur-xl flex flex-col">
+              <div className="flex items-center space-x-3 mb-4">
+                <FaNetworkWired className="text-secondary text-base" />
+                <h3 className="text-secondary font-bold tracking-widest uppercase text-sm">Intel Wire</h3>
+              </div>
+              <div className="flex-1 flex flex-col justify-center space-y-4 text-[10px]">
+                 <div className="flex items-start space-x-2 opacity-80 group hover:opacity-100 transition-opacity">
+                   <span className="text-secondary mt-0.5 animate-pulse">▶</span>
+                   <p className="font-mono leading-relaxed">Check the <span className="text-primary font-bold">Events Hub</span> for leaked industry gossip and counter-intelligence.</p>
+                 </div>
+                 <div className="flex items-start space-x-2 opacity-80 group hover:opacity-100 transition-opacity">
+                   <span className="text-secondary mt-0.5 animate-pulse">▶</span>
+                   <p className="font-mono leading-relaxed">Consider buying Intelligence Buffs to intercept incoming hostile protocols.</p>
+                 </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -195,6 +265,48 @@ export const Results = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Endgame Superlatives */}
+        {phase === 'game_over' && awards && awards.length > 0 && (
+          <div className="p-8 border-t border-outline-variant/30 bg-surface-low/80">
+             <div className="flex items-center space-x-4 mb-8">
+                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-outline-variant/50"></div>
+                <h2 className="font-display text-2xl font-black text-on-surface uppercase tracking-widest flex items-center space-x-3">
+                   <FaAward className="text-secondary" />
+                   <span>Special Commendations</span>
+                </h2>
+                <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-outline-variant/50"></div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {awards.map((award: any, i: number) => (
+                  <motion.div
+                    key={award.category}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8 + (i * 0.15), type: 'spring' }}
+                    className="p-5 border border-outline-variant/50 bg-surface-high relative overflow-hidden group hover:border-secondary/50 transition-colors"
+                  >
+                    <div className="absolute -top-4 -right-4 text-7xl text-on-surface/5 opacity-20 group-hover:rotate-12 transition-transform duration-500">
+                      {award.icon === 'titan' && <FaGem />}
+                      {award.icon === 'paragon' && <FaCrown />}
+                      {award.icon === 'tycoon' && <FaSkullCrossbones />}
+                      {award.icon === 'nightmare' && <FaBiohazard />}
+                      {award.icon === 'king' && <FaGhost />}
+                    </div>
+
+                    <div className="relative z-10">
+                       <span className="text-[10px] font-mono font-bold text-secondary uppercase tracking-[0.2em] block mb-1">{award.category}</span>
+                       <h3 className="font-display text-lg font-black text-on-surface uppercase mb-2 truncate">{award.team_name}</h3>
+                       <p className="text-[11px] font-mono text-on-surface-variant leading-relaxed italic border-l-2 border-secondary/30 pl-3">
+                         "{award.description}"
+                       </p>
+                    </div>
+                  </motion.div>
+                ))}
+             </div>
+          </div>
+        )}
       </div>
     </div>
   );

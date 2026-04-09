@@ -42,7 +42,7 @@ from core.config import (
     MAX_RND_LEVEL, MORALE_HIGH, MORALE_LOW, MORALE_RIOT,
     OVERHAUL_RECOVERY_CAP, QUALITY_MAX,
     RND_CONSISTENCY_BONUS, RND_CYCLES_PER_LEVEL,
-    RND_QUALITY_BONUS, RND_YIELD_BONUS,
+    RND_QUALITY_BONUS, RND_YIELD_BONUS, RND_COST_PER_LEVEL,
     RIOT_SURVIVAL, RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
     RM_WEIGHT, SKILL_GAIN_HIGH_MORALE,
     SKILL_GAIN_LOW_MORALE, SKILL_SIGMA_REDUCTION,
@@ -537,7 +537,7 @@ def resolve_production(
                      else rnd_invest.focus
             levels = rnd_invest.get("levels", 1) if isinstance(rnd_invest, dict) \
                      else rnd_invest.levels
-            cost   = levels * 10_000.0
+            cost   = levels * RND_COST_PER_LEVEL
             inventory.funds -= cost
             _schedule_rnd_event(db, team, cycle, comp_val, focus, levels, cost)
 

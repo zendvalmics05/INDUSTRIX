@@ -18,6 +18,10 @@ import {
   FiEye,
   FiZap,
   FiClock,
+  FiDollarSign,
+  FiGlobe,
+  FiActivity,
+  FiFileText,
 } from 'react-icons/fi';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,7 +195,7 @@ const BuyIntelCard = () => {
 // Main Events Page
 // ─────────────────────────────────────────────────────────────────────────────
 export const Events = () => {
-  const [activeTab, setActiveTab] = useState<'reports' | 'intelligence'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'intelligence' | 'news'>('reports');
   const { phase, cycleNumber } = useGameStore();
   
   const procurement = useEventsStore(s => s.procurement);
@@ -202,6 +206,8 @@ export const Events = () => {
   const loadingProduction = useEventsStore(s => s.loadingProduction);
   const loadingSales = useEventsStore(s => s.loadingSales);
   const loadingNotifications = useEventsStore(s => s.loadingNotifications);
+  const loadingNews = useEventsStore(s => s.loadingNews);
+  const news = useEventsStore(s => s.news);
   const fetchAll = useEventsStore(s => s.fetchAll);
   const markNotificationsAsViewed = useEventsStore(s => s.markNotificationsAsViewed);
 
@@ -268,6 +274,17 @@ export const Events = () => {
           <span>Intelligence Bureau</span>
           {hasSabotage && <span className="absolute top-0 -right-2 w-2 h-2 bg-error rounded-full animate-pulse" />}
         </button>
+        <button
+          onClick={() => setActiveTab('news')}
+          className={`flex items-center space-x-2 pb-3 px-2 font-display text-sm tracking-widest uppercase transition-all whitespace-nowrap ${
+            activeTab === 'news'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-on-surface-variant hover:text-on-surface border-b-2 border-transparent hover:border-outline-variant'
+          }`}
+        >
+          <FiEye size={14} />
+          <span>Industry Gossip</span>
+        </button>
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -324,7 +341,7 @@ export const Events = () => {
               <PendingCard label="Sales Resolution" icon={<FiTrendingUp size={14} />} />
             )}
           </div>
-        ) : (
+        ) : activeTab === 'intelligence' ? (
           <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 px-2 lg:max-w-5xl max-w-full">
             <IntelSection hasSabotage={hasSabotage} />
             
@@ -359,6 +376,66 @@ export const Events = () => {
                 </div>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-8 px-2 lg:max-w-4xl max-w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <h2 className="text-sm font-medium font-mono text-on-surface uppercase tracking-[0.2em] flex items-center space-x-2 border-b border-outline-variant pb-2">
+               <FiEye size={14} className="text-primary" />
+               <span>Industry Gossip & Whispers</span>
+             </h2>
+             <p className="text-[11px] font-mono text-on-surface-variant leading-relaxed">
+                Unverified reports and intelligence gathered from rogue journalists, market analysts, and disgruntled workers. <span className="text-primary font-bold">Use this to build a profile of your competitors.</span>
+             </p>
+
+             {loadingNews && news.length === 0 ? (
+                <div className="p-10 border border-outline-variant/20 bg-surface-low/50 animate-pulse text-[9px] font-mono text-on-surface-variant text-center uppercase tracking-[0.2em]">
+                   Tapping communications...
+                </div>
+             ) : news.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {news.map((n: any) => {
+                    const isGovExposure = n.title.includes("GOVERNMENT EXPOSES");
+                    return (
+                      <div 
+                        key={n.id} 
+                        className={`border p-4 transition-all group relative ${
+                          isGovExposure 
+                            ? 'bg-error/10 border-error shadow-[0_0_20px_rgba(var(--error-rgb),0.2)] animate-pulse' 
+                            : 'bg-surface-low border-outline-variant/50 hover:border-primary/50'
+                        }`}
+                      >
+                        {isGovExposure && (
+                          <div className="absolute top-0 right-0 bg-error text-white font-mono text-[8px] px-2 py-0.5 uppercase font-bold animate-bounce">
+                            Breaking
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mb-2">
+                           <span className={`font-display text-sm uppercase tracking-wide font-bold flex items-center space-x-2 ${isGovExposure ? 'text-error animate-pulse' : 'text-primary'}`}>
+                             {n.type === 'sabotage' && <FiAlertTriangle size={12} className="text-error" />}
+                             {n.type === 'stockpile' && <FiPackage size={12} />}
+                             {n.type === 'labour' && <FiActivity size={12} className="text-warning" />}
+                             {n.type === 'scandal' && <FiEye size={12} className="text-error" />}
+                             {n.type === 'finance' && <FiDollarSign size={12} className="text-success" />}
+                             {n.type === 'market' && <FiGlobe size={12} className="text-tertiary" />}
+                             <span>{n.title}</span>
+                           </span>
+                           <span className="font-mono text-[9px] font-bold opacity-50 uppercase tracking-widest">C{n.cycle_number}</span>
+                        </div>
+                        <p className={`font-mono text-[11px] leading-relaxed transition-opacity ${
+                          isGovExposure ? 'text-on-surface font-bold' : 'text-on-surface/80 group-hover:text-on-surface'
+                        }`}>
+                          {n.message}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+             ) : (
+                <div className="p-12 border border-dashed border-outline-variant/30 text-center opacity-40">
+                  <div className="mx-auto mb-2"><FiEye size={24} className="mx-auto" /></div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.3em]">No whispers on the wire</div>
+                </div>
+             )}
           </div>
         )}
       </div>
