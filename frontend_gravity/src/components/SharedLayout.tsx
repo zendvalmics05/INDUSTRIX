@@ -201,9 +201,10 @@ export const SharedLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface">
-      {/* Top Navbar */}
-      <nav className="flex justify-between items-center bg-surface-low px-6 py-4 border-b border-outline-variant">
-        <div className="flex space-x-8">
+      {/* Top Navbar & Notifications Container (Sticky) */}
+      <div className="sticky top-0 z-50 w-full flex flex-col shadow-md">
+        <nav className="flex justify-between items-center bg-surface-low px-6 py-4 border-b border-outline-variant">
+          <div className="flex space-x-8">
           {navItems.map(item => {
             const isEventTab = item.path === '/event';
             const unread = isEventTab ? getUnreadCount() : 0;
@@ -291,7 +292,7 @@ export const SharedLayout = () => {
           ))}
         </div>
       </div>
-
+      </div>
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-72 bg-surface-low border-r border-outline-variant flex flex-col py-6 overflow-y-auto custom-scrollbar">
