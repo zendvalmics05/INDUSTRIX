@@ -16,7 +16,7 @@ end_game(db, game)            → Game
 """
 import hashlib
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 import numpy as np
@@ -165,7 +165,7 @@ def create_cycle(db: Session, game: Game) -> Cycle:
     phase_log = CyclePhaseLog(
         cycle_id              = cycle.id,
         current_phase         = CyclePhase.PROCUREMENT_OPEN,
-        procurement_opened_at = datetime.utcnow(),
+        procurement_opened_at = datetime.now(timezone.utc),
     )
     db.add(phase_log)
     db.commit()
@@ -264,7 +264,7 @@ def advance_phase(
 
     ts_field = _PHASE_TIMESTAMPS.get(next_phase)
     if ts_field:
-        setattr(phase_log, ts_field, datetime.utcnow())
+        setattr(phase_log, ts_field, datetime.now(timezone.utc))
 
     db.commit()
     db.refresh(phase_log)
@@ -286,7 +286,7 @@ def start_next_cycle(db: Session, game: Game) -> Cycle:
 
     roll_discovery(db, cycle)
 
-    phase_log.completed_at = datetime.utcnow()
+    phase_log.completed_at = datetime.now(timezone.utc)
     db.commit()
 
     return create_cycle(db, game)
@@ -305,7 +305,7 @@ def end_game(db: Session, game: Game) -> Game:
     roll_discovery(db, cycle)
 
     phase_log.current_phase = CyclePhase.GAME_OVER
-    phase_log.completed_at  = datetime.utcnow()
+    phase_log.completed_at  = datetime.now(timezone.utc)
     game.is_active          = False
     db.commit()
     db.refresh(game)

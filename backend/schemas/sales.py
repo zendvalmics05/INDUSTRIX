@@ -94,10 +94,18 @@ class LeaderboardRow(BaseModel):
     inventory_penalty: float
 
 
+class Award(BaseModel):
+    category:    str
+    team_name:   str
+    description: str
+    icon:        Optional[str] = None
+
+
 class LeaderboardOut(BaseModel):
     cycle_number: int
     is_final:     bool
     rows:         List[LeaderboardRow]
+    awards:       List[Award] = Field(default_factory=list)
 
 
 # ── Projections ──────────────────────────────────────────────────────────────

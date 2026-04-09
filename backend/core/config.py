@@ -49,10 +49,10 @@ PARTIAL_DAMAGE_PENALTY:  int   = 20
 # Keys: starting_grade, throughput, labour_required, degradation_rate,
 #       purchase_cost, scrap_value
 MACHINE_TIERS: Dict[str, Dict] = {
-    "basic":      {"grade": 40, "throughput": 200,  "labour": 4, "degrade": 4.0, "buy": 15_000,  "scrap": 1_000},
-    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 3.0, "buy": 35_000,  "scrap": 3_000},
-    "industrial": {"grade": 75, "throughput": 700,  "labour": 10,  "degrade": 2.0, "buy": 80_000,  "scrap": 8_000},
-    "precision":  {"grade": 90, "throughput": 1000, "labour": 20,  "degrade": 1.2, "buy": 180_000, "scrap": 25_000},
+    "basic":      {"grade": 40, "throughput": 200,  "labour": 4,  "degrade": 5.0, "buy": 25_000,   "scrap": 2_000},
+    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 4.0, "buy": 85_000,   "scrap": 6_000},
+    "industrial": {"grade": 75, "throughput": 700,  "labour": 12, "degrade": 3.0, "buy": 220_000,  "scrap": 20_000},
+    "precision":  {"grade": 90, "throughput": 1000, "labour": 25, "degrade": 2.5, "buy": 550_000,  "scrap": 60_000},
 }
 MACHINE_MAX_CONDITION:    float = 100.0
 MACHINE_DEGRADED_AT:      float = 40.0
@@ -74,7 +74,7 @@ AUTOMATION_SIGMA_MULT: Dict[str, float] = {
     "manual": 1.0, "semi_auto": 0.65, "full_auto": 0.35,
 }
 AUTOMATION_UPGRADE_COST: Dict[str, float] = {
-    "manual": 0.0, "semi_auto": 200_000.0, "full_auto": 600_000.0,
+    "manual": 0.0, "semi_auto": 400_000.0, "full_auto": 1_200_000.0,
 }
 
 # ── Labour ────────────────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ WAGE_MORALE_DELTA: Dict[str, float] = {
     "below_market": -10.0, "market": 0.0, "above_market": 8.0,
 }
 WAGE_COST_PER_WORKER: Dict[str, float] = {
-    "below_market": 300.0, "market": 500.0, "above_market": 750.0,
+    "below_market": 800.0, "market": 1_200.0, "above_market": 1_800.0,
 }
 UNDERSTAFFING_MORALE_PENALTY: float = 0.20  # per 1% understaffed
 
@@ -108,7 +108,7 @@ ASSEMBLY_BETA:          float = 0.30
 
 # ── R&D ───────────────────────────────────────────────────────────────────────
 MAX_RND_LEVEL:           int   = 5
-RND_COST_PER_LEVEL:      float = 100_000.0
+RND_COST_PER_LEVEL:      float = 75_000.0
 RND_CYCLES_PER_LEVEL:    int   = 2
 RND_DECAY_PROBABILITY:   float = 0.05
 
@@ -117,20 +117,20 @@ RND_CONSISTENCY_BONUS: float = 2.0   # per level: -2 sigma (floor 2.0)
 RND_YIELD_BONUS:       float = 0.04  # per level: -4% raw material consumed
 
 # ── Sales & market ────────────────────────────────────────────────────────────
-PRICE_REJECT_SCRAP:     float = 200.0
-PRICE_REJECT_REWORK:    float = 400.0
-PRICE_REJECT_BLACK_MKT: float = 600.0
-PRICE_SUBSTANDARD:      float = 1_400.0
-PRICE_STANDARD:         float = 3_000.0
-PRICE_PREMIUM_NORMAL:   float = 3_000.0
-PRICE_PREMIUM_SELL:     float = 4_800.0
+PRICE_REJECT_SCRAP:     float = 300.0
+PRICE_REJECT_REWORK:    float = 600.0
+PRICE_REJECT_BLACK_MKT: float = 900.0
+PRICE_SUBSTANDARD:      float = 1_800.0
+PRICE_STANDARD:         float = 4_200.0
+PRICE_PREMIUM_NORMAL:   float = 5_500.0
+PRICE_PREMIUM_SELL:     float = 8_500.0
 
-HOLDING_COST_PER_UNIT:  float = 40.0
+HOLDING_COST_PER_UNIT:  float = 60.0
 
 BLACK_MKT_DISCOVERY_BASE:     float = 0.55
 BLACK_MKT_FINE_MULTIPLIER:    float = 3.0
 
-BRAND_DECAY:                  float = 0.94
+BRAND_DECAY:                  float = 0.92
 BRAND_DELTA_PREMIUM_SELL:     float = 6.0
 BRAND_DELTA_STANDARD_SELL:    float = 1.5
 BRAND_DELTA_SUBSTANDARD_SELL: float = -5.0
@@ -228,49 +228,49 @@ DEFAULT_MARKET_FACTIONS: list = [
     {
         "name":            "Government Procurement",
         "tier_preference": "premium",
-        "price_ceiling":   4_500.0,
-        "volume":          150,
-        "flexibility":     0.0,    # Will not accept anything below premium
-        "brand_min":       55.0,   # Only buys from GOOD or EXCELLENT brand
+        "price_ceiling":   7_000.0,
+        "volume":          450,
+        "flexibility":     0.0,
+        "brand_min":       55.0,
     },
     {
         "name":            "Industrial Operators",
         "tier_preference": "standard",
-        "price_ceiling":   3_200.0,
-        "volume":          400,
-        "flexibility":     0.5,    # Will step down to substandard if needed
+        "price_ceiling":   4_500.0,
+        "volume":          1200,
+        "flexibility":     0.5,
         "brand_min":       0.0,
     },
     {
         "name":            "Municipal Services",
         "tier_preference": "standard",
-        "price_ceiling":   2_800.0,
-        "volume":          300,
+        "price_ceiling":   3_800.0,
+        "volume":          900,
         "flexibility":     0.3,
-        "brand_min":       25.0,   # Requires at least FAIR brand
+        "brand_min":       25.0,
     },
     {
         "name":            "NGO / Aid Sector",
         "tier_preference": "substandard",
-        "price_ceiling":   1_600.0,
-        "volume":          250,
-        "flexibility":     0.8,    # Very flexible — will take almost anything
+        "price_ceiling":   2_200.0,
+        "volume":          750,
+        "flexibility":     0.8,
         "brand_min":       0.0,
     },
     {
         "name":            "Budget Resellers",
         "tier_preference": "substandard",
-        "price_ceiling":   1_200.0,
-        "volume":          350,
+        "price_ceiling":   1_800.0,
+        "volume":          1000,
         "flexibility":     0.6,
         "brand_min":       0.0,
     },
     {
         "name":            "Private Collectors",
         "tier_preference": "premium",
-        "price_ceiling":   5_000.0,
-        "volume":          80,
-        "flexibility":     0.1,    # Almost no flexibility but pay top price
+        "price_ceiling":   9_000.0,
+        "volume":          250,
+        "flexibility":     0.1,
         "brand_min":       0.0,
     },
 ]
@@ -283,4 +283,12 @@ TIER_FALLBACK: Dict[str, str] = {
     "standard":    "substandard",
     "substandard": None,
     "reject":      None,           # No fallback from reject
+}
+# ── Phase Durations (seconds) ────────────────────────────────────────────────
+# Players see these as a countdown timer. Purely visual/advisory.
+PHASE_DURATIONS: Dict[str, int] = {
+    "procurement_open": 600,   # 10 mins
+    "production_open":  300,   # 5 mins
+    "sales_open":       300,   # 5 mins
+    "backroom":         1200,  # 20 mins
 }

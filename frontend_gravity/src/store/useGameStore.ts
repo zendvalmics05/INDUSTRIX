@@ -11,6 +11,8 @@ interface GameState {
   cycleNumber: number;
   phase: string;
   gameActive: boolean;
+  phaseOpenedAt: number | null;
+  phaseDuration: number | null;
 
   // Sync indicator support
   lastSyncTs: number | null;
@@ -19,16 +21,25 @@ interface GameState {
   login: (teamId: number, pin: string) => Promise<void>;
   logout: () => void;
   pollStatus: () => Promise<void>;
+  
+  lastBriefedCycle: number;
+  setLastBriefedCycle: (cycle: number) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
   // Try to load auth from localStorage
   const saved = localStorage.getItem('industrix-auth');
-  let initial = { teamId: null, teamName: '', pin: '', isLoggedIn: false };
+  const savedBriefing = localStorage.getItem('industrix-last-briefed-cycle');
+  
+  let initial = { teamId: null, teamName: '', pin: '', isLoggedIn: false, lastBriefedCycle: 0 };
   if (saved) {
     try {
-      initial = JSON.parse(saved).state;
+      const auth = JSON.parse(saved).state;
+      initial = { ...initial, ...auth };
     } catch {}
+  }
+  if (savedBriefing) {
+    initial.lastBriefedCycle = parseInt(savedBriefing, 10) || 0;
   }
 
   return {
@@ -37,6 +48,8 @@ export const useGameStore = create<GameState>((set) => {
     cycleNumber: 0,
     phase: '',
     gameActive: false,
+    phaseOpenedAt: null,
+    phaseDuration: null,
     lastSyncTs: null,
     connectionOk: true,
 
@@ -66,6 +79,8 @@ export const useGameStore = create<GameState>((set) => {
           cycleNumber: status.cycle_number,
           phase: status.phase,
           gameActive: status.game_active,
+          phaseOpenedAt: status.phase_opened_at || null,
+          phaseDuration: status.phase_duration || null,
           lastSyncTs: Date.now(),
           connectionOk: true,
         });
@@ -74,5 +89,10 @@ export const useGameStore = create<GameState>((set) => {
         set({ connectionOk: false });
       }
     },
+
+    setLastBriefedCycle: (cycle: number) => {
+      set({ lastBriefedCycle: cycle });
+      localStorage.setItem('industrix-last-briefed-cycle', cycle.toString());
+    }
   };
 });

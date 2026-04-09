@@ -10,6 +10,7 @@ from routers.team import production as team_production
 from routers.team import sales as team_sales
 from routers.team import inventory as team_inventory
 from routers.team import events as team_events
+from routers.team import briefing as team_briefing
 from routers.organiser import cycle   as org_cycle
 from routers.organiser import deals   as org_deals
 from routers.organiser import teams   as org_teams
@@ -40,6 +41,7 @@ app.include_router(team_sales.router)
 app.include_router(team_leaderboard.router)
 app.include_router(team_inventory.router)
 app.include_router(team_events.router)
+app.include_router(team_briefing.router)
 
 # Organiser routers
 app.include_router(org_cycle.router)

@@ -1,42 +1,103 @@
 [
   {
     "name": "Team Alpha",
-    "pin": "alpha2026"
+    "pin": "alpha2026",
+    "members": [
+      { "name": "Alice", "role": "CEO" },
+      { "name": "Bob", "role": "CFO" }
+    ],
+    "starting_stock": { "grade": 60, "count": 20 },
+    "defaults": {
+      "procurement": {
+        "airframe": {"source_id": 1, "quantity": 100, "transport": "road"},
+        "propulsion": {"source_id": 7, "quantity": 100, "transport": "road"},
+        "avionics": {"source_id": 9, "quantity": 100, "transport": "road"},
+        "fire_suppression": {"source_id": 11, "quantity": 100, "transport": "road"},
+        "sensing_safety": {"source_id": 13, "quantity": 100, "transport": "road"},
+        "battery": {"source_id": 15, "quantity": 100, "transport": "road"}
+      },
+      "production": {
+        "wage_level": "market",
+        "target_headcount": 50,
+        "automation_level": null,
+        "maintenance": "basic"
+      },
+      "sales": {
+        "reject": {"action": "scrap"},
+        "substandard": {"action": "sell_discounted"},
+        "standard": {"action": "sell_market"},
+        "premium": {"action": "sell_market"}
+      }
+    }
   },
   {
     "name": "Team Beta",
-    "pin": "beta2026"
+    "pin": "beta2026",
+    "members": [
+      { "name": "Charlie", "role": "COO" }
+    ],
+    "starting_stock": { "grade": 60, "count": 20 },
+    "defaults": {
+      "procurement": {
+        "airframe": {"source_id": 1, "quantity": 100, "transport": "road"},
+        "propulsion": {"source_id": 7, "quantity": 100, "transport": "road"},
+        "avionics": {"source_id": 9, "quantity": 100, "transport": "road"},
+        "fire_suppression": {"source_id": 11, "quantity": 100, "transport": "road"},
+        "sensing_safety": {"source_id": 13, "quantity": 100, "transport": "road"},
+        "battery": {"source_id": 15, "quantity": 100, "transport": "road"}
+      },
+      "production": {
+        "wage_level": "market",
+        "target_headcount": 50,
+        "automation_level": null,
+        "maintenance": "basic"
+      },
+      "sales": {
+        "reject": {"action": "scrap"},
+        "substandard": {"action": "sell_discounted"},
+        "standard": {"action": "sell_market"},
+        "premium": {"action": "sell_market"}
+      }
+    }
   },
   {
     "name": "Team Gamma",
-    "pin": "gamma2026"
+    "pin": "gamma2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Delta",
-    "pin": "delta2026"
+    "pin": "delta2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Epsilon",
-    "pin": "epsilon2026"
-  }
+    "pin": "epsilon2026",
+    "starting_stock": { "grade": 60, "count": 20 }
+  },
   {
     "name": "Team Zeta",
-    "pin": "zeta2026"
+    "pin": "zeta2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Eta",
-    "pin": "eta2026"
+    "pin": "eta2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Theta",
-    "pin": "theta2026"
+    "pin": "theta2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Iota",
-    "pin": "iota2026"
+    "pin": "iota2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   },
   {
     "name": "Team Kappa",
-    "pin": "kappa2026"
+    "pin": "kappa2026",
+    "starting_stock": { "grade": 60, "count": 20 }
   }
 ]

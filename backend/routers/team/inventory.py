@@ -376,25 +376,18 @@ def get_finances(
 
 @router.get(
     "/market",
-    summary="Current market factions and their buying parameters.",
+    summary="Current market factions and their projected buying parameters.",
 )
 def get_market(
     team: Team    = Depends(verify_team),
     db:   Session = Depends(get_db),
 ):
     """
-    Returns the active market factions and their parameters so teams can
-    make informed pricing decisions.
+    Returns the active market factions and their intelligence projections.
+    Exact values are obfuscated with a ±15% variance to ensure pricing 
+    requires strategic risk rather than just copying a flat ceiling.
 
-    Available from any phase — teams can check the market before deciding
-    how to price their drones in the sales phase.
-
-    Each faction shows:
-    - tier_preference: which quality tier they want first
-    - price_ceiling: max CU/unit they will pay
-    - volume: how many units they want this cycle
-    - flexibility: how much they'll compromise (0 = rigid, 1 = any tier)
-    - brand_min: minimum brand score they'll buy from (0 = no requirement)
+    Available from any phase.
     """
     from models.market import MarketFaction
     factions = (
@@ -412,11 +405,42 @@ def get_market(
                 "id":             f.id,
                 "name":           f.name,
                 "tier_preference": f.tier_preference,
-                "price_ceiling":  f.price_ceiling,
-                "volume":         f.volume,
+                "projected_ceiling_min": int(f.price_ceiling * 0.85),
+                "projected_ceiling_max": int(f.price_ceiling * 1.15),
+                "projected_volume_min":  int(f.volume * 0.85),
+                "projected_volume_max":  int(f.volume * 1.15),
                 "flexibility":    f.flexibility,
                 "brand_min":      f.brand_min,
             }
             for f in factions
         ]
     }
+
+# ── GET/POST /team/members ────────────────────────────────────────────────────
+
+from pydantic import BaseModel
+
+class TeamMemberCreate(BaseModel):
+    name: str
+    role: Optional[str] = None
+
+@router.get("/members", summary="List team members.")
+def get_team_members(
+    team: Team    = Depends(verify_team),
+    db:   Session = Depends(get_db),
+):
+    from models.game import TeamMember
+    members = db.query(TeamMember).filter(TeamMember.team_id == team.id).all()
+    return [{"id": m.id, "name": m.name, "role": m.role} for m in members]
+
+@router.post("/members", summary="Add a new team member.")
+def add_team_member(
+    body: TeamMemberCreate,
+    team: Team    = Depends(verify_team),
+    db:   Session = Depends(get_db),
+):
+    from models.game import TeamMember
+    new_member = TeamMember(team_id=team.id, name=body.name, role=body.role)
+    db.add(new_member)
+    db.commit()
+    return {"status": "ok"}

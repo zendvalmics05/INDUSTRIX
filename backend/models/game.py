@@ -89,6 +89,23 @@ class Team(Base):
                                        uselist=False, cascade="all, delete-orphan")
     memory_sales       = relationship("MemorySales",       back_populates="team",
                                        uselist=False, cascade="all, delete-orphan")
+    players            = relationship("TeamMember",        back_populates="team",
+                                       cascade="all, delete-orphan")
+
+
+class TeamMember(Base):
+    """
+    Individual players in a team.
+    Added iteratively to avoid SQLite ALTER TABLE issues.
+    """
+    __tablename__ = "team_member"
+
+    id      = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"), nullable=False, index=True)
+    name    = Column(String(100), nullable=False)
+    role    = Column(String(50), nullable=True)
+
+    team    = relationship("Team", back_populates="players")
 
 
 class Cycle(Base):

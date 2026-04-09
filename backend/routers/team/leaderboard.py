@@ -53,10 +53,11 @@ def get_leaderboard(db: Session = Depends(get_db)):
         )
 
     is_final = phase == CyclePhase.GAME_OVER
-    rows     = compute_leaderboard(db, game, cycle, is_final)
+    res      = compute_leaderboard(db, game, cycle, is_final)
 
     return LeaderboardOut(
         cycle_number = cycle.cycle_number,
         is_final     = is_final,
-        rows         = [LeaderboardRow(**r) for r in rows],
+        rows         = [LeaderboardRow(**r) for r in res["rows"]],
+        awards       = res["awards"],
     )

@@ -3,7 +3,7 @@ schemas/common.py
 =================
 Shared Pydantic types used across multiple schema modules.
 """
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, validator
 
 
@@ -25,7 +25,9 @@ class OkResponse(BaseModel):
 
 class PhaseStatusResponse(BaseModel):
     """Returned by the public polling endpoint GET /status."""
-    game_name:    str
-    cycle_number: int
-    phase:        str
-    game_active:  bool
+    game_name:       str
+    cycle_number:    int
+    phase:           str
+    game_active:     bool
+    phase_opened_at: Optional[float] = None
+    phase_duration:  Optional[int]   = None

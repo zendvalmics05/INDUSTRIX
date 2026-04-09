@@ -6,6 +6,7 @@ interface ResultsState {
   cycleNumber: number;
   isFinal: boolean;
   rows: LeaderboardRow[];
+  awards: any[];
   
   fetchLeaderboard: () => Promise<void>;
 }
@@ -14,6 +15,7 @@ export const useResultsStore = create<ResultsState>((set) => ({
   cycleNumber: 0,
   isFinal: false,
   rows: [],
+  awards: [],
 
   fetchLeaderboard: async () => {
     try {
@@ -23,6 +25,7 @@ export const useResultsStore = create<ResultsState>((set) => ({
           cycleNumber: data.cycle_number || 0,
           isFinal: data.is_final || false,
           rows: data.rows || [],
+          awards: data.awards || [],
         });
       }
     } catch (err) {
