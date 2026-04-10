@@ -55,18 +55,26 @@ def get_cycle_briefing(
             # holding_cost (already deducted)
             
             # For "expenses" we aggregate what was spent/deducted in the summaries
+            # Include fin_adjustment (interest/fines) from the sales summary
+            fin_adj = sale_s.get("fin_adjustment", 0.0)
+            
             expenses = (
                 proc_s.get("total_cost", 0.0) + 
                 prod_s.get("wage_cost", 0.0) + 
                 prod_s.get("maintenance_cost", 0.0) + 
-                sale_s.get("holding_cost", 0.0)
+                sale_s.get("holding_cost", 0.0) - 
+                (fin_adj if fin_adj < 0 else 0) # if fin_adj is negative (interest/fine), it increases expenses
             )
+            
+            # If fin_adj is positive (refund), it should decrease expenses or increase profit.
+            # Usually fin_adj is negative for costs. 
+            # Let's just use a more direct profit calculation: revenue - expenses + fin_adj
             
             res.last_cycle_stats = LastCycleStats(
                 cycle_number = prev_cycle.cycle_number,
                 revenue      = revenue,
                 expenses     = expenses,
-                net_profit   = revenue - expenses,
+                net_profit   = revenue - expenses + (fin_adj if fin_adj > 0 else 0),
                 units_sold   = sale_s.get("units_sold", 0),
                 brand_delta  = sale_s.get("brand_delta", 0.0),
                 brand_score  = sale_s.get("brand_score_after", 0.0)

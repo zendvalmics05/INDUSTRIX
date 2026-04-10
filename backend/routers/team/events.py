@@ -515,6 +515,30 @@ def get_news(
                 "title": "FINANCIAL WEAKNESS EXPOSED",
                 "message": f"MINISTRY BAILOUT! {t_name.upper()} has bent the knee for a government liquidity injection. They are now operating under strict state oversight."
             })
+
+    # 5b. Inter-team transfers (Financial Intelligence)
+    inter_team_events = (
+        db.query(Event)
+        .filter(
+            Event.cycle_id.in_(cycle_ids),
+            Event.status == EventStatus.APPLIED,
+            Event.event_type == EventType.ASSET_EXCHANGE,
+            Event.source_team_id != None,
+            Event.target_team_id != None
+        )
+        .all()
+    )
+    for ev in inter_team_events:
+        src_name = team_names.get(str(ev.source_team_id), "A competitor")
+        tgt_name = team_names.get(str(ev.target_team_id), "another firm")
+        
+        news.append({
+            "id": f"news-transfer-{ev.id}",
+            "cycle_number": ev.cycle.cycle_number,
+            "type": "finance",
+            "title": "Unusual Capital Movement",
+            "message": f"Market monitors have flagged a significant asset transfer between {src_name.upper()} and {tgt_name.upper()}. Analysts speculate on a secret partnership or credit-clearing arrangement."
+        })
         
         # Wage Gossip (High Morale/Wages check - though we check summary mostly)
         # We can also check if they are the "Highest/Lowest" relative.
