@@ -346,9 +346,10 @@ def resolve_production(
 
     # ── Automation upgrade ────────────────────────────────────────────────────
     upgrade_auto = decisions.get("upgrade_automation")
+    automation_upgrade_cost = 0.0
     if upgrade_auto and upgrade_auto != automation_level:
-        cost = AUTOMATION_UPGRADE_COST.get(upgrade_auto, 0.0)
-        inventory.funds -= cost
+        automation_upgrade_cost = AUTOMATION_UPGRADE_COST.get(upgrade_auto, 0.0)
+        inventory.funds -= automation_upgrade_cost
         inventory.automation_level = AutomationLevel(upgrade_auto)
         automation_level = upgrade_auto
 
@@ -468,6 +469,8 @@ def resolve_production(
     # ── Per-component processing ──────────────────────────────────────────────
     component_summaries: Dict = {}
     total_maint_cost    = 0.0
+    total_buy_cost      = 0.0
+    total_rnd_cost      = 0.0
 
     for comp_val, slot in slots.items():
         comp_decisions = decisions.get(comp_val, {})
@@ -510,6 +513,7 @@ def resolve_production(
                 tier_cfg = MACHINE_TIERS.get(tier, {})
                 cost     = tier_cfg.get("buy", 0.0)
                 inventory.funds -= cost
+                total_buy_cost  += cost
 
                 new_machine = Machine(
                     team_id         = team.id,
@@ -546,6 +550,7 @@ def resolve_production(
                      else rnd_invest.levels
             cost   = levels * RND_COST_PER_LEVEL
             inventory.funds -= cost
+            total_rnd_cost  += cost
             _schedule_rnd_event(db, team, cycle, comp_val, focus, levels, cost)
 
         if not machines:
@@ -622,6 +627,9 @@ def resolve_production(
         "riot":          inventory.morale <= MORALE_RIOT,
         "wage_cost":     round(wage_total, 2),
         "maintenance_cost": round(total_maint_cost, 2),
+        "buy_cost":      round(total_buy_cost, 2),
+        "rnd_cost":      round(total_rnd_cost, 2),
+        "automation_upgrade_cost": round(automation_upgrade_cost, 2),
         "funds_after":   round(inventory.funds, 2),
         "labour": {
             "wage_level":     wage_level,
@@ -748,7 +756,6 @@ def calculate_projections(
         
         machines = list(all_machines.get(comp_val, []))
         
-        cost_maint = MAINTENANCE_COST.get(maint, 0.0) * len(machines)
         cost_rnd = (rnd.get("levels", 1) * RND_COST_PER_LEVEL) if rnd else 0.0
         cost_buy = 0.0
         
@@ -758,6 +765,7 @@ def calculate_projections(
             # Add virtual machine for grade/tp projections
             machines.append(Machine(tier=tier, condition=100.0))
             
+        cost_maint = MAINTENANCE_COST.get(maint, 0.0) * len(machines)
         total_outflow += cost_maint + cost_rnd + cost_buy
         
         tp_max = int(total_throughput(machines) * labour_factor)

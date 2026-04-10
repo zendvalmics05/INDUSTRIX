@@ -62,8 +62,11 @@ def get_cycle_briefing(
                 proc_s.get("total_cost", 0.0) + 
                 prod_s.get("wage_cost", 0.0) + 
                 prod_s.get("maintenance_cost", 0.0) + 
+                prod_s.get("buy_cost", 0.0) + 
+                prod_s.get("rnd_cost", 0.0) + 
+                prod_s.get("automation_upgrade_cost", 0.0) +
                 sale_s.get("holding_cost", 0.0) - 
-                (fin_adj if fin_adj < 0 else 0) # if fin_adj is negative (interest/fine), it increases expenses
+                (fin_adj if fin_adj < 0 else 0)
             )
             
             # If fin_adj is positive (refund), it should decrease expenses or increase profit.

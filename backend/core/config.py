@@ -36,10 +36,10 @@ MIN_USABLE_GRADE: int = 1
 # mean_reduce      : subtracted from source quality_mean during draw
 # p_damage         : probability of partial damage event
 TRANSPORT: Dict[str, Dict] = {
-    "air":   {"base_cost": 30000, "var_cost": 200,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
-    "water": {"base_cost": 8000, "var_cost": 20, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
-    "rail":  {"base_cost": 4000,  "var_cost": 60,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
-    "road":  {"base_cost": 1000,  "var_cost": 100,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
+    "air":   {"base_cost": 30000, "var_cost": 0.2,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
+    "water": {"base_cost": 8000, "var_cost": 0.005, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
+    "rail":  {"base_cost": 4000,  "var_cost": 0.02,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
+    "road":  {"base_cost": 1000,  "var_cost": 0.04,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
 }
 
 PARTIAL_DAMAGE_FRACTION: float = 0.25
@@ -74,7 +74,7 @@ AUTOMATION_SIGMA_MULT: Dict[str, float] = {
     "manual": 1.0, "semi_auto": 0.65, "full_auto": 0.35,
 }
 AUTOMATION_UPGRADE_COST: Dict[str, float] = {
-    "manual": 0.0, "semi_auto": 200_000.0, "full_auto": 600_000.0,
+    "manual": 0.0, "semi_auto": 80_000.0, "full_auto": 160_000.0,
 }
 
 # ── Labour ────────────────────────────────────────────────────────────────────
@@ -326,7 +326,7 @@ DEFAULT_MARKET_FACTIONS: list = [
     },
     {
         "name":            "Hazardous Waste Patrol",
-        "tier_preference": "reject",
+        "tier_preference": "substandard",
         "price_ceiling":   500.0,
         "volume":          2000,
         "flexibility":     1.0,

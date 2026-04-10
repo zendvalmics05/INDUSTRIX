@@ -250,13 +250,16 @@ def advance_phase(
         phase_log.production_summary = prod_summaries
 
     elif current == CyclePhase.SALES_OPEN:
+        # Global financial events (market shifts) — applied once, not per team
+        # Applied BEFORE team sales so the current cycle's market calculation 
+        # uses the updated demand/quality thresholds.
+        resolve_global_financial_events(db, game, cycle)
+        
         sales_summaries = {}
         for team in teams:
             result = resolve_sales(db, team, cycle, teams, rng)
             sales_summaries[str(team.id)] = result
         phase_log.sales_summary = sales_summaries
-        # Global financial events (market shifts) — applied once, not per team
-        resolve_global_financial_events(db, game, cycle)
 
     # ── Advance phase ─────────────────────────────────────────────────────────
     next_phase = _PHASE_ORDER[idx + 1]
