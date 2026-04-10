@@ -36,10 +36,10 @@ MIN_USABLE_GRADE: int = 1
 # mean_reduce      : subtracted from source quality_mean during draw
 # p_damage         : probability of partial damage event
 TRANSPORT: Dict[str, Dict] = {
-    "air":   {"base_cost": 30000, "var_cost": 200,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
-    "water": {"base_cost": 8000, "var_cost": 20, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
-    "rail":  {"base_cost": 4000,  "var_cost": 60,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
-    "road":  {"base_cost": 1000,  "var_cost": 100,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
+    "air":   {"base_cost": 30000, "var_cost": 0.2,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
+    "water": {"base_cost": 8000, "var_cost": 0.005, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
+    "rail":  {"base_cost": 4000,  "var_cost": 0.02,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
+    "road":  {"base_cost": 1000,  "var_cost": 0.04,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
 }
 
 PARTIAL_DAMAGE_FRACTION: float = 0.25
@@ -74,7 +74,7 @@ AUTOMATION_SIGMA_MULT: Dict[str, float] = {
     "manual": 1.0, "semi_auto": 0.65, "full_auto": 0.35,
 }
 AUTOMATION_UPGRADE_COST: Dict[str, float] = {
-    "manual": 0.0, "semi_auto": 200_000.0, "full_auto": 600_000.0,
+    "manual": 0.0, "semi_auto": 80_000.0, "full_auto": 160_000.0,
 }
 
 # ── Labour ────────────────────────────────────────────────────────────────────
@@ -237,12 +237,44 @@ LEADERBOARD_NORMALISE: Dict[str, float] = {
 #   brand_min       : minimum brand score required to sell to this faction (0 = none)
 DEFAULT_MARKET_FACTIONS: list = [
     {
+        "name":            "Elite Research Hubs",
+        "tier_preference": "premium",
+        "price_ceiling":   9_500.0,
+        "volume":          150,
+        "flexibility":     0.2,
+        "brand_min":       75.0,
+    },
+    {
+        "name":            "Corporate Air Fleets",
+        "tier_preference": "premium",
+        "price_ceiling":   8_200.0,
+        "volume":          300,
+        "flexibility":     0.4,
+        "brand_min":       65.0,
+    },
+    {
         "name":            "Government Procurement",
         "tier_preference": "premium",
         "price_ceiling":   7_000.0,
         "volume":          450,
         "flexibility":     0.0,
         "brand_min":       55.0,
+    },
+    {
+        "name":            "Private Collectors",
+        "tier_preference": "premium",
+        "price_ceiling":   9_000.0,
+        "volume":          250,
+        "flexibility":     0.1,
+        "brand_min":       0.0,
+    },
+    {
+        "name":            "Logistics Conglomerates",
+        "tier_preference": "standard",
+        "price_ceiling":   4_100.0,
+        "volume":          1500,
+        "flexibility":     0.4,
+        "brand_min":       30.0,
     },
     {
         "name":            "Industrial Operators",
@@ -261,6 +293,14 @@ DEFAULT_MARKET_FACTIONS: list = [
         "brand_min":       25.0,
     },
     {
+        "name":            "Regional Distributors",
+        "tier_preference": "standard",
+        "price_ceiling":   3_200.0,
+        "volume":          1100,
+        "flexibility":     0.6,
+        "brand_min":       0.0,
+    },
+    {
         "name":            "NGO / Aid Sector",
         "tier_preference": "substandard",
         "price_ceiling":   2_200.0,
@@ -271,18 +311,26 @@ DEFAULT_MARKET_FACTIONS: list = [
     {
         "name":            "Budget Resellers",
         "tier_preference": "substandard",
-        "price_ceiling":   1_800.0,
+        "price_ceiling":   1_600.0,
         "volume":          1000,
         "flexibility":     0.6,
         "brand_min":       0.0,
     },
     {
-        "name":            "Private Collectors",
-        "tier_preference": "premium",
-        "price_ceiling":   9_000.0,
-        "volume":          250,
-        "flexibility":     0.1,
-        "brand_min":       0.0,
+        "name":            "Rural Cooperatives",
+        "tier_preference": "substandard",
+        "price_ceiling":   2_500.0,
+        "volume":          800,
+        "flexibility":     0.9,
+        "brand_min":       10.0,
+    },
+    {
+        "name":            "Hazardous Waste Patrol",
+        "tier_preference": "substandard",
+        "price_ceiling":   500.0,
+        "volume":          2000,
+        "flexibility":     1.0,
+        "brand_min":       5.0,
     },
 ]
 
@@ -298,8 +346,8 @@ TIER_FALLBACK: Dict[str, str] = {
 # ── Phase Durations (seconds) ────────────────────────────────────────────────
 # Players see these as a countdown timer. Purely visual/advisory.
 PHASE_DURATIONS: Dict[str, int] = {
-    "procurement_open": 600,   # 10 mins
-    "production_open":  300,   # 5 mins
-    "sales_open":       300,   # 5 mins
-    "backroom":         1200,  # 20 mins
+    "procurement_open": 300,
+    "production_open":  300,
+    "sales_open":       300,
+    "backroom":         300,
 }

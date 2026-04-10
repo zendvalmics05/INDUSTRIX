@@ -507,7 +507,10 @@ export const Production = () => {
     let totalBuy = 0;
 
     (Object.entries(componentDecisions) as [ComponentType, any][]).forEach(([comp, dec]) => {
-      totalMaint += MAINTENANCE_COSTS[dec.maintenance as keyof typeof MAINTENANCE_COSTS] * (components.find(c => c.component === comp)?.machine_count || 0);
+      const existingCount = components.find(c => c.component === comp)?.machine_count || 0;
+      const totalMachinesForMaint = dec.buy_machine ? existingCount + 1 : existingCount;
+      totalMaint += MAINTENANCE_COSTS[dec.maintenance as keyof typeof MAINTENANCE_COSTS] * totalMachinesForMaint;
+      
       if (dec.rnd_invest) totalRnd += dec.rnd_invest.levels * RND_COST_PER_LEVEL;
       if (dec.buy_machine) totalBuy += MACHINE_TIERS[dec.buy_machine.tier as keyof typeof MACHINE_TIERS].buy;
     });

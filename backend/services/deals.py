@@ -549,7 +549,7 @@ def create_global_event(
             db             = db,
             game_id        = game.id,
             cycle_id       = cyc.id,
-            phase          = EventPhase.FINANCIAL,
+            phase          = EventPhase.SALES,
             event_type     = EventType.GLOBAL_MARKET_SHIFT,
             payload        = payload,
             target_team_id = None,

@@ -1,0 +1,4218 @@
+[
+    {
+        "name": "Tech Tactix",
+        "pin": "hlemkbkice",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "ASAP_TECH",
+        "pin": "jkeelokhad",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Auctioneers Of Asutosh",
+        "pin": "ohjdddpohk",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Metallix",
+        "pin": "dlgjinlcge",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "TrialBlazers",
+        "pin": "pgoniakglm",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Anik",
+        "pin": "hjbeedbkcm",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "The Skew-Symmetric",
+        "pin": "fepfbadlic",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "pied piper",
+        "pin": "emdcnofmkc",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Bengal Tigers",
+        "pin": "hmafjfkchh",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Endurance",
+        "pin": "ebcjebijid",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "HINDENBURG SURVIVORS",
+        "pin": "olhahnlcjf",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Strategic minds",
+        "pin": "bdaaaafmpd",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "The Yield Guild",
+        "pin": "ladghebncp",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "SHARDUL",
+        "pin": "bobldfibgi",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "KINGMAKERS",
+        "pin": "mdlcfikenb",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "High Rise",
+        "pin": "mhpjocidmd",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Industry plant",
+        "pin": "gfkghejpce",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "FARADAY INSTINCT",
+        "pin": "mcmbomoljd",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "AURA",
+        "pin": "nbhageoigc",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Md Arsalan",
+        "pin": "amfjefglee",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "As it is",
+        "pin": "oklekgonen",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "ARES DEFENSE LT",
+        "pin": "negbgjfhfa",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "CHEEKU",
+        "pin": "maakjfonom",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "ALPHAQUADS_201",
+        "pin": "epbpoieeaj",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Lagan",
+        "pin": "keddfehgja",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Industrix",
+        "pin": "hecoobeobn",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "SHUNYA",
+        "pin": "lngohneihi",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Pragati",
+        "pin": "dldjchnamg",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "CHAINFLUX",
+        "pin": "ikfpmdfmdd",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "FinWhale",
+        "pin": "papmdgfgej",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Ace",
+        "pin": "phmiadgeod",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "sharks",
+        "pin": "cgehofmoah",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "MID-DAY",
+        "pin": "jgkpkebfag",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Value Voyagers",
+        "pin": "hhfadjpnph",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Blank",
+        "pin": "ehbgjchmhc",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Nexora",
+        "pin": "jlhilgofbm",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "ALEX",
+        "pin": "fgfgehemad",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "TEAM VOID",
+        "pin": "bokbpkjnnh",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Sayan Das",
+        "pin": "fcafkgcdad",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "AXON.REAPER",
+        "pin": "gedaaifjfd",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "PathCAD.io",
+        "pin": "nhkbpkfdje",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Cache Crushers",
+        "pin": "implcbbioj",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "In the streaks",
+        "pin": "ajboibnaao",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "The_Debuggers",
+        "pin": "kmlpoeanfm",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Builders",
+        "pin": "olcbhbccpn",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Sumit",
+        "pin": "mofenbgjpb",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Money Mavericks",
+        "pin": "fadekdmdpa",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Ayushman Ganguli",
+        "pin": "ihaomcclkp",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "AUCTIONDONE",
+        "pin": "fkkbdclajo",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "LUMOM",
+        "pin": "bcjohjeckf",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "SYMMETRY",
+        "pin": "gjmpkehibh",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Squity 303",
+        "pin": "kobhibcppo",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Blank",
+        "pin": "leimbdnpoo",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Shield",
+        "pin": "mjamcopafc",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "UNICORN",
+        "pin": "keknkajodm",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Busy",
+        "pin": "fpniebomfp",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Instru Industrialists",
+        "pin": "nkjhhggcak",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Precision Pillars",
+        "pin": "pelfbblkod",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Stratagems",
+        "pin": "bgmknfcmkn",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "BakerStreet",
+        "pin": "bceekoeioc",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "APPREX ALLIANCE",
+        "pin": "kcpnfdhddo",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Real avengers",
+        "pin": "pmagifbdbb",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "BUILD-IT",
+        "pin": "mdjdmeangb",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "malakarbhanulal",
+        "pin": "pknfmdjnbk",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "EngiNomics",
+        "pin": "dnkopmkfba",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "MechaByte",
+        "pin": "fpnjecamcl",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Kaze",
+        "pin": "ebejcehncg",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    },
+    {
+        "name": "Bishal Pramanick",
+        "pin": "pfljeiicdg",
+        "starting_stock": {
+            "grade": 60,
+            "count": 20
+        },
+        "defaults": {
+            "procurement": {
+                "airframe": {
+                    "source_id": 1,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "propulsion": {
+                    "source_id": 11,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "avionics": {
+                    "source_id": 21,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "fire_suppression": {
+                    "source_id": 31,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "sensing_safety": {
+                    "source_id": 41,
+                    "quantity": 100,
+                    "transport": "road"
+                },
+                "battery": {
+                    "source_id": 51,
+                    "quantity": 100,
+                    "transport": "road"
+                }
+            },
+            "production": {
+                "wage_level": "market",
+                "target_headcount": 50,
+                "automation_level": null,
+                "maintenance": "basic"
+            },
+            "sales": {
+                "reject": {
+                    "action": "scrap"
+                },
+                "substandard": {
+                    "action": "sell_discounted"
+                },
+                "standard": {
+                    "action": "sell_market"
+                },
+                "premium": {
+                    "action": "sell_market"
+                }
+            }
+        }
+    }
+]

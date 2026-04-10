@@ -215,6 +215,9 @@ export interface ProductionSummary {
   cycle_number: number;
   wage_cost: number;
   maintenance_cost: number;
+  buy_cost: number;
+  rnd_cost: number;
+  automation_upgrade_cost: number;
   funds_after: number;
   riot: boolean;
   strike: boolean;

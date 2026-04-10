@@ -86,7 +86,7 @@ def _load_global_financial_events(
         .filter(
             Event.cycle_id       == cycle_id,
             Event.target_team_id == None,
-            Event.phase          == EventPhase.FINANCIAL,
+            Event.phase          == EventPhase.SALES,
             Event.event_type     == EventType.GLOBAL_MARKET_SHIFT,
             Event.status         == EventStatus.PENDING,
         )
@@ -559,6 +559,12 @@ def _resolve_global_financial_events(
                 current = getattr(game, field, 50.0)
                 setattr(game, field,
                         max(0.0, min(100.0, current + p[delta_key])))
+
+    # SYNC TO CYCLE SNAPSHOT: Ensure the current cycle uses the new values immediately.
+    cycle.market_demand_multiplier = game.market_demand_multiplier
+    cycle.qr_hard = game.qr_hard
+    cycle.qr_soft = game.qr_soft
+    cycle.qr_premium = game.qr_premium
     return global_events
 
 
