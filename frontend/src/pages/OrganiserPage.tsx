@@ -4,6 +4,7 @@ import { useAdminStore } from '../store/adminStore'
 import { useNavigate } from 'react-router-dom'
 import GovDealsPanel from '../components/organiser/GovDealsPanel.tsx'
 import InterTeamExchangePanel from '../components/organiser/InterTeamExchangePanel.tsx'
+import { FiZap } from 'react-icons/fi'
 
 // Note: In a real app, we'd have separate component files. 
 // For this task, I'll define the main sub-components below or in the same file to ensure they exist.
@@ -70,6 +71,16 @@ export default function OrganiserPage() {
                <span className="text-purple-400 uppercase">{gameSummary?.cycle?.phase || 'NONE'}</span>
              </div>
           </div>
+          <div className="h-4 w-px bg-white/10 mx-2" />
+          <a
+            href="/spectator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-400 border border-purple-500/30 px-3 py-1 hover:bg-purple-500/10 rounded flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+          >
+            <FiZap size={12} className="text-purple-500" /> 
+            <span className="text-[10px] tracking-[0.15em] font-bold">SPECTATOR_VIEW</span>
+          </a>
           <button 
             onClick={() => { logout(); navigate('/admin/login'); }}
             className="text-red-400 border border-red-900/50 px-3 py-1 hover:bg-red-950/30 rounded"

@@ -112,9 +112,20 @@ export interface MarketFaction {
   projected_volume_max: number;
   flexibility: number;
   brand_min: number;
+  last_cycle_price?: number | null;
+  last_cycle_volume?: number | null;
 }
 
-// Global & Auth
+export interface TransactionOut {
+  id: number;
+  cycle_number: number;
+  delta: number;
+  balance: number;
+  type: string;
+  description?: string;
+  created_at: string;
+}
+
 export interface InventoryOut {
   funds: number;
   brand_score: number;
@@ -126,6 +137,7 @@ export interface InventoryOut {
   morale: number;
   automation_level: string;
   has_gov_loan: boolean;
+  transactions?: TransactionOut[];
 }
 
 export interface FinancesData {
@@ -134,8 +146,14 @@ export interface FinancesData {
   brand_score: number;
   brand_tier: string;
   has_gov_loan: boolean;
-  active_loans: { interest_per_cycle: number; lender: string; cycle_id: number }[];
+  active_loans: { 
+    type: 'interest' | 'repayment';
+    amount: number; 
+    lender: string; 
+    cycle_id: number;
+  }[];
   total_interest_due_per_cycle: number;
+  total_principal_remaining: number;
 }
 
 export interface LeaderboardRow {
@@ -147,6 +165,7 @@ export interface LeaderboardRow {
   market_share: number;
   brand_score: number;
   operational_efficiency: number;
+  liquid_cash: number;
 }
 
 export interface Award {

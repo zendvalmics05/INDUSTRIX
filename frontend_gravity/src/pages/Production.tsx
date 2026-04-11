@@ -59,15 +59,15 @@ const Tooltip = ({ text, title, children, className = "" }: { text: string; titl
       {children || <FiInfo size={11} className="text-on-surface-variant cursor-help inline-block align-middle ml-1 opacity-70 hover:opacity-100 transition-opacity" />}
       {coords && createPortal(
         <div 
-          className="fixed z-[100] w-64 bg-surface-highest border border-outline-variant p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-1 pointer-events-none"
+          className="fixed z-[100] w-64 bg-surface-highest border border-outline-variant p-2.5 shadow-2xl animate-in fade-in slide-in-from-bottom-1 pointer-events-none"
           style={{ 
-            top: coords.top - 12, 
+            top: coords.top - 10, 
             left: coords.left, 
             transform: 'translateX(-50%) translateY(-100%)' 
           }}
         >
-          {title && <div className="text-base font-semibold font-medium font-mono text-primary uppercase mb-1 font-bold tracking-widest">{title}</div>}
-          <p className="text-base font-semibold font-medium font-mono text-on-surface leading-relaxed opacity-90 normal-case">{text}</p>
+          {title && <div className="text-[10px] font-black font-mono text-primary uppercase mb-1 tracking-widest">{title}</div>}
+          <p className="text-[11px] font-medium font-mono text-on-surface leading-tight opacity-90 normal-case">{text}</p>
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-outline-variant"></div>
         </div>,
         document.body
@@ -82,7 +82,7 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
 
   return (
     <div className="space-y-1">
-      {label && <div className="flex justify-between text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono">
+      {label && <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-mono">
         <span className="flex items-center space-x-1">
           <span>{label}</span>
           <Tooltip text="Indicates the structural integrity of this machine. Maintenance protocol affects the rate of decay per cycle." />
@@ -112,14 +112,14 @@ const HealthBar = ({ current, projected, label }: { current: number, projected: 
 
 const MetricBox = ({ label, value, subvalue, icon: Icon, color = 'text-primary', tooltip }: any) => {
   const content = (
-    <div className="bg-surface-low border border-outline-variant p-4 flex items-start space-x-4 cursor-help h-full">
-      <div className={`p-2.5 rounded-lg bg-surface-highest ${color} border border-outline-variant/50 flex-shrink-0`}>
-        <Icon size={22} />
+    <div className="bg-surface-low border border-outline-variant p-3 flex items-start space-x-3 cursor-help h-full">
+      <div className={`p-2 rounded-lg bg-surface-highest ${color} border border-outline-variant/50 flex-shrink-0`}>
+        <Icon size={18} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-base font-semibold font-medium uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
-        <div className="text-3xl font-bold font-display text-on-surface leading-tight truncate">{value}</div>
-        {subvalue && <div className="text-base font-semibold font-mono text-on-surface-variant mt-0.5 opacity-80">{subvalue}</div>}
+        <div className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant font-mono mb-0.5">{label}</div>
+        <div className="text-xl font-black font-display text-on-surface leading-none truncate">{value}</div>
+        {subvalue && <div className="text-[10px] font-bold font-mono text-on-surface-variant mt-0.5 opacity-70">{subvalue}</div>}
       </div>
     </div>
   );
@@ -193,19 +193,19 @@ const ProductionDropdown = ({
   const selected = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex items-center space-x-1">
-        <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+        <label className="text-[10px] font-black font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
         {tooltip && <Tooltip text={tooltip} />}
       </div>
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full flex items-center justify-between bg-surface border p-3.5 font-mono text-base font-semibold font-medium uppercase transition-all ${isOpen ? 'border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' : 'border-outline-variant/30 hover:border-outline-variant'
+          className={`w-full flex items-center justify-between bg-surface border px-3 py-2 font-mono text-xs transition-all ${isOpen ? 'border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' : 'border-outline-variant/30 hover:border-outline-variant'
             }`}
         >
-          <span className="text-on-surface font-bold tracking-wider">{selected.label}</span>
+          <span className="text-on-surface font-black tracking-wider uppercase">{selected.label}</span>
           <div className="flex items-center space-x-3">
             {selected.cost !== undefined && <span className="text-on-surface-variant opacity-70">${selected.cost.toLocaleString()}</span>}
             <FiChevronDown className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-on-surface-variant'}`} />
@@ -221,13 +221,13 @@ const ProductionDropdown = ({
                 className={`w-full p-4 text-left border-b border-outline-variant/20 last:border-0 hover:bg-primary/5 transition-colors group ${value === opt.value ? 'bg-primary/10' : ''
                   }`}
               >
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className={`text-base font-bold uppercase transition-colors ${value === opt.value ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className={`text-[11px] font-black uppercase transition-colors ${value === opt.value ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
                     {opt.label}
                   </span>
-                  {opt.cost !== undefined && <span className="text-base font-semibold font-medium font-mono text-on-surface-variant opacity-70">${opt.cost.toLocaleString()}</span>}
+                  {opt.cost !== undefined && <span className="text-[10px] font-bold font-mono text-on-surface-variant opacity-70">${opt.cost.toLocaleString()}</span>}
                 </div>
-                <p className="text-base font-semibold font-mono text-on-surface-variant leading-relaxed opacity-80 group-hover:opacity-100">
+                <p className="text-[10px] font-bold font-mono text-on-surface-variant leading-tight opacity-70 group-hover:opacity-100">
                   {opt.info}
                 </p>
               </button>
@@ -265,19 +265,19 @@ const DiscreteStepBar = ({
   const isDecisionMade = projectedLevel > currentLevel;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex justify-between items-end">
         <div className="space-y-0.5">
           <div className="flex items-center space-x-1">
-            <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+            <label className="text-[10px] font-black font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
             {tooltip && <Tooltip text={tooltip} />}
           </div>
-          {info && <div className="text-base font-semibold font-medium font-mono text-on-surface-variant opacity-60 italic">{info}</div>}
+          {info && <div className="text-[10px] font-bold font-mono text-on-surface-variant opacity-60 italic">{info}</div>}
         </div>
-        <div className="text-base font-semibold font-medium font-mono text-on-surface font-bold">Lvl {currentLevel}/{maxLevels}</div>
+        <div className="text-[11px] font-black font-mono text-on-surface">Lvl {currentLevel}/{maxLevels}</div>
       </div>
 
-      <div className="flex items-center space-x-5">
+      <div className="flex items-center space-x-5 relative pb-6">
         <div className="flex-1 flex items-center space-x-1 relative h-6">
           <div className="absolute left-0 right-0 h-[2px] bg-outline-variant/30 top-1/2 -translate-y-1/2" />
           <div
@@ -299,16 +299,15 @@ const DiscreteStepBar = ({
                     ? 'bg-primary/30 border-primary/60 border-dashed animate-pulse scale-105'
                     : 'bg-surface border-outline-variant/50'
                 }`}
-              style={{ position: 'absolute', left: `${(i / maxLevels) * 100}%`, marginLeft: i === maxLevels ? '-12px' : i === 0 ? '0' : '-6px' }}
+              style={{ position: 'absolute', left: `${(i / maxLevels) * 100}%`, marginLeft: i === maxLevels ? '-8px' : i === 0 ? '0' : '-4px' }}
             />
           ))}
         </div>
-
-          <Tooltip text={isUpgradeLocked ? "Hardware evolution in progress. Completion expected at the end of the next cycle." : ""} title={isUpgradeLocked ? "Upgrade Locked" : ""}>
+          <Tooltip text={isUpgradeLocked ? "Hardware evolution in progress. Completion expected at the end of the next cycle." : "Allocate capital to advance this research track. Benefits will be active next cycle."} title={isUpgradeLocked ? "Upgrade Locked" : "Invest in R&D"}>
             <button
               onClick={onAdd}
               disabled={disabled || isUpgradeLocked || (currentLevel >= maxLevels && !isDecisionMade)}
-              className={`p-2 rounded-md border transition-all ${isUpgradeLocked
+              className={`p-1.5 rounded-sm border transition-all ${isUpgradeLocked
                   ? 'bg-tertiary/10 border-tertiary/40 text-tertiary cursor-not-allowed'
                   : isDecisionMade
                     ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.25)]'
@@ -321,8 +320,8 @@ const DiscreteStepBar = ({
             </button>
           </Tooltip>
           {!isUpgradeLocked && currentLevel < maxLevels && cost && (
-            <div className={`absolute -bottom-5 right-0 text-base font-semibold font-medium font-mono transition-opacity whitespace-nowrap ${isDecisionMade ? 'text-primary' : 'text-on-surface-variant opacity-0 group-hover:opacity-100'}`}>
-              {isDecisionMade ? `Allocated: $${cost.toLocaleString()}` : `Cost: $${cost.toLocaleString()}`}
+            <div className={`absolute top-full right-0 mt-1.5 text-[10px] font-black font-mono whitespace-nowrap ${isDecisionMade ? 'text-primary animate-pulse' : 'text-on-surface-variant'}`}>
+              {isDecisionMade ? `ALLOCATED: $${cost.toLocaleString()}` : `CAPEX REQ: $${cost.toLocaleString()}`}
             </div>
           )}
         </div>
@@ -350,15 +349,15 @@ const BottleneckSlider = ({
   const currentVal = value === null ? maxPossible : value;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-          <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
+          <label className="text-[10px] font-black font-mono text-on-surface-variant uppercase tracking-widest">{label}</label>
           <Tooltip text="Target number of components to produce this cycle. Limited by both machine capacity and raw material stock." />
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold font-display text-on-surface">{currentVal.toLocaleString()}</div>
-          <div className={`text-base font-semibold font-medium font-mono uppercase tracking-widest font-bold ${isStockBottleneck ? 'text-tertiary' : 'text-primary'}`}>
+          <div className="text-2xl font-black font-display text-on-surface leading-none">{currentVal.toLocaleString()}</div>
+          <div className={`text-[10px] font-black font-mono uppercase tracking-widest ${isStockBottleneck ? 'text-tertiary' : 'text-primary'}`}>
             Max Plan: {maxPossible.toLocaleString()} · {isStockBottleneck ? 'RESOURCE LIMITED' : 'CAPACITY LIMITED'}
           </div>
         </div>
@@ -397,16 +396,16 @@ const HeadcountSlider = ({
   const minVal = 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex justify-between items-end">
         <div className="flex items-center space-x-1">
-          <label className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
-          <Tooltip text="Assign your active workforce to maintenance and production. Understaffing will reduce effective throughput proportionately." />
+          <label className="text-[10px] font-black font-mono text-on-surface-variant uppercase tracking-widest">Global Workforce Deployment</label>
+          <Tooltip text="Assign your active workforce to maintenance and production. Understaffing will reduce effective throughput proportionately. This setting affects ALL factory components." />
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold font-display text-on-surface">{value} <span className="text-base font-semibold font-medium text-on-surface-variant uppercase font-mono opacity-80">Staff</span></div>
-          <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">
-            Optimal Required: <span className="text-primary font-bold">{required}</span>
+          <div className="text-2xl font-black font-display text-on-surface leading-none">{value} <span className="text-[10px] font-bold text-on-surface-variant uppercase font-mono opacity-80 underline">Combined Workforce</span></div>
+          <div className="text-[10px] font-black font-mono text-on-surface-variant uppercase tracking-widest mt-1">
+            Optimal Required: <span className="text-primary font-black underline">{required}</span>
           </div>
         </div>
       </div>
@@ -443,9 +442,9 @@ const ContextualStats = ({
   buyCost: number
 }) => (
   <div className="bg-surface-low border border-outline-variant overflow-hidden">
-    <div className="bg-surface-highest/50 px-4 py-2 border-b border-outline-variant flex justify-between items-center">
-      <span className="text-base font-semibold font-medium font-mono text-primary uppercase tracking-[0.2em] font-bold">{title} Status</span>
-      <FiBarChart2 className="text-primary" size={14} />
+    <div className="bg-surface-highest/50 px-3 py-1.5 border-b border-outline-variant flex justify-between items-center">
+      <span className="text-[10px] font-black font-mono text-primary uppercase tracking-[0.2em]">{title} Status</span>
+      <FiBarChart2 className="text-primary" size={12} />
     </div>
     <div className="p-4 flex flex-col space-y-6">
       <div className="min-h-[100px] flex flex-col">
@@ -540,7 +539,7 @@ export const Production = () => {
     const projectedMorale = Math.max(0, Math.min(100, (morale || 0) + projectedMoraleDelta));
 
     const activeMachines = factoryCompData?.machines || [];
-    const simulatedMachines = [...activeMachines];
+    let simulatedMachines = [...activeMachines];
     if (currentComp.buy_machine) {
       const buyTier = currentComp.buy_machine.tier;
       simulatedMachines.push({
@@ -548,6 +547,12 @@ export const Production = () => {
         throughput: MACHINE_TIERS[buyTier].throughput, base_grade: MACHINE_TIERS[buyTier].grade,
       });
     }
+
+    // Apply projected maintenance condition to simulated machines for accurate quality/tp forecasting
+    simulatedMachines = simulatedMachines.map(mac => ({
+      ...mac,
+      condition: calculateProjectedCondition(mac.condition, currentComp.maintenance, mac.tier)
+    }));
 
     const rnd_q = (factoryCompData?.rnd_quality || 0);
     const rnd_c = (factoryCompData?.rnd_consistency || 0);
@@ -638,6 +643,18 @@ export const Production = () => {
             <h2 className="text-base font-semibold font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
               <FiSettings size={16} /> <span>{selectedComponent.replace('_', ' ')} Directives</span>
             </h2>
+            
+            {(factoryCompData?.machine_count === 0 && !currentComp.buy_machine) && (
+              <div className="bg-error/10 border border-error/30 p-4 flex items-start space-x-3 animate-in slide-in-from-top-1">
+                <FiAlertCircle className="text-error flex-shrink-0 mt-0.5" size={16} />
+                <div className="space-y-1">
+                  <div className="text-[11px] font-black text-error uppercase tracking-widest font-mono">Critical Equipment Failure</div>
+                  <p className="text-[10px] font-bold font-mono text-on-surface-variant leading-tight opacity-90">
+                    No active machines detected in this slot. Throughput is currently 0. Procure new hardware or wait for an organiser grant to resume production.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <ProductionDropdown
               label="Fleet Maintenance Protocol"
@@ -647,9 +664,9 @@ export const Production = () => {
               tooltip="Select the intensity level for proactive machine care. Higher levels reduce condition decay but increase operational costs."
               options={[
                 { value: 'none', label: 'Reactive (Zero)', info: 'Degrade at 1.0x. No preventative care.', cost: 0 },
-                { value: 'basic', label: 'Standard (Low)', info: 'Degrade at 0.5x. Basic preventative routines.', cost: MAINTENANCE_COSTS.basic },
-                { value: 'full', label: 'Proactive (High)', info: 'Degrade at 0.2x. Deep diagnostic sensor care.', cost: MAINTENANCE_COSTS.full },
-                { value: 'overhaul', label: 'Restorative (Overhaul)', info: 'Recovery up to +20 Condition units. Physical restoration.', cost: MAINTENANCE_COSTS.overhaul }
+                { value: 'basic', label: 'Standard (Low)', info: 'Degrade at 0.4x. Basic preventative routines.', cost: MAINTENANCE_COSTS.basic },
+                { value: 'full', label: 'Proactive (High)', info: 'Degrade at 0.1x. Deep diagnostic sensor care.', cost: MAINTENANCE_COSTS.full },
+                { value: 'overhaul', label: 'Restorative (Overhaul)', info: 'Recovery up to +30 Condition units. Physical restoration.', cost: MAINTENANCE_COSTS.overhaul }
               ]}
             />
 
@@ -711,9 +728,11 @@ export const Production = () => {
             </div>
           </div>
 
-          <div className="bg-surface-low border border-outline-variant p-6 space-y-9">
-            <h2 className="text-base font-semibold font-mono text-primary uppercase tracking-[0.25em] flex items-center space-x-2 border-b border-outline-variant pb-4">
-              <FiUsers size={16} /> <span>Enterprise Operations</span>
+          <div className="bg-surface-low border border-outline-variant p-6 space-y-7">
+            <h2 className="text-[11px] font-black font-mono text-primary uppercase tracking-[0.3em] flex items-center space-x-2 border-b border-outline-variant pb-3 group">
+              <FiUsers size={14} className="group-hover:rotate-12 transition-transform" /> 
+              <span>Enterprise Operations — <span className="text-on-surface italic">Global Directives</span></span>
+              <Tooltip text="These operational parameters apply across ALL component production slots. Changes here impact total throughput and company-wide morale." />
             </h2>
             <ProductionDropdown
               label="Compensation Tier Selection"
@@ -750,7 +769,7 @@ export const Production = () => {
                 else if (currentIdx < 2) setAutomation(levels[currentIdx + 1]);
               }}
               disabled={!isProductionOpen}
-              tooltip="Decreases total human workforce requirements and lowers manufacture variance."
+              tooltip="Facility automation drastically reduces the human workforce required per machine and tightens quality variance (lower Sigma) globally."
               info="Digital twins & cobot integration."
             />
           </div>

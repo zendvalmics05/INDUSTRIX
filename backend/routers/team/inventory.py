@@ -337,14 +337,34 @@ def get_finances(
     game  = db.query(Game).filter(Game.id == team.game_id).first()
     cycle = _current_cycle(db, game.id)
 
-    # Active loan interest events targeting this team
+    # ── Loans & Debt Projections ──────────────────────────────────────────────
+    from models.deals import GovDeal
+    from core.enums import GovDealStatus, GovDealType
+    
+    pending_loans_records = (
+        db.query(GovDeal)
+        .filter(
+            GovDeal.buyer_team_id == team.id,
+            GovDeal.status == GovDealStatus.PENDING,
+            GovDeal.deal_type == GovDealType.GREEN_GOV_LOAN
+        )
+        .all()
+    )
+    
+    total_remaining_principal = 0.0
+    interest_per_cycle_total = 0.0
+    for l_rec in pending_loans_records:
+        total_remaining_principal += float(l_rec.effect_payload.get("principal", 0))
+        interest_per_cycle_total  += float(l_rec.effect_payload.get("interest_per_cycle", 0))
+
+    # Detailed breakdown for the sidebar (using generated events)
     active_loans = []
     if cycle:
         loan_events = (
             db.query(Event)
             .filter(
                 Event.target_team_id == team.id,
-                Event.event_type     == EventType.LOAN_INTEREST,
+                Event.event_type.in_([EventType.LOAN_INTEREST, EventType.LOAN_REPAYMENT]),
                 Event.status         == EventStatus.PENDING,
             )
             .order_by(Event.cycle_id)
@@ -352,11 +372,15 @@ def get_finances(
         )
         for ev in loan_events:
             p = ev.payload or {}
+            amount = float(p.get("amount", 0)) if p.get("amount") is not None else 0.0
+            is_repayment = ev.event_type == EventType.LOAN_REPAYMENT
             active_loans.append({
-                "interest_per_cycle": p.get("amount", 0.0),
+                "type":               "repayment" if is_repayment else "interest",
+                "amount":             amount,
                 "lender":             "government" if p.get("lender_team_id") is None
-                                      else f"team_{p.get('lender_team_id')}",
+                                      else f"Team {p.get('lender_team_id')}",
                 "cycle_id":           ev.cycle_id,
+                "cycle_num":          ev.cycle.cycle_number if ev.cycle else 0
             })
 
     return {
@@ -366,9 +390,8 @@ def get_finances(
         "brand_tier":        inv.brand_tier.value,
         "has_gov_loan":      inv.has_gov_loan,
         "active_loans":      active_loans,
-        "total_interest_due_per_cycle": round(
-            sum(l["interest_per_cycle"] for l in active_loans), 2
-        ),
+        "total_principal_remaining":    round(total_remaining_principal, 2),
+        "total_interest_due_per_cycle": round(interest_per_cycle_total, 2),
     }
 
 
@@ -409,8 +432,10 @@ def get_market(
                 "projected_ceiling_max": int(f.price_ceiling * 1.15),
                 "projected_volume_min":  int(f.volume * 0.85),
                 "projected_volume_max":  int(f.volume * 1.15),
-                "flexibility":    f.flexibility,
-                "brand_min":      f.brand_min,
+                "last_cycle_price":      f.last_cycle_price,
+                "last_cycle_volume":     f.last_cycle_volume,
+                "flexibility":           f.flexibility,
+                "brand_min":             f.brand_min,
             }
             for f in factions
         ]

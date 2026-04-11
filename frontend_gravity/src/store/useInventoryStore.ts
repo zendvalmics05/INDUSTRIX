@@ -3,9 +3,13 @@ import { teamApi } from '../api';
 import type { ComponentSlotData } from '../types';
 
 export interface FundsLedgerEntry {
+  id: number;
   timestamp: string;
   delta: number;
   balance: number;
+  type: string;
+  description: string;
+  cycle: number;
 }
 
 interface InventoryState {
@@ -25,22 +29,6 @@ interface InventoryState {
 
   fetchInventory: () => Promise<void>;
   scrapRejectUnits: () => Promise<void>;
-  clearLedger: () => void;
-}
-
-const LEDGER_KEY = 'industrix-funds-ledger';
-const MAX_LEDGER = 50;
-
-function loadLedger(): FundsLedgerEntry[] {
-  try {
-    const raw = localStorage.getItem(LEDGER_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return [];
-}
-
-function saveLedger(ledger: FundsLedgerEntry[]) {
-  localStorage.setItem(LEDGER_KEY, JSON.stringify(ledger.slice(-MAX_LEDGER)));
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -56,7 +44,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   automationLevel: 'manual',
   hasGovLoan: false,
 
-  fundsLedger: loadLedger(),
+  fundsLedger: [],
 
   fetchInventory: async () => {
     try {
@@ -66,23 +54,19 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       ]);
 
       if (meData) {
-        const prevFunds = get().funds;
-        const newFunds = meData.funds || 0;
-
-        const ledger = [...get().fundsLedger];
-        if (prevFunds !== 0 && newFunds !== prevFunds) {
-          const delta = newFunds - prevFunds;
-          ledger.push({
-            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            delta,
-            balance: newFunds,
-          });
-          while (ledger.length > MAX_LEDGER) ledger.shift();
-          saveLedger(ledger);
-        }
+        // Map backend transactions to ledger entries
+        const ledger: FundsLedgerEntry[] = (meData.transactions || []).map((t: any) => ({
+          id: t.id,
+          timestamp: new Date(t.created_at).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          delta: t.delta,
+          balance: t.balance,
+          type: t.type,
+          description: t.description || '',
+          cycle: t.cycle_number
+        }));
 
         set({
-          funds: newFunds,
+          funds: meData.funds || 0,
           brandScore: meData.brand_score || 0,
           brandTier: meData.brand_tier || 'fair',
           droneStockTotal: meData.drone_stock_total || 0,
@@ -118,10 +102,5 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     } catch (err) {
       console.error("Failed to scrap rejects", err);
     }
-  },
-
-  clearLedger: () => {
-    localStorage.removeItem(LEDGER_KEY);
-    set({ fundsLedger: [] });
   },
 }));

@@ -5,6 +5,16 @@ import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { ComponentTabs, SendDecisionsButton } from '../components/SharedComponents';
 import { ProcurementCard } from '../components/PhaseSummaries';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const getConsistencyLabel = (sigma: number) => {
+  if (sigma <= 2.0) return "Ultra Reliable";
+  if (sigma <= 5.0) return "Highly Consistent";
+  if (sigma <= 10.0) return "Mostly Stable";
+  if (sigma <= 18.0) return "Barely Consistent";
+  if (sigma <= 30.0) return "Volatile Supply";
+  return "Total Gambling";
+};
 
 export const Procurement = () => {
   const {
@@ -139,7 +149,7 @@ export const Procurement = () => {
           <span>Usable Units: {totalItems}</span>
 
           {/* Tooltip for graph */}
-          <div className="absolute top-6 left-0 hidden group-hover/header:block bg-surface p-2 border border-outline-variant shadow-lg text-xs font-mono text-on-surface w-64 z-50 normal-case leading-relaxed">
+          <div className="absolute top-6 left-0 hidden group-hover/header:block bg-surface-highest p-3 border border-outline shadow-2xl text-xs font-mono text-on-surface w-64 z-[100] normal-case leading-relaxed">
             Displays current usable inventory density. Unusable damages (Grade 0) are excluded. New procurements will dynamically merge into this spread upon cycle resolution following transport damage rolls.
           </div>
         </div>
@@ -147,7 +157,12 @@ export const Procurement = () => {
         <div className="flex items-end flex-1 min-h-[60px] w-full space-x-[2px] mt-1 mb-1">
           {deciles.map((val, idx) => (
             <div key={idx} className="flex-1 bg-surface-highest transition-colors flex flex-col justify-end h-full group/col relative">
-              <div className="w-full bg-outline transition-all duration-300 group-hover/col:bg-primary rounded-t-sm" style={{ height: `${(val / maxVal) * 100}%` }}></div>
+              <motion.div 
+                initial={{ height: 0 }}
+                animate={{ height: `${(val / maxVal) * 100}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                className="w-full bg-outline transition-all duration-300 group-hover/col:bg-primary rounded-t-sm"
+              />
               <div className="absolute bottom-full mb-1 hidden group-hover/col:block bg-surface p-1 text-xs z-10 border border-outline-variant whitespace-nowrap shadow-lg">
                 Grade {idx * 4 + 1}-{idx * 4 + 4}: {val} units
               </div>
@@ -173,7 +188,7 @@ export const Procurement = () => {
 
 
   return (
-    <div className="flex flex-col h-full space-y-6">
+    <div className="flex flex-col h-full space-y-4">
       {/* Phase Summary (if resolved) */}
       {!isProcurementOpen && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-700">
@@ -194,9 +209,9 @@ export const Procurement = () => {
 
       <div className="flex justify-between items-start flex-shrink-0">
         <div>
-          <h1 className="font-display text-4xl uppercase tracking-tighter">PROCUREMENT</h1>
-          <div className="text-on-surface-variant font-mono text-sm mt-1 font-medium tracking-widest flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <h1 className="font-display text-3xl uppercase tracking-tighter">PROCUREMENT</h1>
+          <div className="text-on-surface-variant font-mono text-xs mt-0.5 font-medium tracking-widest flex items-center space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span>Facility Cycle {useGameStore.getState().cycleNumber} · Supply Chain Active</span>
           </div>
         </div>
@@ -204,59 +219,77 @@ export const Procurement = () => {
 
       <ComponentTabs selected={selectedComponent} onSelect={setComponent} />
 
-      <div className="flex space-x-6 items-center flex-shrink-0">
-        <button
+      <div className="flex space-x-4 items-center flex-shrink-0">
+        <motion.button
+          whileTap={{ scale: 0.98 }}
           onClick={() => isProcurementOpen && setIsBuying(selectedComponent, false)}
           disabled={!isProcurementOpen}
-          className={`flex-1 flex items-center justify-between p-4 border font-display tracking-widest transition-colors ${!buyingCurrentComponent ? 'bg-error-container border-error text-on-surface' : 'bg-surface-low border-outline-variant text-on-surface-variant hover:bg-surface-high'} ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}`}
+          className={`flex-1 flex items-center justify-between p-3 border font-display tracking-widest transition-colors relative ${!buyingCurrentComponent ? 'bg-error-container border-error text-on-surface' : 'bg-surface-low border-outline-variant text-on-surface-variant hover:bg-surface-high'} ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}`}
         >
-          <span className="text-sm font-semibold">DO NOT PURCHASE</span>
-          {!buyingCurrentComponent ? <FiCheckCircle className="text-2xl" /> : <FiCircle className="text-2xl opacity-50" />}
-        </button>
+          <span className="text-xs font-semibold">DO NOT PURCHASE</span>
+          {!buyingCurrentComponent ? (
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+              <FiCheckCircle className="text-xl" />
+            </motion.div>
+          ) : <FiCircle className="text-xl opacity-50" />}
+        </motion.button>
 
-        <button
+        <motion.button
+          whileTap={{ scale: 0.98 }}
           onClick={() => isProcurementOpen && setIsBuying(selectedComponent, true)}
           disabled={!isProcurementOpen}
-          className={`flex-1 flex items-center justify-between p-4 border font-display tracking-widest transition-colors ${buyingCurrentComponent ? 'bg-primary-container border-primary text-[#000]' : 'bg-surface-low border-outline-variant text-on-surface-variant hover:bg-surface-high'} ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}`}
+          className={`flex-1 flex items-center justify-between p-3 border font-display tracking-widest transition-colors relative ${buyingCurrentComponent ? 'bg-primary-container border-primary text-[#000]' : 'bg-surface-low border-outline-variant text-on-surface-variant hover:bg-surface-high'} ${!isProcurementOpen && 'opacity-50 cursor-not-allowed'}`}
         >
-          <span className="text-sm font-semibold">PROCURE COMPONENTS</span>
-          {buyingCurrentComponent ? <FiCheckCircle className="text-2xl text-[#000]" /> : <FiCircle className="text-2xl opacity-50" />}
-        </button>
+          <span className="text-xs font-semibold">PROCURE COMPONENTS</span>
+          {buyingCurrentComponent ? (
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+              <FiCheckCircle className="text-xl text-[#000]" />
+            </motion.div>
+          ) : <FiCircle className="text-xl opacity-50" />}
+        </motion.button>
       </div>
 
       {buyingCurrentComponent && (
-        <div className="flex flex-1 overflow-hidden space-x-6 animate-fade-in min-h-0">
+        <div className="flex flex-1 overflow-hidden space-x-4 animate-fade-in min-h-0">
           {/* INPUT SECTION (LEFT) */}
-          <div className="w-[60%] flex flex-col space-y-6 min-h-0">
-            <div className="bg-surface-container p-6 space-y-6 flex-1 flex flex-col border border-outline-variant min-h-0">
-
-              <div className="flex space-x-6 flex-shrink-0 h-[320px]">
+          <div className="w-[60%] flex flex-col space-y-4 min-h-0">
+            <div className="bg-surface-container p-4 space-y-4 flex-1 flex flex-col border border-outline-variant min-h-0">
+              <div className="flex space-x-4 flex-shrink-0 h-[280px]">
                 <div className="w-1/2 flex flex-col space-y-2 h-full">
-                  <label className="block text-sm font-bold font-mono text-on-surface-variant uppercase tracking-widest flex-shrink-0">
-                    SUPPLIER SOURCE
+                  <label className="block text-[11px] font-bold font-mono text-on-surface-variant uppercase tracking-widest flex-shrink-0 flex items-center space-x-2 group relative cursor-help">
+                    <span>SUPPLIER SOURCE</span>
+                    <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-4 h-4 flex items-center justify-center font-bold text-[8px]">i</span>
+                    <div className="absolute left-6 top-0 hidden group-hover:block bg-surface-highest p-3 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-56 z-[100] normal-case leading-relaxed font-normal">
+                      Available regional suppliers for the selected component. Each has unique distance, quality, and cost profiles.
+                    </div>
                   </label>
                   <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar relative">
-                    {activeSources.map((s) => {
-                      const isSelected = currentDecision.source_id === s.id;
-                      const isSaved = initialDecisions[selectedComponent]?.source_id === s.id && initialDecisions[selectedComponent]?.quantity > 0;
-                      return (
-                        <div
-                          key={s.id}
-                          onClick={() => handleSourceSelect(s.id)}
-                          className={`relative p-3 border font-mono text-sm cursor-pointer transition-colors ${isSelected ? 'bg-surface-highest border-primary font-medium' : 'bg-surface border-outline-variant hover:bg-surface-high'} ${isSaved ? 'ring-1 ring-tertiary ring-offset-1 ring-offset-surface-container' : ''}`}
-                        >
-                          <div className="flex justify-between items-center mb-1">
-                            <span className={isSelected ? 'text-primary font-bold text-base' : 'text-on-surface font-semibold text-base'}>{s.name}</span>
-                            <span className="text-xs text-on-surface-variant">${s.base_cost_per_unit}/u</span>
-                          </div>
-                          <div className="flex justify-between text-xs text-on-surface-variant font-medium">
-                            <span>Dist: {s.distance}km</span>
-                            <span>Q: {s.quality_mean.toFixed(1)} ± {s.quality_sigma.toFixed(1)}</span>
-                          </div>
-                          {isSaved && <div className="absolute -top-2 -right-2 bg-tertiary text-[#000] text-[10px] px-1 font-bold">SAVED</div>}
-                        </div>
-                      );
-                    })}
+                    <AnimatePresence mode="popLayout">
+                      {activeSources.map((s, idx) => {
+                        const isSelected = currentDecision.source_id === s.id;
+                        const isSaved = initialDecisions[selectedComponent]?.source_id === s.id && initialDecisions[selectedComponent]?.quantity > 0;
+                        return (
+                          <motion.div
+                            key={s.id}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={() => handleSourceSelect(s.id)}
+                            className={`relative p-3 border font-mono text-sm cursor-pointer transition-colors ${isSelected ? 'bg-surface-highest border-primary font-medium' : 'bg-surface border-outline-variant hover:bg-surface-high'} ${isSaved ? 'ring-1 ring-tertiary ring-offset-1 ring-offset-surface-container' : ''}`}
+                          >
+                            <div className="flex justify-between items-center mb-0.5">
+                              <span className={isSelected ? 'text-primary font-bold text-sm' : 'text-on-surface font-semibold text-sm'}>{s.name}</span>
+                              <span className="text-[10px] text-on-surface-variant font-mono">${s.base_cost_per_unit}/u</span>
+                            </div>
+                            <div className="flex justify-between text-[10px] text-on-surface-variant font-medium font-mono">
+                              <span>{s.distance}km · Q:{s.quality_mean.toFixed(0)}</span>
+                              <span className="text-primary/80 uppercase">{getConsistencyLabel(s.quality_sigma)}</span>
+                            </div>
+                            {isSaved && <div className="absolute -top-2 -right-2 bg-tertiary text-[#000] text-[10px] px-1 font-bold">SAVED</div>}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                     {activeSources.length === 0 && (
                       <div className="p-4 text-center text-on-surface-variant italic font-mono text-sm border border-outline-variant">No sources available</div>
                     )}
@@ -265,50 +298,80 @@ export const Procurement = () => {
 
                 <div className="w-1/2 flex flex-col space-y-6 h-full overflow-y-auto custom-scrollbar pr-2">
                   {selectedSource ? (
-                    <div className="bg-surface-low border border-outline-variant p-4 space-y-3 font-mono text-sm flex-1 flex flex-col font-medium">
-                      <h3 className="text-primary text-base border-b border-outline-variant/50 pb-2 mb-2 font-bold uppercase">{selectedSource.name}</h3>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">DISTANCE</span>
+                    <div className="bg-surface-low border border-outline-variant p-3 space-y-2 font-mono text-xs flex-1 flex flex-col font-medium">
+                      <h3 className="text-primary text-sm border-b border-outline-variant/30 pb-1.5 mb-1.5 font-bold uppercase">{selectedSource.name}</h3>
+                      <div className="flex justify-between items-center group relative cursor-help">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-on-surface-variant uppercase">DISTANCE</span>
+                          <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold text-[8px]">i</span>
+                        </div>
                         <span>{selectedSource.distance} km</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">ORDER LIMITS</span>
-                        <span>{selectedSource.min_order} - {selectedSource.max_order}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">QUALITY MEAN</span>
-                        <span>{selectedSource.quality_mean.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">CONSISTENCY</span>
-                        <span>±{selectedSource.quality_sigma.toFixed(2)} σ</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-on-surface-variant">UNIT BASE COST</span>
-                        <span className="text-tertiary font-bold">${selectedSource.base_cost_per_unit.toFixed(2)}</span>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-surface-highest p-2 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-48 z-[100] normal-case leading-relaxed font-normal">
+                           Physical distance from the supplier. Impacts variable transport costs and increases damage risk during transit.
+                        </div>
                       </div>
 
-                      <div className="pt-4 border-t border-outline-variant/50 mt-auto">
-                        <label className="block text-xs font-bold font-mono text-on-surface-variant uppercase tracking-widest mb-2">
-                          PROCURING QUANTITY
-                        </label>
+                      <div className="flex justify-between items-center group relative cursor-help">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-on-surface-variant uppercase">QUALITY MEAN</span>
+                          <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold text-[8px]">i</span>
+                        </div>
+                        <span>{selectedSource.quality_mean.toFixed(2)}</span>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-surface-highest p-2 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-48 z-[100] normal-case leading-relaxed font-normal">
+                           The average grade (0-100) of materials. Higher grades are required for premium manufacturing and efficient production.
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center group relative cursor-help">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-on-surface-variant uppercase">CONSISTENCY</span>
+                          <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold text-[8px]">i</span>
+                        </div>
+                        <span className="text-primary font-bold uppercase">{getConsistencyLabel(selectedSource.quality_sigma)}</span>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-surface-highest p-2 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-48 z-[100] normal-case leading-relaxed font-normal">
+                           Measures the reliability of the supplier's grade control. High consistency means materials will likely hit the target mean.
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center group relative cursor-help">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-on-surface-variant uppercase">UNIT BASE COST</span>
+                          <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold text-[8px]">i</span>
+                        </div>
+                        <span className="text-tertiary font-bold">${selectedSource.base_cost_per_unit.toFixed(2)}</span>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:block bg-surface-highest p-2 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-48 z-[100] normal-case leading-relaxed font-normal">
+                           The raw purchase price per unit of material before transport fees and topographical logistical taxes.
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-outline-variant/30 mt-auto">
+                        <div className="flex justify-between items-baseline mb-2 group relative cursor-help">
+                          <label className="text-[10px] font-bold font-mono text-on-surface-variant uppercase tracking-widest flex items-center space-x-2">
+                            <span>QUANTITY</span>
+                            <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-3 h-3 flex items-center justify-center font-bold text-[7px]">i</span>
+                          </label>
+                          <span className="text-xl font-bold font-mono text-primary">{currentDecision.quantity} u</span>
+                          <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block bg-surface-highest p-2 border border-outline-variant shadow-lg text-[10px] font-mono text-on-surface w-48 z-50 normal-case leading-relaxed font-normal">
+                            Total volume being ordered. Higher volumes utilize more funds but ensure production stability for the next cycle.
+                          </div>
+                        </div>
                         <input
-                          type="number"
-                          min={selectedSource.min_order || 0}
-                          max={selectedSource.max_order || 10000}
+                          type="range"
+                          min={selectedSource.min_order}
+                          max={selectedSource.max_order}
                           step="1"
                           value={currentDecision.quantity}
-                          onBlur={handleQuantityBlur}
                           onChange={e => {
                             let val = parseInt(e.target.value) || 0;
                             setDecision(selectedComponent, 'quantity', val);
                           }}
                           disabled={!isProcurementOpen}
-                          className="w-full bg-surface border border-outline-variant p-3 font-mono text-3xl font-bold text-primary"
+                          className="w-full h-1.5 bg-surface rounded-lg appearance-none cursor-pointer accent-primary border border-outline-variant/30"
                         />
-                        {currentDecision.quantity < selectedSource.min_order || currentDecision.quantity > selectedSource.max_order ? (
-                          <p className="text-error text-xs mt-1 font-semibold">Order clamped at min limits on losing focus.</p>
-                        ) : null}
+                        <div className="flex justify-between text-[9px] text-on-surface-variant font-mono mt-1 opacity-70">
+                          <span>MIN: {selectedSource.min_order}</span>
+                          <span>MAX: {selectedSource.max_order}</span>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -322,8 +385,12 @@ export const Procurement = () => {
               {/* Transport Mode with Hover Cards */}
               <div className="space-y-4 flex-shrink-0">
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold font-mono text-on-surface-variant uppercase tracking-widest">
-                    TRANSPORT MODE
+                  <label className="block text-sm font-bold font-mono text-on-surface-variant uppercase tracking-widest group relative cursor-help flex items-center space-x-2">
+                    <span>TRANSPORT MODE</span>
+                    <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-4 h-4 flex items-center justify-center font-bold text-[8px]">i</span>
+                    <div className="absolute left-6 top-0 hidden group-hover:block bg-surface-highest p-3 border border-outline shadow-2xl text-[10px] font-mono text-on-surface w-56 z-[100] normal-case leading-relaxed font-normal">
+                      Method of shipment. Controls speed, base/variable costs, and risk of material damage during transit.
+                    </div>
                   </label>
                   <div className="flex space-x-2">
                     {(Object.keys(transports) || []).map(mode => {
@@ -331,10 +398,12 @@ export const Procurement = () => {
                       const isSelected = currentDecision.transport === mode;
                       return (
                         <div key={mode} className="flex-1 relative group/transport">
-                          <button
+                          <motion.button
+                            whileHover={isProcurementOpen ? { y: -2 } : {}}
+                            whileTap={isProcurementOpen ? { scale: 0.96 } : {}}
                             disabled={!isProcurementOpen}
                             onClick={() => setDecision(selectedComponent, 'transport', mode)}
-                            className={`w-full py-3 text-sm font-semibold font-mono uppercase tracking-widest transition-colors border
+                            className={`w-full py-2 text-xs font-semibold font-mono uppercase tracking-[0.2em] transition-colors border
                               ${isSelected
                                 ? 'bg-surface-highest text-primary border-primary ring-1 ring-primary'
                                 : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-low'
@@ -343,7 +412,7 @@ export const Procurement = () => {
                             `}
                           >
                             {mode}
-                          </button>
+                          </motion.button>
 
                           {/* Hover Card */}
                           {tData && (
@@ -359,8 +428,8 @@ export const Procurement = () => {
                                   <span className="text-on-surface font-semibold">${tData.var_cost}/u·km</span>
                                 </div>
                                 <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-on-surface-variant">σ Spread</span>
-                                  <span className="text-on-surface font-semibold">+{tData.sigma_add.toFixed(2)}</span>
+                                  <span className="text-on-surface-variant">Consist. Impact</span>
+                                  <span className="text-on-surface font-semibold">{getConsistencyLabel(tData.sigma_add)}</span>
                                 </div>
                                 <div className="flex justify-between text-xs font-mono">
                                   <span className="text-error">Damage %</span>
@@ -381,12 +450,12 @@ export const Procurement = () => {
 
                 {/* PROJECTED COMPONENT COST */}
                 {selectedSource && isBuying[selectedComponent] && currentProjections && (
-                  <div className="p-4 border border-outline-variant bg-surface-highest group relative flex justify-between items-center cursor-help">
-                    <span className="text-on-surface-variant font-mono text-sm font-semibold uppercase tracking-widest flex items-center space-x-2">
-                      <span>Projected Total Cost</span>
-                      <span className="bg-primary/20 text-primary rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">i</span>
+                  <div className="p-3 border border-outline-variant bg-surface-highest group relative flex justify-between items-center cursor-help">
+                    <span className="text-on-surface-variant font-mono text-[10px] font-bold uppercase tracking-widest flex items-center space-x-2">
+                      <span>PROJECTED COST</span>
+                      <span className="bg-primary/20 text-primary rounded-full w-4 h-4 flex items-center justify-center font-bold text-[10px]">i</span>
                     </span>
-                    <span className="font-mono text-2xl text-primary font-bold">
+                    <span className="font-mono text-xl text-primary font-bold">
                       ${componentCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                     <div className="absolute left-1/4 bottom-full hidden group-hover:block bg-surface-highest p-3 border border-outline-variant shadow-lg text-xs font-mono text-on-surface whitespace-nowrap z-50 normal-case">
@@ -408,12 +477,12 @@ export const Procurement = () => {
           </div>
 
           {/* TOTALS & FACTORY IMPACT PANEL (RIGHT) */}
-          <div className="w-[40%] flex flex-col space-y-6 min-h-0 overflow-y-auto custom-scrollbar pr-2">
-            <div className="bg-surface-low p-6 border border-outline-variant space-y-6 flex-1 flex flex-col">
-              <h2 className="font-display text-base font-bold uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-2 flex items-center justify-between group relative cursor-help">
+          <div className="w-[40%] flex flex-col space-y-4 min-h-0 overflow-y-auto custom-scrollbar pr-2">
+            <div className="bg-surface-low p-4 border border-outline-variant space-y-4 flex-1 flex flex-col">
+              <h2 className="font-display text-sm font-bold uppercase tracking-widest text-[#978d9e] border-b border-outline-variant pb-1.5 flex items-center justify-between group relative cursor-help">
                 <span>ORDER SUMMARY</span>
-                <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">i</span>
-                <div className="absolute right-0 top-full mt-2 hidden group-hover:block bg-surface-highest p-3 border border-outline-variant shadow-lg text-xs font-mono text-on-surface w-64 z-[60] leading-relaxed font-normal normal-case">
+                <span className="bg-surface-high text-on-surface border border-outline-variant rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]">i</span>
+                <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-surface-highest p-3 border border-outline shadow-2xl text-xs font-mono text-on-surface w-64 z-[100] leading-relaxed font-normal normal-case">
                   Procured materials are mixed with existing inventory distributions upon cycle resolution. Unfavorable transports reduce incoming grade means or trigger damage variances over distance.
                 </div>
               </h2>
@@ -430,13 +499,25 @@ export const Procurement = () => {
                     <span className="text-on-surface-variant text-xs font-medium">
                       {fundUsagePct.toFixed(1)}% of ${funds.toLocaleString()}
                     </span>
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-surface-highest p-3 border border-outline shadow-2xl text-xs font-mono text-on-surface w-64 z-[100] leading-relaxed font-normal normal-case">
+                      Current spending compared to total cash on hand. Exceeding 100% will trigger a cash crunch penalty at the end of the cycle.
+                    </div>
                   </div>
 
                   {/* Progress Bar Container */}
                   <div className="w-full bg-surface h-4 border border-outline-variant relative overflow-hidden">
-                    <div className={`h-full ${progressColor} transition-all duration-300`} style={{ width: `${Math.min(fundUsagePct, 100)}%` }} />
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(fundUsagePct, 100)}%` }}
+                      className={`h-full ${progressColor} transition-all duration-300`} 
+                    />
                     {isOverflowing && (
-                      <div className="absolute inset-0 bg-error/40" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,0,0,0.5) 5px, rgba(255,0,0,0.5) 10px)' }}></div>
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 bg-error/40 shadow-[inset_0_0_10px_rgba(255,0,0,0.5)]" 
+                        style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,0,0,0.5) 5px, rgba(255,0,0,0.5) 10px)' }} 
+                      />
                     )}
                   </div>
 
@@ -461,15 +542,15 @@ export const Procurement = () => {
       )}
 
       {/* BOTTOM BAR */}
-      <div className="bg-surface-container border border-outline-variant p-6 flex justify-between items-center mt-auto flex-shrink-0">
+      <div className="bg-surface-container border border-outline-variant p-4 flex justify-between items-center mt-auto flex-shrink-0">
         <div className="flex space-x-12 relative w-full h-full">
           <div>
-            <div className="text-on-surface-variant font-display text-sm font-bold tracking-widest mb-1 flex items-center space-x-2">
+            <div className="text-on-surface-variant font-display text-xs font-bold tracking-[0.2em] mb-1 flex items-center space-x-2">
               <span>GLOBAL SPEND PROJECTION</span>
-              {projectedCosts ? <FiCheckCircle className="text-primary text-sm" /> : null}
+              {projectedCosts ? <FiCheckCircle className="text-primary text-xs" /> : null}
             </div>
-            <div className={`font-mono text-3xl font-bold ${isOverflowing ? 'text-error' : 'text-on-surface'}`}>${totalProcurementCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-            {lastSavedAt && <div className="absolute top-full mt-2 text-on-surface-variant font-mono text-xs font-semibold">Saved at {lastSavedAt}</div>}
+            <div className={`font-mono text-2xl font-bold ${isOverflowing ? 'text-error' : 'text-on-surface'}`}>${totalProcurementCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            {lastSavedAt && <div className="absolute top-full mt-1 text-on-surface-variant font-mono text-[10px] font-semibold">Saved at {lastSavedAt}</div>}
           </div>
         </div>
 

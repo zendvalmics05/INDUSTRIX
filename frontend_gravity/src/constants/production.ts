@@ -4,10 +4,10 @@
  */
 
 export const MACHINE_TIERS = {
-  basic: { grade: 40, throughput: 200, labour: 4, degrade: 4.0, buy: 15000, scrap: 1000 },
-  standard: { grade: 60, throughput: 400, labour: 8, degrade: 3.0, buy: 35000, scrap: 3000 },
-  industrial: { grade: 75, throughput: 700, labour: 10, degrade: 2.0, buy: 80000, scrap: 8000 },
-  precision: { grade: 90, throughput: 1000, labour: 20, degrade: 1.2, buy: 180000, scrap: 25000 },
+  basic: { grade: 40, throughput: 200, labour: 4, degrade: 15.0, buy: 15000, scrap: 1000 },
+  standard: { grade: 60, throughput: 400, labour: 8, degrade: 12.0, buy: 35000, scrap: 3000 },
+  industrial: { grade: 75, throughput: 700, labour: 10, degrade: 8.0, buy: 80000, scrap: 8000 },
+  precision: { grade: 90, throughput: 1000, labour: 20, degrade: 10.0, buy: 180000, scrap: 25000 },
 };
 
 export const MAINTENANCE_COSTS = {
@@ -19,12 +19,12 @@ export const MAINTENANCE_COSTS = {
 
 export const MAINTENANCE_DEGRADE_MULT = {
   none: 1.0,
-  basic: 0.6,
-  full: 0.3,
-  overhaul: 0.1,
+  basic: 0.4,
+  full: 0.1,
+  overhaul: 0.0,
 };
 
-export const OVERHAUL_RECOVERY_CAP = 20.0;
+export const OVERHAUL_RECOVERY_CAP = 30.0;
 export const MACHINE_MAX_CONDITION = 100.0;
 
 export const WAGE_COSTS = {
@@ -59,7 +59,7 @@ export const AUTOMATION_UPGRADE_COST = {
   full_auto: 160000,
 };
 
-export const RND_COST_PER_LEVEL = 100000.0;
+export const RND_COST_PER_LEVEL = 40000.0;
 export const RND_QUALITY_BONUS = 3.0;
 export const RND_CONSISTENCY_BONUS = 2.0;
 export const RND_YIELD_BONUS = 0.04;

@@ -261,6 +261,13 @@ def advance_phase(
             sales_summaries[str(team.id)] = result
         phase_log.sales_summary = sales_summaries
 
+        # Snapshot current market parameters as "last cycle" before organiser tweaks them in Backroom
+        from models.market import MarketFaction
+        db.query(MarketFaction).filter(MarketFaction.game_id == game.id).update({
+            "last_cycle_price": MarketFaction.price_ceiling,
+            "last_cycle_volume": MarketFaction.volume
+        }, synchronize_session=False)
+
     # ── Advance phase ─────────────────────────────────────────────────────────
     next_phase = _PHASE_ORDER[idx + 1]
     phase_log.current_phase = next_phase

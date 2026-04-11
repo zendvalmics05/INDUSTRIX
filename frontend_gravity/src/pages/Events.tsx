@@ -80,6 +80,74 @@ const NotificationItem = ({ notification }: { notification: any }) => {
     }
   };
 
+  const KEY_MAP: Record<string, string> = {
+    team_id: 'Target Entity',
+    lender_team_id: 'Creditor',
+    amount: 'Nominal Value',
+    interest_per_cycle: 'Cycle Instalment',
+    principal: 'Principal Sum',
+    duration: 'Contract Term',
+    focus: 'Strategic Focus',
+    levels: 'Upgrade Magnitude',
+    condition_hit: 'Integrity Loss',
+    commission: 'Mgmt Fee',
+    bribe_amount: 'Resolution Cost',
+    discovery_probability: 'Exposure Risk',
+    status: 'Agreement Status',
+    component: 'Affected System',
+    delay: 'Arrival Timeline',
+    direction: 'Transfer Type',
+    notes: 'Remarks',
+    from: 'Originating Party',
+    to: 'Receiving Party',
+    intel_scope: 'Intelligence Scope',
+    workforce_stolen: 'Headcount Impact',
+    stolen_rnd: 'R&D Compromised',
+    cost_multiplier: 'Cost Factor',
+    loss_fraction: 'Loss Fraction',
+    demand_multiplier: 'Demand Factor',
+    block_fraction: 'Restricted Volume',
+    fine_amount: 'Penalty Sum',
+    refund_fraction: 'Rebate Factor',
+    units: 'Units Procured',
+    price_per_unit: 'Unit Price',
+    threshold_reduction: 'Standard Relaxation',
+    skill_bonus: 'Skill Uplift',
+    skill_hit: 'Skill Impact',
+    level_arriving: 'R&D Level Awarded',
+    mean_bonus: 'Quality Mean Uplift',
+  };
+
+  const formatPayloadValue = (key: string, val: any) => {
+    if (val === null || val === undefined) return 'THE MINISTRY';
+    if (key.includes('id') && typeof val === 'number') return `CORPORATION ${val}`;
+    if (key === 'amount' || key === 'principal' || key.includes('cost') || key.includes('bribe') || key.includes('fee') || key === 'fine_amount' || key === 'price_per_unit') {
+      return `$${Number(val).toLocaleString()}`;
+    }
+    if (typeof val === 'number' && (key.includes('probability') || key.includes('risk'))) {
+      return `${(val * 100).toFixed(0)}%`;
+    }
+    if (typeof val === 'number' && (key.includes('fraction') || key.includes('multiplier') || key.includes('factor'))) {
+      return `${(val * 100).toFixed(1)}%`;
+    }
+    if (key === 'direction') {
+      const DIR_LABELS: Record<string, string> = {
+        inbound: 'Inbound Receipt',
+        outbound: 'Outbound Dispatch',
+        'Inbound Receipt': 'Inbound Receipt',
+        'Outbound Dispatch': 'Outbound Dispatch',
+      };
+      return DIR_LABELS[String(val)] || String(val);
+    }
+    if (typeof val === 'boolean') return val ? 'YES' : 'NO';
+    if (typeof val === 'string') return val.replace(/_/g, ' ').toUpperCase();
+    return String(val);
+  };
+
+  const formatPayloadKey = (key: string) => {
+    return KEY_MAP[key] || key.replace(/_/g, ' ').toUpperCase();
+  };
+
   return (
     <div className={`border p-4 mb-3 rounded-sm transition-all group hover:scale-[1.02] active:scale-[0.98] ${getColors()}`}>
       <div className="flex justify-between items-start mb-2">
@@ -116,13 +184,11 @@ const NotificationItem = ({ notification }: { notification: any }) => {
         <div className="mt-2 grid grid-cols-2 gap-2">
           {Object.entries(notification.payload).map(([k, v]) => (
             <div key={k} className="bg-white/5 px-2 py-1 rounded flex flex-col">
-              <span className="text-[8px] uppercase opacity-40 tracking-widest truncate">{k.replace(/_/g, ' ')}</span>
+              <span className="text-[8px] uppercase opacity-40 tracking-widest truncate">{formatPayloadKey(k)}</span>
               <span className="text-[10px] font-mono font-bold truncate">
                 {typeof v === 'object' && v !== null 
                   ? JSON.stringify(v) 
-                  : typeof v === 'number' 
-                    ? v.toLocaleString() 
-                    : String(v)}
+                  : formatPayloadValue(k, v)}
               </span>
             </div>
           ))}
@@ -225,8 +291,8 @@ export const Events = () => {
   }, [notifications, markNotificationsAsViewed]);
 
   const hasSabotage = useMemo(() => {
-    if (!procurement) return false;
-    return Object.values(procurement.per_component).some(c => c.event === 'sabotaged');
+    if (!procurement || !procurement.per_component) return false;
+    return Object.values(procurement.per_component).some((c: any) => c.event === 'sabotaged');
   }, [procurement]);
 
   return (

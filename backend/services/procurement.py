@@ -367,6 +367,17 @@ def resolve_procurement(
     if inventory:
         inventory.funds = round(inventory.funds - total_cost, 2)
         inventory.cumulative_production_cost = round(inventory.cumulative_production_cost + total_cost, 2)
+        
+        # Record Transaction
+        from models.procurement import Transaction
+        db.add(Transaction(
+            team_id=team.id,
+            cycle_number=cycle.cycle_number,
+            delta=-total_cost,
+            balance=inventory.funds,
+            type="Procurement",
+            description=f"Material costs & logistics for {len(summary)} components"
+        ))
 
     # ── Mark all procurement events as applied ────────────────────────────────
     _mark_applied(events)

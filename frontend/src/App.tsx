@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import EventCountdownPage from './pages/EventCountdownPage.jsx'
 import AdminLoginPage from './pages/AdminLoginPage.tsx'
 import OrganiserPage from './pages/OrganiserPage.tsx'
+import SpectatorPage from './pages/SpectatorPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import AdminRoute from './components/AdminRoute.tsx'
@@ -12,6 +13,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/spectator" element={<SpectatorPage />} />
       <Route
         path="/dashboard"
         element={
@@ -38,7 +40,7 @@ export default function App() {
         }
       />
 
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/spectator" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

@@ -231,7 +231,7 @@ def create_inter_team_loan(
         ev_borrower = Event(
             game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
             event_type=EventType.ASSET_EXCHANGE,
-            payload={"notes": "Inter-team Loan Principal Received", "direction": "inbound", "from": lender.name},
+            payload={"notes": "Loan Principal — Funds Received", "direction": "Inbound Receipt", "from": lender.name},
             target_team_id=borrower.id, source_team_id=lender.id,
             status=EventStatus.APPLIED, notes=body.notes
         )
@@ -241,7 +241,7 @@ def create_inter_team_loan(
         ev_lender = Event(
             game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
             event_type=EventType.ASSET_EXCHANGE,
-            payload={"notes": "Inter-team Loan Principal Disbursed", "direction": "outbound", "to": borrower.name},
+            payload={"notes": "Loan Principal — Funds Dispatched", "direction": "Outbound Dispatch", "to": borrower.name},
             target_team_id=lender.id, source_team_id=borrower.id,
             status=EventStatus.APPLIED, notes=body.notes
         )
@@ -325,7 +325,7 @@ def create_gov_loan(
         ev_gov = Event(
             game_id=game.id, cycle_id=cycle_id, phase=EventPhase.FINANCIAL,
             event_type=EventType.ASSET_EXCHANGE,
-            payload={"notes": "Ministry Support Loan Disbursed", "direction": "inbound", "from": "Ministry Directorate"},
+            payload={"notes": "Ministry Liquidity Facility — Funds Credited", "direction": "Inbound Receipt", "from": "Ministry Directorate"},
             target_team_id=borrower.id, source_team_id=None,
             status=EventStatus.APPLIED, notes=body.notes
         )
@@ -492,12 +492,31 @@ def manual_discovery(
     Manually caught a team in a backroom deal (e.g. after successful identification).
     Applies the fine to the aggressor and issues victim restitution equal to 1x the bribe.
     Works for deals in PENDING (pre-effect) or APPLIED (post-effect) status.
+
+    NOTE: deal_id must be a GovDeal ID, NOT an Event ID.
+    Use GET /organiser/deals to list all GovDeals and their IDs.
+    Inter-team exchanges (/exchange) do not create GovDeal rows and cannot be discovered here.
     """
     deal = db.query(GovDeal).filter(
         GovDeal.id == deal_id, GovDeal.game_id == game.id
     ).first()
     if not deal:
-        raise HTTPException(404, "Deal not found.")
+        # Try to give a more helpful error: check if this ID is an Event row instead
+        is_event = db.query(Event).filter(
+            Event.id == deal_id, Event.game_id == game.id
+        ).first()
+        if is_event:
+            raise HTTPException(
+                404,
+                f"ID {deal_id} is an Event row, not a GovDeal. "
+                "Use GET /organiser/deals to find the correct GovDeal ID. "
+                "Inter-team exchanges are not GovDeals and cannot be discovered here."
+            )
+        raise HTTPException(
+            404,
+            f"GovDeal {deal_id} not found in this game. "
+            "Use GET /organiser/deals to list valid GovDeal IDs."
+        )
 
     if deal.status in (GovDealStatus.DISCOVERED, GovDealStatus.CANCELLED):
         raise HTTPException(
