@@ -262,6 +262,7 @@ class EventType(str, enum.Enum):
     RND_SABOTAGE = "rnd_sabotage"
     SKILLED_LABOUR = "skilled_labour"
     RND_INVESTMENT = "rnd_investment"
+    FACTORY_DESTRUCTION = "factory_destruction"
 
     # Sales
     MARKET_LIMIT = "market_limit"
@@ -303,6 +304,7 @@ class GovDealType(str, enum.Enum):
     GREEN_SUBSIDISED_INPUTS = "green_subsidised_inputs"
     # Infrastructure
     RED_MACHINE_SABOTAGE = "red_machine_sabotage"
+    RED_FACTORY_DESTRUCTION = "red_factory_destruction"
     RED_INFRA_DELAY = "red_infra_delay"
     GREEN_FAST_TRACK_INFRA = "green_fast_track_infra"
     # Labour & R&D
@@ -324,6 +326,7 @@ class GovDealType(str, enum.Enum):
     GREEN_QUALITY_WAIVER = "green_quality_waiver"
     GREEN_TAX_EVASION = "green_tax_evasion"
     GREEN_SECURITY_PROTOCOL = "green_security_protocol"
+    GREEN_GOV_LOAN = "green_gov_loan"
 
     # Blue (Intelligence/Manipulation)
     BLUE_ESPIONAGE = "blue_espionage"

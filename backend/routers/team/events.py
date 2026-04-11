@@ -64,7 +64,12 @@ def get_notifications(
             Event.target_team_id == team.id,
             Event.cycle_id.in_(cycle_ids),
             Event.status == EventStatus.APPLIED,
-            Event.gov_deal_id != None
+            Event.gov_deal_id != None,
+            Event.event_type.not_in([
+                EventType.LOAN_INTEREST, 
+                EventType.LOAN_REPAYMENT, 
+                EventType.RND_INVESTMENT
+            ])
         )
         .all()
     )
@@ -76,7 +81,7 @@ def get_notifications(
             cycle_number=ev.cycle.cycle_number,
             type=NotificationType.SABOTAGE,
             title=f"Security Breach: {desc}",
-            message=f"Investigation suggests external interference with your operations. Trace ID recorded.",
+            message=f"Investigation indicates sophisticated third-party interference with your local operations. Digital signature logged.",
             severity="error",
             discovery_code=ev.discovery_code,
             payload=ev.payload
@@ -96,26 +101,33 @@ def get_notifications(
         # A. If Discovered (Caught)
         if deal.status == GovDealStatus.DISCOVERED:
             fine = round(deal.bribe_amount * 2.5, 2)
+            clean_deal = deal.deal_type.value.replace('green_', '').replace('red_', '').replace('blue_', '').replace('_', ' ').title()
             notifications.append(NotificationOut(
                 id=f"deal-disc-{deal.id}",
                 cycle_number=cycle_num_map.get(deal.negotiated_cycle_id, 0) + 1,
                 type=NotificationType.DISCOVERY_SELF,
                 title="Protocol Investigation: Compromised",
-                message=f"Ministry auditors intercepted your arrangement for '{deal.deal_type}'. Penalty of {fine:,.0f} CU applied.",
+                message=f"Ministry auditors have intercepted your '{clean_deal}' arrangement. A financial penalty of {fine:,.0f} CU has been levied against your accounts.",
                 severity="warning",
                 payload=deal.effect_payload
             ))
         
         # B. If Pending/Applied/Cancelled (Confirmed record for the buyer)
         elif deal.status in (GovDealStatus.PENDING, GovDealStatus.APPLIED, GovDealStatus.CANCELLED):
-            status_text = deal.status.value.capitalize()
+            status_map = {
+                GovDealStatus.PENDING: "Authorized",
+                GovDealStatus.APPLIED: "Executed",
+                GovDealStatus.CANCELLED: "Nullified"
+            }
+            status_text = status_map.get(deal.status, deal.status.value.capitalize())
+
             prefix = "Government Accord"
             severity = "success"
             
-            if deal.deal_type.startswith("red_"):
+            if deal.deal_type.value.startswith("red_"):
                 prefix = "Offensive Protocol"
                 severity = "info"  # Not error, as the buyer bought it intentionally
-            elif deal.deal_type.startswith("blue_"):
+            elif deal.deal_type.value.startswith("blue_"):
                 prefix = "Intelligence Protocol"
                 severity = "info"
                 
@@ -242,13 +254,16 @@ def get_notifications(
         .all()
     )
     for ev in exchanges:
-        origin = ev.payload.get("from", "External")
+        origin = ev.payload.get("from", "Confidential Source")
+        direction = ev.payload.get("direction", "unknown")
+        dir_text = "Inbound Receipt" if direction == "inbound" else "Outbound Dispatch"
+        
         notifications.append(NotificationOut(
             id=f"exch-{ev.id}",
             cycle_number=ev.cycle.cycle_number,
             type=NotificationType.ASSET_EXCHANGE,
             title="Intra-Company Asset Transfer",
-            message=f"Assets received from {origin}. Protocol: {ev.payload.get('direction', 'unknown')}.",
+            message=f"Assets received from {origin}. Protocol: {dir_text}.",
             severity="info",
             payload=ev.payload
         ))
@@ -360,7 +375,13 @@ def get_news(
         .filter(
             Event.cycle_id.in_(cycle_ids),
             Event.status == EventStatus.APPLIED,
-            Event.gov_deal_id != None
+            Event.gov_deal_id != None,
+            Event.event_type.not_in([
+                EventType.LOAN_INTEREST,
+                EventType.LOAN_REPAYMENT,
+                EventType.RND_INVESTMENT,
+                EventType.ASSET_EXCHANGE
+            ])
         )
         .all()
     )

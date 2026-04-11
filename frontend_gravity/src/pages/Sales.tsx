@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGameStore, useInventoryStore } from '../store';
 import { useEventsStore } from '../store/useEventsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
@@ -6,7 +6,7 @@ import { teamApi } from '../api';
 import { SendDecisionsButton } from '../components/SharedComponents';
 import { SalesCard } from '../components/PhaseSummaries';
 import { 
-  FiTrendingUp, FiAlertTriangle, 
+  FiTrendingUp, FiAlertTriangle, FiInfo,
   FiPackage, FiDollarSign, FiZap, FiCheckCircle, FiChevronDown 
 } from 'react-icons/fi';
 
@@ -30,6 +30,30 @@ const getDefaultSellAction = (tier: TierKey): SalesAction => {
   if (tier === 'substandard') return 'sell_discounted';
   return 'sell_market';
 };
+
+// ── Tooltip ──────────────────────────────────────────────────────────────────
+
+const Tooltip = ({ text, children, side = 'top', className = '' }: { text: string; children: React.ReactNode; side?: 'top' | 'bottom' | 'left' | 'right'; className?: string }) => (
+  <div className={`relative group/tip inline-flex ${className}`}>
+    {children}
+    <div className={`
+      pointer-events-none absolute z-50 w-max max-w-[220px]
+      px-2.5 py-1.5 rounded-sm
+      bg-surface-highest border border-outline-variant
+      text-[11px] font-mono text-on-surface leading-snug
+      shadow-xl shadow-black/30
+      opacity-0 group-hover/tip:opacity-100
+      scale-95 group-hover/tip:scale-100
+      transition-all duration-150
+      ${side === 'top'    ? 'bottom-full mb-2 left-1/2 -translate-x-1/2' : ''}
+      ${side === 'bottom' ? 'top-full mt-2 left-1/2 -translate-x-1/2'    : ''}
+      ${side === 'left'   ? 'right-full mr-2 top-1/2 -translate-y-1/2'   : ''}
+      ${side === 'right'  ? 'left-full ml-2 top-1/2 -translate-y-1/2'    : ''}
+    `}>
+      {text}
+    </div>
+  </div>
+);
 
 // ── Components ───────────────────────────────────────────────────────────────
 
@@ -154,6 +178,180 @@ const RejectActionCard = ({
 };
 
 
+const FactionIntelRow = ({
+  f, isOpen, priceLocked, priceRisky, brandGated, brandScore, price, estVolume,
+  statusLabel, statusColor, statusBg,
+}: {
+  f: any; isOpen: boolean; priceLocked: boolean; priceRisky: boolean;
+  brandGated: boolean; brandScore: number; price: number; estVolume: number;
+  statusLabel: string; statusColor: string; statusBg: string;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  // Price position visualization
+  // Track spans from 0 → ceiling_max * 1.35 so there's room to show "over budget"
+  const totalRange = f.projected_ceiling_max * 1.35;
+  const safeEndPct   = (f.projected_ceiling_min / totalRange) * 100;   // end of safe zone
+  const riskyEndPct  = (f.projected_ceiling_max / totalRange) * 100;   // end of risky zone
+  const needlePct    = Math.min(102, (price / totalRange) * 100);       // clamp slightly over edge
+
+  // Zone the needle is in
+  const needleColor = priceLocked ? '#ef4444' : priceRisky ? '#f59e0b' : '#22c55e';
+
+  return (
+    <div className="transition-colors duration-200 hover:bg-surface-highest/30">
+      {/* Collapsed row — always visible */}
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-left"
+      >
+        <div className="flex items-center space-x-3 min-w-0">
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOpen ? (priceRisky ? 'bg-warning' : 'bg-secondary') : 'bg-error'}`} />
+          <span className="text-sm font-bold font-mono text-on-surface uppercase truncate">{f.name}</span>
+        </div>
+        <div className="flex items-center space-x-3 flex-shrink-0 ml-2">
+          <span className={`text-xs font-mono ${isOpen ? statusColor : 'text-on-surface-variant opacity-40 line-through'}`}>
+            {isOpen ? `~${estVolume} units` : '0 units'}
+          </span>
+          <Tooltip
+            side="left"
+            text={
+              statusLabel === 'OPEN'   ? 'This sector will buy from you at your current price and brand score.' :
+              statusLabel === 'RISKY'  ? 'Your price is above their guaranteed floor. Some—but not all—units may sell.' :
+              statusLabel === 'OVER'   ? 'Your price exceeds this sector\'s maximum budget. They will not buy from you.' :
+              statusLabel === 'BRAND'  ? 'Your brand score is too low to access this sector. Raise your brand to unlock.' :
+                                        'Both price and brand requirements are unmet. This sector is inaccessible.'
+            }
+          >
+            <span className={`text-[11px] font-black font-mono uppercase px-2 py-0.5 rounded-sm ${statusBg} ${statusColor}`}>
+              {statusLabel}
+            </span>
+          </Tooltip>
+          <FiChevronDown
+            size={13}
+            className={`text-on-surface-variant opacity-40 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+
+          {/* ── Price Position Track ───────────────────────────────────── */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs font-mono uppercase mb-1">
+              <span className="text-on-surface-variant opacity-60">Price Position</span>
+              <span className="text-on-surface-variant opacity-40">
+                ceiling ${f.projected_ceiling_min.toLocaleString()} – ${f.projected_ceiling_max.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Zone track with needle */}
+            <div className="relative h-5 w-full select-none">
+              {/* Track background — three zones */}
+              <div className="absolute inset-y-[6px] inset-x-0 rounded-full overflow-hidden flex">
+                {/* Safe zone: 0 → ceiling_min */}
+                <div
+                  className="h-full bg-secondary/25"
+                  style={{ width: `${safeEndPct}%` }}
+                />
+                {/* Risky zone: ceiling_min → ceiling_max */}
+                <div
+                  className="h-full bg-warning/25"
+                  style={{ width: `${riskyEndPct - safeEndPct}%` }}
+                />
+                {/* Over-budget zone: ceiling_max → end */}
+                <div className="h-full flex-1 bg-error/15" />
+              </div>
+
+              {/* Zone boundary ticks */}
+              <div
+                className="absolute top-0 bottom-0 w-px bg-secondary/50"
+                style={{ left: `${safeEndPct}%` }}
+              />
+              <div
+                className="absolute top-0 bottom-0 w-px bg-error/50"
+                style={{ left: `${riskyEndPct}%` }}
+              />
+
+              {/* Price needle */}
+              <div
+                className="absolute top-0 bottom-0 w-0.5 transition-all duration-300"
+                style={{ left: `${Math.min(99, needlePct)}%`, backgroundColor: needleColor }}
+              >
+                {/* Needle head (diamond) */}
+                <div
+                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+                  style={{ backgroundColor: needleColor }}
+                />
+              </div>
+            </div>
+
+            {/* Zone labels */}
+            <div className="relative h-4 text-[10px] font-mono uppercase">
+              <span
+                className="absolute text-secondary opacity-70 -translate-x-1/2"
+                style={{ left: `${safeEndPct / 2}%` }}
+              >
+                SAFE
+              </span>
+              <span
+                className="absolute text-warning opacity-70 -translate-x-1/2"
+                style={{ left: `${(safeEndPct + riskyEndPct) / 2}%` }}
+              >
+                RISKY
+              </span>
+              <span
+                className="absolute text-error opacity-60 -translate-x-1/2"
+                style={{ left: `${(riskyEndPct + 100) / 2}%` }}
+              >
+                OVER
+              </span>
+            </div>
+
+            {/* Contextual message */}
+            {priceLocked && (
+              <p className="text-[11px] font-mono text-error opacity-80">
+                Your ${price.toLocaleString()} exceeds their max ${f.projected_ceiling_max.toLocaleString()}.
+              </p>
+            )}
+            {priceRisky && !priceLocked && (
+              <p className="text-[11px] font-mono text-warning opacity-80">
+                You're above their guaranteed floor — some units may go unsold.
+              </p>
+            )}
+            {!priceLocked && !priceRisky && (
+              <p className="text-[11px] font-mono text-secondary opacity-70">
+                Priced within their guaranteed buy-in range.
+              </p>
+            )}
+          </div>
+
+          {/* Brand requirement */}
+          <div className="flex justify-between text-xs font-mono uppercase pt-1 border-t border-outline-variant/20">
+            <span className="text-on-surface-variant opacity-60">Brand Min.</span>
+            <span className={brandGated ? 'text-warning font-bold' : 'text-on-surface-variant opacity-60'}>
+              {brandGated
+                ? `Locked — need +${(f.brand_min - brandScore).toFixed(0)} pts (min ${f.brand_min})`
+                : `✓ Eligible (min ${f.brand_min})`
+              }
+            </span>
+          </div>
+
+          {/* Flexibility note */}
+          {f.flexibility > 0 && (
+            <div className="text-[11px] font-mono text-on-surface-variant opacity-50 uppercase">
+              Flex: {Math.round(f.flexibility * 100)}% of unmet demand steps down a quality tier.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 export const Sales = () => {
   const { phase, cycleNumber } = useGameStore();
   const { brandScore, brandTier, droneStock, components, fetchInventory } = useInventoryStore();
@@ -184,6 +382,7 @@ export const Sales = () => {
   const [lastSavedAt, setLastSavedAt] = useState<string>('');
   const [qrThresholds, setQrThresholds] = useState({ qr_hard: 30, qr_soft: 60, qr_premium: 85 });
   const [standardPrices, setStandardPrices] = useState<StandardPrices | null>(null);
+  const [factions, setFactions] = useState<any[]>([]);
 
   const isSalesOpen = phase === 'sales_open';
   const canSeeSummary = ['backroom', 'game_over'].includes(phase);
@@ -217,6 +416,7 @@ export const Sales = () => {
     }).catch(() => {});
 
     teamApi.getSalesPrices().then(setStandardPrices).catch(() => {});
+    teamApi.getMarket().then(data => setFactions(data.factions || [])).catch(() => {});
 
     if (canSeeSummary) {
       fetchAllSummaries(phase);
@@ -471,10 +671,16 @@ export const Sales = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-shrink-0">
         <div className="lg:col-span-3 bg-surface-low border border-outline-variant p-5 flex flex-col space-y-4">
           <div className="flex justify-between items-center text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">
-            <span>Brand Recognition</span>
-            <span className="text-primary font-bold">{brandTier}</span>
+            <Tooltip text="Your global brand score. Higher scores unlock premium market sectors and boost faction demand weight.">
+              <span className="flex items-center gap-1 cursor-default">Brand Recognition <FiInfo size={11} className="opacity-40" /></span>
+            </Tooltip>
+            <Tooltip text={`Tier: ${brandTier}. Tiers go: Poor → Fair → Good → Excellent. Each unlock higher brand_min sectors.`} side="left">
+              <span className="text-primary font-bold cursor-default">{brandTier}</span>
+            </Tooltip>
           </div>
-          <div className="text-3xl font-display text-on-surface">{brandScore.toFixed(1)}</div>
+          <Tooltip text="Score out of 100. Affected by quality sold, black market discoveries, and government events." side="bottom">
+            <div className="text-3xl font-display text-on-surface cursor-default">{brandScore.toFixed(1)}</div>
+          </Tooltip>
           <div className="text-sm font-semibold font-mono text-on-surface-variant leading-relaxed uppercase opacity-80">
             Market share and buyer trust are indexed to your global reputation score.
           </div>
@@ -484,12 +690,16 @@ export const Sales = () => {
           <div className="flex justify-between items-center mb-6">
             <div className="text-base font-semibold font-medium font-mono text-on-surface-variant uppercase tracking-widest">Assembly Allocation Pipeline</div>
             <div className="flex items-center space-x-6 text-sm font-mono uppercase">
-              <div className="text-on-surface-variant">
-                Bottleneck: <span className="text-tertiary font-bold">{projection?.bottleneck_component?.replace('_', ' ') || bottleneckInfo?.component?.replace('_', ' ') || 'NONE'}</span>
-              </div>
-              <div className="text-on-surface-variant">
-                Max Capacity: <span className="text-primary font-bold">{maxAssembly} Units</span>
-              </div>
+              <Tooltip text="The component with the least finished stock. Limits how many drones you can assemble this cycle.">
+                <div className="text-on-surface-variant cursor-default">
+                  Bottleneck: <span className="text-tertiary font-bold">{projection?.bottleneck_component?.replace('_', ' ') || bottleneckInfo?.component?.replace('_', ' ') || 'NONE'}</span>
+                </div>
+              </Tooltip>
+              <Tooltip text="Maximum drones assembleable given current component stock across all six slots.">
+                <div className="text-on-surface-variant cursor-default">
+                  Max Capacity: <span className="text-primary font-bold">{maxAssembly} Units</span>
+                </div>
+              </Tooltip>
             </div>
           </div>
           
@@ -617,74 +827,166 @@ export const Sales = () => {
                   {/* Protocol Selector */}
                   <div className="flex space-x-3 mb-10">
                     {[
-                      { id: 'hold', label: 'Hold Inventory', icon: FiPackage },
-                      { id: 'scrap', label: 'Liquidate Scrub', icon: FiAlertTriangle },
-                      { id: 'sell', label: 'Market Sell', icon: FiTrendingUp }
+                      { id: 'hold',  label: 'Hold Inventory', icon: FiPackage,       tip: "Park this tier's stock. No revenue now, but units carry forward. Holding fees apply each cycle." },
+                      { id: 'scrap', label: 'Liquidate Scrub', icon: FiAlertTriangle, tip: 'Scrap units below market value for quick cash. Use to clear excess stock and avoid ongoing holding costs.' },
+                      { id: 'sell',  label: 'Market Sell',     icon: FiTrendingUp,    tip: 'Route units to open market. Price against faction ceilings — undercutting competitors wins more volume.' },
                     ].map(opt => {
                        const isActive = opt.id === 'sell' ? isSelling : decisions[tier].action === opt.id;
                        const targetAction = opt.id === 'sell' ? getDefaultSellAction(tier) : opt.id as SalesAction;
                        return (
-                         <button 
-                           key={opt.id}
-                           onClick={() => setDecisions(s => ({ ...s, [tier]: { ...s[tier], action: targetAction } }))}
-                           disabled={!isSalesOpen}
-                           className={`flex-1 flex items-center justify-center space-x-3 py-4 border font-mono text-xs font-bold uppercase tracking-widest transition-all ${
-                             isActive 
-                               ? 'bg-on-surface text-surface border-on-surface shadow-lg' 
-                               : 'bg-surface/40 border-outline-variant text-on-surface-variant hover:border-on-surface hover:bg-surface-high'
-                           } ${!isSalesOpen && 'opacity-50 pointer-events-none'}`}
-                         >
-                           <opt.icon className={isActive ? 'text-surface' : ''} size={16} />
-                           <span>{opt.label}</span>
-                         </button>
+                         <Tooltip key={opt.id} text={opt.tip} side="top" className="flex-1">
+                           <button
+                             onClick={() => setDecisions(s => ({ ...s, [tier]: { ...s[tier], action: targetAction } }))}
+                             disabled={!isSalesOpen}
+                             className={`w-full flex items-center justify-center space-x-3 py-4 border font-mono text-xs font-bold uppercase tracking-widest transition-all ${
+                               isActive
+                                 ? 'bg-on-surface text-surface border-on-surface shadow-lg'
+                                 : 'bg-surface/40 border-outline-variant text-on-surface-variant hover:border-on-surface hover:bg-surface-high'
+                             } ${!isSalesOpen && 'opacity-50 pointer-events-none'}`}
+                           >
+                             <opt.icon className={isActive ? 'text-surface' : ''} size={16} />
+                             <span>{opt.label}</span>
+                           </button>
+                         </Tooltip>
                        );
                     })}
                   </div>
 
                   {/* Content grid - only visible when selling */}
-                  {isSelling ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center animate-in fade-in slide-in-from-top-4 duration-500">
-                      <div className="lg:col-span-7">
-                        {standardPrices && (
-                          <PriceSlider 
-                            label={tier}
-                            value={decisions[tier].price_override ?? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard)}
-                            min={1}
-                            max={Math.round((standardPrices?.premium || 4800) * 1.5)}
-                            standardPrices={standardPrices}
-                            disabled={!isSalesOpen}
-                            onChange={(val) => setDecisions(s => ({ ...s, [tier]: { ...s[tier], price_override: val, action: isSellingAction(s[tier].action) ? s[tier].action : getDefaultSellAction(tier) } }))}
-                          />
-                        )}
-                      </div>
-                      <div className="lg:col-span-5 space-y-4">
-                        <div className="bg-surface p-5 border border-outline-variant/30 space-y-4 shadow-inner">
-                           <div className="flex items-center space-x-2 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest font-bold border-b border-outline-variant/20 pb-2">
-                              <FiDollarSign className={tierColor} />
-                              <span>Pricing Architecture</span>
-                           </div>
-                           <div className="flex justify-between items-center text-xs font-mono uppercase">
-                              <span className="opacity-60 text-[10px]">Asking Price</span>
-                              <span className="text-on-surface font-bold text-lg">
-                                ${((decisions[tier].price_override === null || decisions[tier].price_override === undefined) ? (standardPrices ? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard) : 0) : (decisions[tier].price_override || 0)).toLocaleString()}
-                              </span>
-                           </div>
-                           <div className="flex justify-between items-center text-xs font-mono uppercase">
-                              <span className="opacity-60 text-[10px]">Market Outlook</span>
-                              <span className="text-secondary">Optimal Conversion</span>
-                           </div>
+                  {isSelling ? (() => {
+                    const price = (decisions[tier].price_override === null || decisions[tier].price_override === undefined)
+                      ? (standardPrices ? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard) : 0)
+                      : (decisions[tier].price_override || 0);
+
+                    const relevantFactions = factions.filter(f => f.tier_preference === tier);
+                    const totalPossibleVolume = relevantFactions.reduce((sum, f) => sum + f.projected_volume_max, 0);
+                    const reachableVolume = relevantFactions
+                      .filter(f => f.projected_ceiling_max >= price && brandScore >= f.brand_min)
+                      .reduce((sum, f) => sum + (price <= f.projected_ceiling_min ? f.projected_volume_max : f.projected_volume_min), 0);
+                    const reachPercent = totalPossibleVolume > 0 ? Math.round((reachableVolume / totalPossibleVolume) * 100) : 0;
+                    const openCount = relevantFactions.filter(f => f.projected_ceiling_max >= price && brandScore >= f.brand_min).length;
+
+                    let overallStatus = 'OPTIMAL';
+                    let overallColor = 'text-secondary';
+                    let overallBorder = 'border-secondary/40';
+                    if (reachPercent === 0) { overallStatus = 'NO DEMAND'; overallColor = 'text-error'; overallBorder = 'border-error/40'; }
+                    else if (reachPercent < 30) { overallStatus = 'FRAGMENTED'; overallColor = 'text-warning'; overallBorder = 'border-warning/40'; }
+                    else if (reachPercent < 70) { overallStatus = 'STRONG'; overallColor = 'text-primary'; overallBorder = 'border-primary/40'; }
+
+                    return (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                        {/* Full-width Price Slider */}
+                        <div>
+                          {standardPrices && (
+                            <PriceSlider
+                              label={tier}
+                              value={decisions[tier].price_override ?? (tier === 'premium' ? standardPrices.premium : tier === 'substandard' ? standardPrices.substandard : standardPrices.standard)}
+                              min={1}
+                              max={Math.round((standardPrices?.premium || 4800) * 1.5)}
+                              standardPrices={standardPrices}
+                              disabled={!isSalesOpen}
+                              onChange={(val) => setDecisions(s => ({ ...s, [tier]: { ...s[tier], price_override: val, action: isSellingAction(s[tier].action) ? s[tier].action : getDefaultSellAction(tier) } }))}
+                            />
+                          )}
+                        </div>
+
+                        {/* Market Intelligence Panel */}
+                        <div className={`border ${overallBorder} rounded-sm overflow-hidden`}>
+                          {/* Panel header */}
+                          <div className="px-4 py-3 flex items-center justify-between border-b border-outline-variant/20 bg-surface/60">
+                            <Tooltip text="Live sector analysis for this tier. Shows which market factions will buy from you at your current price and brand score.">
+                              <div className="flex items-center space-x-2 cursor-default">
+                                <FiTrendingUp className={overallColor} size={14} />
+                                <span className="text-xs font-mono font-bold uppercase tracking-widest text-on-surface-variant">Market Intel</span>
+                              </div>
+                            </Tooltip>
+                            <div className="flex items-center space-x-3">
+                              <Tooltip
+                                side="left"
+                                text={
+                                  overallStatus === 'OPTIMAL'    ? 'All accessible sectors are well within budget. Max conversion expected.' :
+                                  overallStatus === 'STRONG'     ? 'Most sectors reachable. Minor price pressure may reduce volume slightly.' :
+                                  overallStatus === 'FRAGMENTED' ? 'Only a small portion of sector volume is reachable. Consider lowering price.' :
+                                                                   'No sectors will purchase at this price. You will generate zero market revenue.'
+                                }
+                              >
+                                <span className={`text-xs font-mono font-black uppercase ${overallColor} cursor-default`}>{overallStatus}</span>
+                              </Tooltip>
+                              <Tooltip text={`${openCount} of ${relevantFactions.length} sectors are accessible at your current price and brand score.`} side="left">
+                                <span className="text-xs font-mono text-on-surface-variant opacity-60 cursor-default">{openCount}/{relevantFactions.length} open</span>
+                              </Tooltip>
+                            </div>
+                          </div>
+
+                          {/* Volume reach bar */}
+                          <div className="h-1.5 w-full bg-surface-highest">
+                            <div
+                              className={`h-full transition-all duration-700 ${reachPercent >= 70 ? 'bg-secondary' : reachPercent >= 30 ? 'bg-primary' : reachPercent > 0 ? 'bg-warning' : 'bg-error/40'}`}
+                              style={{ width: `${reachPercent}%` }}
+                            />
+                          </div>
+
+                          {/* Faction rows */}
+                          {relevantFactions.length === 0 ? (
+                            <div className="px-4 py-6 text-center text-sm font-mono text-on-surface-variant opacity-50 uppercase">
+                              No active sectors for {tier} tier
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-outline-variant/20 max-h-72 overflow-y-auto custom-scrollbar-thin">
+                              {relevantFactions.map(f => {
+                                const priceLocked = price > f.projected_ceiling_max;
+                                const priceRisky = !priceLocked && price > f.projected_ceiling_min;
+                                const brandGated = brandScore < f.brand_min;
+                                const isOpen = !priceLocked && !brandGated;
+                                const estVolume = isOpen ? (priceRisky ? f.projected_volume_min : f.projected_volume_max) : 0;
+
+                                let statusLabel = 'OPEN';
+                                let statusColor = 'text-secondary';
+                                let statusBg = 'bg-secondary/10';
+                                if (priceLocked && brandGated) { statusLabel = 'LOCKED'; statusColor = 'text-error'; statusBg = 'bg-error/10'; }
+                                else if (priceLocked) { statusLabel = 'OVER'; statusColor = 'text-error'; statusBg = 'bg-error/10'; }
+                                else if (brandGated) { statusLabel = 'BRAND'; statusColor = 'text-warning'; statusBg = 'bg-warning/10'; }
+                                else if (priceRisky) { statusLabel = 'RISKY'; statusColor = 'text-primary'; statusBg = 'bg-primary/10'; }
+
+                                return (
+                                  <FactionIntelRow
+                                    key={f.id}
+                                    f={f}
+                                    isOpen={isOpen}
+                                    priceLocked={priceLocked}
+                                    priceRisky={priceRisky}
+                                    brandGated={brandGated}
+                                    brandScore={brandScore}
+                                    price={price}
+                                    estVolume={estVolume}
+                                    statusLabel={statusLabel}
+                                    statusColor={statusColor}
+                                    statusBg={statusBg}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Summary footer */}
+                          {relevantFactions.length > 0 && (
+                            <div className="px-4 py-2.5 border-t border-outline-variant/20 bg-surface/60 flex justify-between items-center text-xs font-mono uppercase text-on-surface-variant">
+                              <span>Accessible Volume</span>
+                              <span className={`font-black ${overallColor}`}>~{reachableVolume.toLocaleString()} units ({reachPercent}%)</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ) : (
+                    );
+                  })() : (
                     <div className="p-10 border border-dashed border-outline-variant/50 bg-surface/20 rounded-sm flex items-center justify-center animate-in fade-in duration-300">
                       <div className="text-center space-y-2">
                         <div className={`text-sm font-bold font-mono uppercase tracking-widest ${decisions[tier].action === 'hold' ? 'text-on-surface' : 'text-error'}`}>
                           Protocol: {decisions[tier].action === 'hold' ? 'Inventory Buffer Engaged' : 'Asset Liquidation Confirmed'}
                         </div>
-                        <div className="text-[10px] font-mono text-on-surface-variant uppercase opacity-60 max-w-xs mx-auto">
-                          {decisions[tier].action === 'hold' 
-                            ? 'Stock will be carried over for future market distribution. Daily holding fees apply.' 
+                        <div className="text-xs font-mono text-on-surface-variant uppercase opacity-60 max-w-xs mx-auto">
+                          {decisions[tier].action === 'hold'
+                            ? 'Stock will be carried over for future market distribution. Daily holding fees apply.'
                             : 'Units will be permanently deconstructed for salvage. Revenue recovered per scrap table.'}
                         </div>
                       </div>
@@ -716,20 +1018,26 @@ export const Sales = () => {
             <div className="space-y-8 flex-1">
               <div className="space-y-4">
                 <div className="flex justify-between items-center group">
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors">Target Throttling</span>
+                  <Tooltip text="Number of drones queued for assembly this cycle. Set via the slider above. Cannot exceed bottleneck component stock.">
+                    <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors cursor-default flex items-center gap-1">Target Throttling <FiInfo size={10} className="opacity-30" /></span>
+                  </Tooltip>
                   <span className="text-base font-mono text-on-surface">{currentUnitsToAssemble} Units</span>
                 </div>
                 <div className="flex justify-between items-center group">
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors">Projected Throughput</span>
+                  <Tooltip text="Fraction of target units expected to complete assembly. Affected by machine conditions and workforce morale.">
+                    <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors cursor-default flex items-center gap-1">Projected Throughput <FiInfo size={10} className="opacity-30" /></span>
+                  </Tooltip>
                   <span className="text-base font-mono text-on-surface">100%</span>
                 </div>
-                
+
                 <div className="pt-6 border-t border-outline-variant/30">
-                   <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">Cycle Revenue Target</div>
-                   <div className="text-5xl font-display text-primary tracking-tighter transition-all hover:scale-105 origin-left">
-                     <span className="text-2xl mr-1 opacity-50 font-bold">$</span>
-                     {totalEstimate.toLocaleString()}
-                   </div>
+                  <Tooltip text="Sum of estimated revenue across all tiers using current decisions and the projected drone distribution. Not a guarantee — actual faction allocation happens at resolution." side="bottom">
+                    <div className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mb-2 cursor-default flex items-center gap-1">Cycle Revenue Target <FiInfo size={10} className="opacity-30" /></div>
+                  </Tooltip>
+                  <div className="text-5xl font-display text-primary tracking-tighter transition-all hover:scale-105 origin-left">
+                    <span className="text-2xl mr-1 opacity-50 font-bold">$</span>
+                    {totalEstimate.toLocaleString()}
+                  </div>
                 </div>
               </div>
 

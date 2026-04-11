@@ -191,3 +191,21 @@ class MemoryProcurement(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     team = relationship("Team", back_populates="memory_procurement")
+
+
+class Transaction(Base):
+    """
+    Historical log of every fund modification (credit or deduction).
+    Enables the "Financial Records" view with clear reasons.
+    """
+    __tablename__ = "transaction"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    team_id      = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"),
+                          nullable=False, index=True)
+    cycle_number = Column(Integer, nullable=False)
+    delta        = Column(Float,   nullable=False)
+    balance      = Column(Float,   nullable=False)
+    type         = Column(String(50), nullable=False)  # e.g. "Procurement", "Production", "Sales", "Event"
+    description  = Column(String(255), nullable=True)
+    created_at   = Column(DateTime, server_default=func.now())

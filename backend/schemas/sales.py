@@ -93,6 +93,7 @@ class LeaderboardRow(BaseModel):
     market_share:           float
     brand_score:            float
     operational_efficiency: float
+    liquid_cash:            float
 
 
 class Award(BaseModel):
@@ -130,6 +131,20 @@ class AssemblyProjectionOut(BaseModel):
 
 # ── Inventory snapshot ────────────────────────────────────────────────────────
 
+class TransactionOut(BaseModel):
+    id:           int
+    cycle_number: int
+    delta:        float
+    balance:      float
+    type:         str
+    description:  Optional[str] = None
+    created_at:   str
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
 class InventoryOut(BaseModel):
     """Summary of a team's own state — returned by GET /team/me."""
     funds:             float
@@ -142,6 +157,7 @@ class InventoryOut(BaseModel):
     morale:            float
     automation_level:  str
     has_gov_loan:      bool
+    transactions:      List[TransactionOut] = []
 
     model_config = {
         "from_attributes": True

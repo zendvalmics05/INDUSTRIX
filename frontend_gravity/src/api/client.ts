@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Base API instance
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://10.111.238.136:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   //baseURL: "https://unoccurring-amateurishly-mallie.ngrok-free.dev",
   headers: {
     'Content-Type': 'application/json',

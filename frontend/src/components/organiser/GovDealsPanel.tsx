@@ -14,7 +14,7 @@ const DEAL_TYPES = [
   "red_supply_sabotage", "red_price_inflation", "red_machine_sabotage",
   "red_infra_delay", "red_labour_strike", "red_labour_poach",
   "red_rnd_sabotage", "red_market_limit", "red_demand_suppression",
-  "red_price_pressure", "red_targeted_audit", "red_arbitrary_fine"
+  "red_price_pressure", "red_targeted_audit", "red_arbitrary_fine", "red_factory_destruction"
 ]
 
 const COMPONENTS = [

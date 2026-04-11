@@ -36,10 +36,10 @@ MIN_USABLE_GRADE: int = 1
 # mean_reduce      : subtracted from source quality_mean during draw
 # p_damage         : probability of partial damage event
 TRANSPORT: Dict[str, Dict] = {
-    "air":   {"base_cost": 30000, "var_cost": 0.2,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
-    "water": {"base_cost": 8000, "var_cost": 0.005, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
-    "rail":  {"base_cost": 4000,  "var_cost": 0.02,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
-    "road":  {"base_cost": 1000,  "var_cost": 0.04,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
+    "air":   {"base_cost": 25000, "var_cost": 0.45,  "sigma_add": 0.0, "p_damage": 0.00, "mean_reduce": 0.00, "vulnerability": 0.00},
+    "water": {"base_cost": 7500,  "var_cost": 0.015, "sigma_add": 9.0, "p_damage": 0.18, "mean_reduce": 4.00, "vulnerability": 0.50},
+    "rail":  {"base_cost": 2200,  "var_cost": 0.08,  "sigma_add": 3.5, "p_damage": 0.07, "mean_reduce": 0.50, "vulnerability": 0.80},
+    "road":  {"base_cost": 400,   "var_cost": 0.25,  "sigma_add": 6.0, "p_damage": 0.14, "mean_reduce": 1.50, "vulnerability": 1.00},
 }
 
 PARTIAL_DAMAGE_FRACTION: float = 0.25
@@ -49,21 +49,21 @@ PARTIAL_DAMAGE_PENALTY:  int   = 20
 # Keys: starting_grade, throughput, labour_required, degradation_rate,
 #       purchase_cost, scrap_value
 MACHINE_TIERS: Dict[str, Dict] = {
-    "basic":      {"grade": 40, "throughput": 200,  "labour": 4,  "degrade": 4.0, "buy": 15_000,   "scrap": 1_000},
-    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 3.0, "buy": 35_000,   "scrap": 3_000},
-    "industrial": {"grade": 75, "throughput": 700,  "labour": 10, "degrade": 2.0, "buy": 80_000,  "scrap": 8_000},
-    "precision":  {"grade": 90, "throughput": 1000, "labour": 20, "degrade": 1.2, "buy": 180_000,  "scrap": 25_000},
+    "basic":      {"grade": 40, "throughput": 200,  "labour": 4,  "degrade": 15.0, "buy": 15_000,   "scrap": 1_000},
+    "standard":   {"grade": 60, "throughput": 400,  "labour": 8,  "degrade": 12.0, "buy": 35_000,   "scrap": 3_000},
+    "industrial": {"grade": 75, "throughput": 700,  "labour": 10, "degrade": 8.0,  "buy": 80_000,  "scrap": 8_000},
+    "precision":  {"grade": 90, "throughput": 1000, "labour": 20, "degrade": 10.0, "buy": 180_000,  "scrap": 25_000},
 }
 MACHINE_MAX_CONDITION:    float = 100.0
 MACHINE_DEGRADED_AT:      float = 40.0
 CONDITION_GRADE_EXPONENT: float = 0.6
-OVERHAUL_RECOVERY_CAP:    float = 20.0
+OVERHAUL_RECOVERY_CAP:    float = 30.0
 
 MAINTENANCE_COST: Dict[str, float] = {
     "none": 0.0, "basic": 500.0, "full": 1_500.0, "overhaul": 5_000.0,
 }
 MAINTENANCE_DEGRADE_MULT: Dict[str, float] = {
-    "none": 1.0, "basic": 0.6, "full": 0.3, "overhaul": 0.1,
+    "none": 1.0, "basic": 0.4, "full": 0.1, "overhaul": 0.0,
 }
 
 # ── Automation ────────────────────────────────────────────────────────────────
@@ -120,8 +120,8 @@ COMPONENT_COMPLEXITY: Dict[str, Dict] = {
 
 # ── R&D ───────────────────────────────────────────────────────────────────────
 MAX_RND_LEVEL:           int   = 5
-RND_COST_PER_LEVEL:      float = 100_000.0
-RND_CYCLES_PER_LEVEL:    int   = 2
+RND_COST_PER_LEVEL:      float = 40_000.0
+RND_CYCLES_PER_LEVEL:    int   = 1
 RND_DECAY_PROBABILITY:   float = 0.05
 
 RND_QUALITY_BONUS:     float = 3.0   # per level: +3 to machine output mean
@@ -143,15 +143,16 @@ BLACK_MKT_DISCOVERY_BASE:     float = 0.55
 BLACK_MKT_FINE_MULTIPLIER:    float = 3.0
 
 BRAND_DECAY:                  float = 0.94
-BRAND_DELTA_PREMIUM_SELL:     float = 6.0
-BRAND_DELTA_STANDARD_SELL:    float = 1.5
-BRAND_DELTA_SUBSTANDARD_SELL: float = -5.0
-BRAND_DELTA_BLACK_MKT_FOUND:  float = -25.0
-BRAND_DELTA_BLACK_MKT_HIDDEN: float = -3.0
-BRAND_DELTA_AUDIT_PASS:       float = 4.0
-BRAND_DELTA_AUDIT_FAIL:       float = -18.0
-BRAND_DELTA_GOV_LOAN:         float = -8.0
-BRAND_DELTA_DEAL_FOUND:       float = -20.0
+# Brand now rises proportionally to how much below the faction price ceiling
+# a team sells. avg_discount_fraction × BRAND_DELTA_PRICE_MAX = brand gain.
+# e.g. selling at 50% of ceiling → +6 brand (half of max 12).
+BRAND_DELTA_PRICE_MAX:        float = 12.0
+BRAND_DELTA_BLACK_MKT_FOUND:  float = -15.0
+BRAND_DELTA_BLACK_MKT_HIDDEN: float = -1.0
+BRAND_DELTA_AUDIT_PASS:       float = 10.0
+BRAND_DELTA_AUDIT_FAIL:       float = -15.0
+BRAND_DELTA_GOV_LOAN:         float = -5.0
+BRAND_DELTA_DEAL_FOUND:       float = -10.0
 
 BRAND_TIERS: Dict[str, float] = {
     "poor": 0.0, "fair": 25.0, "good": 55.0, "excellent": 80.0,
@@ -183,7 +184,7 @@ DEAL_BRIBE_FLOOR: Dict[str, float] = {
     "red_supply_sabotage": 5_000, "red_price_inflation": 4_000,
     "green_priority_supply": 4_000, "green_subsidised_inputs": 3_000,
     "red_machine_sabotage": 8_000, "red_infra_delay": 6_000,
-    "green_fast_track_infra": 5_000, "red_labour_strike": 7_000,
+    "red_factory_destruction": 35_000, "green_fast_track_infra": 5_000, "red_labour_strike": 7_000,
     "red_labour_poach": 6_000, "red_rnd_sabotage": 8_000,
     "green_skilled_labour": 4_000, "green_research_grant": 12_000,
     "red_market_limit": 7_000, "red_demand_suppression": 6_000,
@@ -197,7 +198,7 @@ DEAL_BASE_DISCOVERY: Dict[str, float] = {
     "red_supply_sabotage": 0.12, "red_price_inflation": 0.08,
     "green_priority_supply": 0.06, "green_subsidised_inputs": 0.07,
     "red_machine_sabotage": 0.18, "red_infra_delay": 0.10,
-    "green_fast_track_infra": 0.08, "red_labour_strike": 0.14,
+    "red_factory_destruction": 0.35, "green_fast_track_infra": 0.08, "red_labour_strike": 0.14,
     "red_labour_poach": 0.13, "red_rnd_sabotage": 0.15,
     "green_skilled_labour": 0.06, "green_research_grant": 0.10,
     "red_market_limit": 0.20, "red_demand_suppression": 0.18,
@@ -317,9 +318,9 @@ DEFAULT_MARKET_FACTIONS: list = [
         "brand_min":       0.0,
     },
     {
-        "name":            "Rural Cooperatives",
+        "name":            "Wildlife Monitoring",
         "tier_preference": "substandard",
-        "price_ceiling":   2_500.0,
+        "price_ceiling":   2_400.0,
         "volume":          800,
         "flexibility":     0.9,
         "brand_min":       10.0,
@@ -331,6 +332,38 @@ DEFAULT_MARKET_FACTIONS: list = [
         "volume":          2000,
         "flexibility":     1.0,
         "brand_min":       5.0,
+    },
+    {
+        "name":            "Luxury Charter Services",
+        "tier_preference": "premium",
+        "price_ceiling":   9_800.0,
+        "volume":          100,
+        "flexibility":     0.1,
+        "brand_min":       85.0,
+    },
+    {
+        "name":            "Smart City Infrastructure",
+        "tier_preference": "standard",
+        "price_ceiling":   4_300.0,
+        "volume":          950,
+        "flexibility":     0.5,
+        "brand_min":       40.0,
+    },
+    {
+        "name":            "Agriculture Surveyors",
+        "tier_preference": "substandard",
+        "price_ceiling":   1_800.0,
+        "volume":          1200,
+        "flexibility":     0.7,
+        "brand_min":       0.0,
+    },
+    {
+        "name":            "Global Aerospace Security",
+        "tier_preference": "premium",
+        "price_ceiling":   8_500.0,
+        "volume":          220,
+        "flexibility":     0.3,
+        "brand_min":       72.0,
     },
 ]
 

@@ -24,7 +24,7 @@ function binGrades(arr: any): { scrap: number; bins: number[]; total: number } {
     bins.push(sum);
     usableTotal += sum;
   }
-  
+
   return { scrap, bins, total: usableTotal };
 }
 
@@ -47,7 +47,7 @@ function GradeHistogram({ arr, label, color = 'primary' }: { arr: number[]; labe
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="font-display text-xs tracking-widest uppercase text-on-surface-variant">{label}</span>
-        <span className="font-mono text-xs text-on-surface">{total} units</span>
+        <span className="font-mono text-xs text-on-surface">{total}</span>
       </div>
       <div className="flex items-end gap-[2px] h-10 bg-surface-highest/5 rounded-sm p-[2px] border border-outline-variant/10">
         {bins.map((count, i) => (
@@ -115,8 +115,8 @@ function ComponentSection({ slot }: { slot: ComponentSlotData }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <GradeHistogram arr={slot.raw_stock} label={`Raw Materials — ${rawTotal}`} color="tertiary" />
-        <GradeHistogram arr={slot.finished_stock} label={`Finished Components — ${finTotal}`} color="primary" />
+        <GradeHistogram arr={slot.raw_stock} label={`Raw Materials`} color="tertiary" />
+        <GradeHistogram arr={slot.finished_stock} label={`Finished Components`} color="primary" />
       </div>
 
       {slot.machines.length > 0 && (
@@ -134,7 +134,7 @@ export const Inventory = () => {
   const {
     funds, brandScore, brandTier, droneStockTotal, droneStock,
     components, hasGovLoan, workforceSize, skillLevel, morale, automationLevel,
-    fetchInventory, scrapRejectUnits, fundsLedger, clearLedger
+    fetchInventory, scrapRejectUnits, fundsLedger
   } = useInventoryStore();
 
   useEffect(() => {
@@ -218,41 +218,50 @@ export const Inventory = () => {
             <h2 className="font-display text-sm uppercase tracking-widest text-[#978d9e]">
               FINANCIAL RECORDS
             </h2>
-            {fundsLedger.length > 0 && (
-              <button
-                onClick={clearLedger}
-                className="font-display text-[10px] tracking-widest uppercase text-on-surface-variant hover:text-error transition-colors border border-outline-variant px-3 py-1"
-              >
-                CLEAR
-              </button>
-            )}
           </div>
 
           {reversedLedger.length === 0 ? (
             <div className="text-on-surface-variant font-mono text-xs italic py-4 text-center">
-              No fund movements recorded yet. Changes appear automatically.
+              No fund movements recorded yet. Transactions appear automatically after phase resolution.
             </div>
           ) : (
-            <div className="overflow-y-auto max-h-56">
+            <div className="overflow-y-auto max-h-80 custom-scrollbar-thin">
               <table className="w-full text-left font-mono text-xs">
                 <thead>
-                  <tr className="text-on-surface-variant font-medium border-b border-outline-variant sticky top-0 bg-surface-low">
-                    <th className="py-1.5 pl-2 font-normal w-28">TIME</th>
-                    <th className="py-1.5 font-normal text-right w-36">CHANGE</th>
-                    <th className="py-1.5 pr-2 font-normal text-right">BALANCE</th>
+                  <tr className="text-on-surface-variant font-medium border-b border-outline-variant sticky top-0 bg-surface-low z-10 transition-colors">
+                    <th className="py-2 pl-2 font-normal w-12">CYC</th>
+                    <th className="py-2 font-normal w-24">TIME</th>
+                    <th className="py-2 font-normal w-24">TYPE</th>
+                    <th className="py-2 font-normal">REASON / DESCRIPTION</th>
+                    <th className="py-2 font-normal text-right w-32">CHANGE</th>
+                    <th className="py-2 pr-2 font-normal text-right w-32">BALANCE</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reversedLedger.map((entry, idx) => (
                     <tr
-                      key={`${entry.timestamp}-${idx}`}
-                      className={`${idx % 2 === 0 ? 'bg-surface-highest/10' : ''} hover:bg-surface-highest/30 transition-colors`}
+                      key={`${entry.id}-${idx}`}
+                      className={`${idx % 2 === 0 ? 'bg-surface-highest/5' : ''} hover:bg-surface-highest/20 transition-colors border-b border-outline-variant/10`}
                     >
-                      <td className="py-1.5 pl-2 text-on-surface-variant">{entry.timestamp}</td>
-                      <td className={`py-1.5 text-right font-semibold ${entry.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {entry.delta > 0 ? '+' : ''}{entry.delta.toLocaleString(undefined, { minimumFractionDigits: 2 })} CU
+                      <td className="py-2 pl-2 text-on-surface-variant">{entry.cycle}</td>
+                      <td className="py-2 text-on-surface-variant opacity-70">{entry.timestamp}</td>
+                      <td className="py-2">
+                         <span className={`px-1.5 py-0.5 rounded-[2px] text-[9px] uppercase font-bold ${
+                           entry.type === 'Sales' ? 'bg-green-500/10 text-green-400' : 
+                           entry.type === 'Procurement' ? 'bg-tertiary/10 text-tertiary' : 
+                           entry.type === 'Production' ? 'bg-primary/10 text-primary' : 
+                           'bg-error/10 text-error'
+                         }`}>
+                           {entry.type}
+                         </span>
                       </td>
-                      <td className={`py-1.5 pr-2 text-right ${entry.balance < 0 ? 'text-error' : 'text-on-surface'}`}>
+                      <td className="py-2 text-on-surface truncate max-w-xs" title={entry.description}>
+                        {entry.description}
+                      </td>
+                      <td className={`py-2 text-right font-bold ${entry.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {entry.delta > 0 ? '+' : ''}{entry.delta.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className={`py-2 pr-2 text-right font-bold ${entry.balance < 0 ? 'text-error' : 'text-on-surface'}`}>
                         ${entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                     </tr>

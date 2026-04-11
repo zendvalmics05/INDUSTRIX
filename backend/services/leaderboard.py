@@ -75,13 +75,25 @@ def compute_leaderboard(
         )
         
         # 4. Outstanding loans
-        from models.deals import EventStatus, EventPhase
+        from models.deals import GovDeal, GovDealType, GovDealStatus, EventStatus
+        
+        # A. Public Repayment Events (e.g. from inter-team or auction loans)
         pending_repayments = db.query(Event).filter(
             Event.target_team_id == team.id,
             Event.event_type == EventType.LOAN_REPAYMENT,
             Event.status == EventStatus.PENDING
         ).all()
-        outstanding_loans = sum(ev.payload.get("amount", 0.0) for ev in pending_repayments if ev.payload)
+        event_debt = sum(ev.payload.get("amount", 0.0) for ev in pending_repayments if ev.payload)
+        
+        # B. Government Loan Contracts (GovDeals) - these only generate events as they expire
+        active_gov_loans = db.query(GovDeal).filter(
+            GovDeal.buyer_team_id == team.id,
+            GovDeal.deal_type == GovDealType.GREEN_GOV_LOAN,
+            GovDeal.status == GovDealStatus.PENDING
+        ).all()
+        gov_debt = sum(deal.effect_payload.get("principal", 0.0) for deal in active_gov_loans if deal.effect_payload)
+        
+        outstanding_loans = event_debt + gov_debt
         
         enterprise_value = ev_funds + machine_value + drone_stock_value - outstanding_loans
         
@@ -101,11 +113,12 @@ def compute_leaderboard(
             "market_share":           market_share,
             "brand_score":            inv.brand_score,
             "operational_efficiency": operational_efficiency,
+            "liquid_cash":            inv.funds,
         }
 
         norm = {
             k: v / LEADERBOARD_NORMALISE.get(k, 1.0)
-            for k, v in raw.items()
+            for k, v in raw.items() if k in LEADERBOARD_WEIGHTS
         }
 
         composite = sum(
@@ -119,7 +132,7 @@ def compute_leaderboard(
             "team_id":          team.id,
             "team_name":        team.name,
             "composite_score":  round(composite, 4),
-            **{k: round(v, 4) if "share" in k or "margin" in k or "efficiency" in k else round(v, 2) for k, v in raw.items()},
+            **{k: (round(v, 7) if "efficiency" in k else round(v, 4) if "share" in k or "margin" in k else round(v, 2)) for k, v in raw.items()},
         })
 
     rows.sort(key=lambda r: r["composite_score"], reverse=True)

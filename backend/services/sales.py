@@ -26,8 +26,7 @@ from core.config import (
     ASSEMBLY_BETA, ASSEMBLY_LAMBDA, TIER_FALLBACK,
     BASE_MARKET_CAPACITY, BLACK_MKT_DISCOVERY_BASE, BLACK_MKT_FINE_MULTIPLIER,
     BRAND_DECAY, BRAND_DELTA_BLACK_MKT_FOUND, BRAND_DELTA_BLACK_MKT_HIDDEN,
-    BRAND_DELTA_PREMIUM_SELL, BRAND_DELTA_STANDARD_SELL,
-    BRAND_DELTA_SUBSTANDARD_SELL, BRAND_TIERS,
+    BRAND_DELTA_PRICE_MAX, BRAND_TIERS,
     HOLDING_COST_PER_UNIT, MAX_MARKET_SHARE, PRICE_ELASTICITY,
     PRICE_PREMIUM_NORMAL, PRICE_PREMIUM_SELL, PRICE_REJECT_BLACK_MKT,
     PRICE_REJECT_REWORK, PRICE_REJECT_SCRAP, PRICE_STANDARD, PRICE_SUBSTANDARD, QUALITY_MAX,
@@ -112,19 +111,19 @@ def compute_brand_tier(score: float) -> BrandTier:
 
 
 def _update_brand(
-    inventory:        Inventory,
-    tier_sold:        Dict[str, int],
-    black_mkt_found:  bool,
-    black_mkt_hidden: bool,
+    inventory:           Inventory,
+    avg_discount_frac:   float,   # (price_ceiling - sell_price) / price_ceiling, averaged over all sold units
+    black_mkt_found:     bool,
+    black_mkt_hidden:    bool,
 ) -> float:
+    """
+    Brand rises when you sell below the faction price ceiling (good value).
+    avg_discount_frac = 0  → sold at exactly the ceiling → no gain.
+    avg_discount_frac = 1  → sold at free → BRAND_DELTA_PRICE_MAX gain (theoretical).
+    Black-market penalties are unchanged.
+    """
     old_score = inventory.brand_score
-    delta = 0.0
-    if tier_sold.get("premium", 0) > 0:
-        delta += BRAND_DELTA_PREMIUM_SELL
-    if tier_sold.get("standard", 0) > 0:
-        delta += BRAND_DELTA_STANDARD_SELL
-    if tier_sold.get("substandard", 0) > 0:
-        delta += BRAND_DELTA_SUBSTANDARD_SELL
+    delta = avg_discount_frac * BRAND_DELTA_PRICE_MAX
     if black_mkt_found:
         delta += BRAND_DELTA_BLACK_MKT_FOUND
     elif black_mkt_hidden:
@@ -341,6 +340,11 @@ def _run_faction_market(
     # Allocation accumulator: team_id → total units sold across all factions.
     allocation: Dict[int, int] = {inp["team_id"]: 0 for inp in team_inputs}
 
+    # Discount accumulator: team_id → (total weighted discount, total units)
+    # weighted_discount += units_bought * (1 - sell_price / faction.price_ceiling)
+    discount_numerator:   Dict[int, float] = {inp["team_id"]: 0.0 for inp in team_inputs}
+    discount_denominator: Dict[int, int]   = {inp["team_id"]: 0   for inp in team_inputs}
+
     # Mutable supply pool: {team_id: {tier_val: remaining_units}}
     supply: Dict[int, Dict[str, int]] = {}
     for inp in team_inputs:
@@ -355,7 +359,7 @@ def _run_faction_market(
         # Apply global demand multiplier to faction volume.
         effective_volume = int(faction.volume * cycle.market_demand_multiplier)
         remaining        = effective_volume
-        faction_purchases: Dict[int, int] = {}
+        faction_purchases: Dict[int, Dict[str, int]] = {} # team_id -> {tier_val: units}
         current_tier     = faction.tier_preference
         first_pass       = True
 
@@ -395,8 +399,16 @@ def _run_faction_market(
                 take = min(c["available"], remaining)
                 supply[c["team_id"]][current_tier] -= take
                 allocation[c["team_id"]]           += take
-                faction_purchases[c["team_id"]]     = (
-                    faction_purchases.get(c["team_id"], 0) + take
+                # Accumulate discount data for brand calculation
+                ceiling = faction.price_ceiling
+                if ceiling > 0:
+                    disc = (ceiling - c["price"]) / ceiling
+                    discount_numerator[c["team_id"]]   += take * disc
+                    discount_denominator[c["team_id"]] += take
+                if c["team_id"] not in faction_purchases:
+                    faction_purchases[c["team_id"]] = {}
+                faction_purchases[c["team_id"]][current_tier] = (
+                    faction_purchases[c["team_id"]].get(current_tier, 0) + take
                 )
                 remaining -= take
 
@@ -420,19 +432,26 @@ def _run_faction_market(
             "purchases":        faction_purchases,
         })
 
-    return allocation, faction_detail
+    # Compute average discount fractions: {team_id: float 0.0-1.0}
+    avg_discount: Dict[int, float] = {
+        tid: (discount_numerator[tid] / discount_denominator[tid])
+             if discount_denominator[tid] > 0 else 0.0
+        for tid in allocation
+    }
+
+    return allocation, faction_detail, avg_discount
 
 
 def _market_allocation(
     db:          "Session",
     cycle,
     team_inputs: List[Dict],
-    market_capacity: int,   # kept for backward compat with event modifiers — not used directly
-) -> Tuple[Dict[int, int], List[Dict]]:
+    market_capacity: int,
+) -> Tuple[Dict[int, int], List[Dict], Dict[int, float]]:
     """
     Facade kept so callers don't need to change.
     Routes to _run_faction_market internally.
-    Returns (allocation_dict, faction_detail).
+    Returns (allocation_dict, faction_detail, avg_discount_by_team).
     """
     return _run_faction_market(db, cycle, team_inputs)
 
@@ -483,6 +502,8 @@ def _resolve_financial_events(
     fin_events = _load_phase_events(db, team.id, cycle.id, EventPhase.FINANCIAL)
     adjustment = 0.0
 
+    from models.procurement import Transaction
+
     for ev in fin_events:
         p = ev.payload or {}
         if ev.event_type == EventType.LOAN_INTEREST:
@@ -490,6 +511,14 @@ def _resolve_financial_events(
             lender_id = p.get("lender_team_id")
             inventory.funds -= amount
             adjustment      -= amount
+            
+            # Record Transaction
+            db.add(Transaction(
+                team_id=inventory.team_id, cycle_number=cycle.cycle_number,
+                delta=-amount, balance=inventory.funds,
+                type="Event", description=f"Loan Interest Payment ({'Gov' if not lender_id else 'Private'})"
+            ))
+
             if lender_id:
                 lender_inv = (
                     db.query(Inventory)
@@ -498,11 +527,31 @@ def _resolve_financial_events(
                 )
                 if lender_inv:
                     lender_inv.funds += amount
+                    db.add(Transaction(
+                        team_id=lender_id, cycle_number=cycle.cycle_number,
+                        delta=amount, balance=lender_inv.funds,
+                        type="Event", description=f"Interest Dividend from Team {inventory.team_id}"
+                    ))
         elif ev.event_type == EventType.LOAN_REPAYMENT:
             amount    = p.get("amount", 0.0)
             lender_id = p.get("lender_team_id")
             inventory.funds -= amount
             adjustment      -= amount
+            
+            # Record Transaction
+            db.add(Transaction(
+                team_id=inventory.team_id, cycle_number=cycle.cycle_number,
+                delta=-amount, balance=inventory.funds,
+                type="Event", description=f"Loan Principal Repayment ({'Gov' if not lender_id else 'Private'})"
+            ))
+
+            # Mark associated contract as APPLIED
+            if ev.gov_deal_id:
+                from models.deals import GovDeal, GovDealStatus
+                contract = db.query(GovDeal).filter(GovDeal.id == ev.gov_deal_id).first()
+                if contract:
+                    contract.status = GovDealStatus.APPLIED
+
             if lender_id:
                 lender_inv = (
                     db.query(Inventory)
@@ -511,6 +560,11 @@ def _resolve_financial_events(
                 )
                 if lender_inv:
                     lender_inv.funds += amount
+                    db.add(Transaction(
+                        team_id=lender_id, cycle_number=cycle.cycle_number,
+                        delta=amount, balance=lender_inv.funds,
+                        type="Event", description=f"Principal Recovery from Team {inventory.team_id}"
+                    ))
             else:
                 # Government loan: check for any other pending gov loan events
                 from core.enums import EventStatus
@@ -533,10 +587,20 @@ def _resolve_financial_events(
             fine             = p.get("fine_amount", 0.0)
             inventory.funds -= fine
             adjustment      -= fine
+            db.add(Transaction(
+                team_id=inventory.team_id, cycle_number=cycle.cycle_number,
+                delta=-fine, balance=inventory.funds,
+                type="Event", description=f"Ministry Fine: {ev.event_type.replace('_', ' ').title()}"
+            ))
         elif ev.event_type == EventType.TAX_EVASION_REFUND:
             refund           = total_costs * p.get("refund_fraction", 0.0)
             inventory.funds += refund
             adjustment      += refund
+            db.add(Transaction(
+                team_id=inventory.team_id, cycle_number=cycle.cycle_number,
+                delta=refund, balance=inventory.funds,
+                type="Event", description="Tax Evasion Refund (Fiscal Subsidy)"
+            ))
 
     return adjustment, fin_events
 
@@ -732,8 +796,9 @@ def resolve_sales(
         })
 
     market_capacity = int(BASE_MARKET_CAPACITY * cycle.market_demand_multiplier)
-    allocation, faction_detail = _market_allocation(db, cycle, all_inputs, market_capacity)
+    allocation, faction_detail, avg_discount_by_team = _market_allocation(db, cycle, all_inputs, market_capacity)
     can_sell        = allocation.get(team.id, 0)
+    avg_discount    = avg_discount_by_team.get(team.id, 0.0)
 
     # ── Government guaranteed purchase ────────────────────────────────────────
     gov_revenue = 0.0
@@ -859,11 +924,37 @@ def resolve_sales(
     _mark_applied(fin_events)
 
     # ── Brand update ──────────────────────────────────────────────────────────
-    brand_delta = _update_brand(inventory, tier_sold, black_mkt_found, black_mkt_hidden)
+    brand_delta = _update_brand(inventory, avg_discount, black_mkt_found, black_mkt_hidden)
 
     # ── Update inventory ──────────────────────────────────────────────────────
     inventory.drone_stock      = new_drone_stock
+    # Note: final_net_revenue = gross - holding_cost - black_mkt_fine
+    # However, financial events (loans/fines) were ALREADY processed inside inventory.funds 
+    # within _resolve_financial_events.
     inventory.funds            = round(inventory.funds + final_net_revenue, 2)
+    
+    # Record Transactions
+    from models.procurement import Transaction
+    if total_revenue_gross > 0:
+        db.add(Transaction(
+            team_id=team.id, cycle_number=cycle.cycle_number,
+            delta=round(total_revenue_gross, 2), balance=inventory.funds,
+            type="Sales", description=f"Drone Sales Revenue ({sold_so_far} units)"
+        ))
+    if holding_cost > 0:
+        db.add(Transaction(
+            team_id=team.id, cycle_number=cycle.cycle_number,
+            delta=-round(holding_cost, 2), balance=inventory.funds,
+            type="Sales", description=f"Inventory Storage Fees ({total_held} units held)"
+        ))
+    if black_mkt_fine > 0:
+        # Note: the fine was already deducted from final_net_revenue, which we just added.
+        db.add(Transaction(
+            team_id=team.id, cycle_number=cycle.cycle_number,
+            delta=-round(black_mkt_fine, 2), balance=inventory.funds,
+            type="Sales", description="Black Market Interdiction Penalty"
+        ))
+
     inventory.cumulative_profit = round(
         inventory.cumulative_profit + final_net_revenue, 2
     )
@@ -876,19 +967,24 @@ def resolve_sales(
     # ── Restructure faction detail for frontend ──────────────────────────────
     faction_sales = []
     for f in faction_detail:
-        units = f["purchases"].get(team.id, 0)
-        if units > 0:
-            # Note: tier_preference might not be perfectly granular if multiple tiers 
-            # were sold to same faction, but it works for 99% of simulation cases.
-            tier = f["tier_preference"]
-            price = price_map.get(tier, 0.0)
-            faction_sales.append({
-                "faction":        f["faction"],
-                "tier":           tier,
-                "units_sold":     units,
-                "price_per_unit": price,
-                "revenue":        units * price
-            })
+        purchases = f["purchases"].get(team.id, {})
+        if not purchases:
+            continue
+        
+        # Calculate precise revenue considering potential tier step-downs
+        f_units = 0
+        f_rev   = 0.0
+        for t_val, t_units in purchases.items():
+            f_units += t_units
+            f_rev   += t_units * price_map.get(t_val, 0.0)
+
+        faction_sales.append({
+            "faction":        f["faction"],
+            "tier":           f["tier_preference"],
+            "units_sold":     f_units,
+            "price_per_unit": round(f_rev / f_units, 2) if f_units > 0 else 0,
+            "revenue":        round(f_rev, 2)
+        })
 
     return {
         "cycle_number":      cycle.cycle_number,

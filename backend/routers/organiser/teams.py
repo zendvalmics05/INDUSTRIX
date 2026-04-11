@@ -395,6 +395,20 @@ def adjust_funds(
         raise HTTPException(500, "Inventory not found.")
 
     inv.funds = round(inv.funds + amount, 2)
+    
+    # Record Transaction
+    from models.procurement import Transaction
+    from models.game import Cycle
+    current_cycle = db.query(Cycle).filter(Cycle.game_id == game.id).order_by(Cycle.cycle_number.desc()).first()
+    db.add(Transaction(
+        team_id=team.id,
+        cycle_number=current_cycle.cycle_number if current_cycle else 0,
+        delta=round(amount, 2),
+        balance=inv.funds,
+        type="Admin",
+        description=reason
+    ))
+    
     db.commit()
 
     return {
@@ -499,6 +513,132 @@ def repay_loan(
         "funds_after":   round(inv.funds, 2),
         "loans_cancelled": len(pending_loans),
         "gov_flag_cleared": clear_gov_flag,
+    }
+
+
+# ── Loan injection (Organiser manual bailout) ─────────────────────────────────
+
+from pydantic import BaseModel as _BM
+
+class LoanInjection(_BM):
+    amount:           float
+    interest_rate:    float = 0.10
+    duration_cycles:  int   = 3
+    notes:            str   = "Emergency Organiser Loan"
+
+
+@router.post("/teams/{team_id}/inject-loan",
+             summary="Manual loan injection by organiser (Immediate credit + Scheduled interest).")
+def inject_loan(
+    team_id: int,
+    body:    LoanInjection,
+    game:    Game    = Depends(verify_organiser),
+    db:      Session = Depends(get_db),
+):
+    """
+    Organiser-level loan provision.
+    1. Immediately adds `amount` to team's funds.
+    2. Flags them as having a gov loan (blocking backroom deals until repayment).
+    3. Schedules the interest and principal repayment events into future cycles.
+    """
+    team = db.query(Team).filter(
+        Team.id == team_id, Team.game_id == game.id
+    ).first()
+    if not team:
+        raise HTTPException(404, "Team not found.")
+
+    inv = db.query(Inventory).filter(Inventory.team_id == team.id).first()
+    if not inv:
+        raise HTTPException(500, "Inventory not found.")
+
+    # 1. Immediate credit
+    inv.funds = round(inv.funds + body.amount, 2)
+    inv.has_gov_loan = True  # Blocks backroom deals
+    
+    # Record Transaction
+    from models.procurement import Transaction
+    # Find current cycle
+    current_cycle = (
+        db.query(Cycle)
+        .filter(Cycle.game_id == game.id)
+        .order_by(Cycle.cycle_number.desc())
+        .first()
+    )
+    if not current_cycle:
+        raise HTTPException(400, "No active cycle found.")
+
+    db.add(Transaction(
+        team_id=team.id,
+        cycle_number=current_cycle.cycle_number,
+        delta=round(body.amount, 2),
+        balance=inv.funds,
+        type="Loan",
+        description=f"Loan Disbursement: {body.notes}"
+    ))
+
+    # 2. Find current cycle
+    current_cycle = (
+        db.query(Cycle)
+        .filter(Cycle.game_id == game.id)
+        .order_by(Cycle.cycle_number.desc())
+        .first()
+    )
+    if not current_cycle:
+        raise HTTPException(400, "No active cycle found.")
+
+    # 3. Create persistent Loan record (GovDeal)
+    from models.deals import GovDeal
+    from core.enums import GovDealStatus, GovDealType
+    
+    interest_per_cycle = round(body.amount * body.interest_rate, 2)
+    
+    loan_record = GovDeal(
+        game_id               = game.id,
+        buyer_team_id         = team.id,
+        deal_type             = GovDealType.GREEN_GOV_LOAN,
+        status                = GovDealStatus.PENDING,
+        bribe_amount          = 0.0,
+        effect_scale          = 1.0,
+        effect_payload        = {
+            "principal":          body.amount,
+            "interest_per_cycle": interest_per_cycle,
+            "duration":           body.duration_cycles,
+            "interest_rate":      body.interest_rate
+        },
+        discovery_probability = 0.0,
+        cycles_active         = 0,
+        negotiated_cycle_id   = current_cycle.id,
+        notes                 = body.notes
+    )
+    db.add(loan_record)
+    db.flush() # get id
+
+    # 4. Generate the interest event for the CURRENT cycle immediately
+    # So it shows up in the "Projected Obligations" for this cycle.
+    from services.deals import _create_event_rows_for_deal
+    from core.enums import EventPhase, EventType
+    
+    spec = {
+        "phase": EventPhase.FINANCIAL,
+        "event_type": EventType.LOAN_INTEREST,
+        "payload": {
+            "amount": interest_per_cycle,
+            "lender_team_id": None
+        },
+        "target_team_id": team.id
+    }
+    _create_event_rows_for_deal(db, game, current_cycle, loan_record, [spec], team.id)
+    loan_record.cycles_active = 1
+    
+    db.commit()
+
+    return {
+        "team":             team.name,
+        "loan_credited":    body.amount,
+        "funds_after":      inv.funds,
+        "interest":         interest_per_cycle,
+        "duration":         body.duration_cycles,
+        "note":             "Loan recorded. Interest/repayment events will be generated as cycles advance."
     }
 
 
@@ -691,9 +831,14 @@ def financial_risks(
     suspiciously_low = []
 
     for t_id, data in team_data.items():
-        if data["funds"] < 0:
+        # Use rounded funds for categorization to match UI and prevent float noise issues
+        rounded_funds = round(data["funds"], 2)
+        
+        if rounded_funds < 0:
             cash_crunch.append(data)
-        elif data["funds"] < low_threshold and data["funds"] >= 0:
+        elif rounded_funds <= low_threshold:
+            # We use <= low_threshold here. If they have exactly 0 or just round to 0, 
+            # they correctly fall into "suspiciously_low" if the threshold is > 0.
             suspiciously_low.append(data)
 
     # Sort them by most dire first

@@ -484,10 +484,15 @@ def resolve_production(
         # ── Per-component machine sabotage event ──────────────────────────────
         for ev in events:
             p = ev.payload or {}
-            if ev.event_type == EventType.MACHINE_SABOTAGE:
+            if ev.event_type in (EventType.MACHINE_SABOTAGE, EventType.FACTORY_DESTRUCTION):
                 if p.get("component", comp_val) == comp_val and machines:
-                    # Hit the machine with the lowest condition
-                    victim = min(machines, key=lambda m: m.condition)
+                    # MACHINE_SABOTAGE hits the victim with LOWEST condition (vulnerable)
+                    # FACTORY_DESTRUCTION hits the victim with HIGHEST condition (maximum impact)
+                    if ev.event_type == EventType.FACTORY_DESTRUCTION:
+                        victim = max(machines, key=lambda m: m.condition)
+                    else:
+                        victim = min(machines, key=lambda m: m.condition)
+
                     victim.condition = max(
                         0.0, victim.condition - p.get("condition_hit", 0.0)
                     )
@@ -542,7 +547,7 @@ def resolve_production(
             machines = [m for m in machines if m.is_active]
             all_machines[comp_val] = machines
 
-        # ── R&D investment ────────────────────────────────────────────────────
+        # ── R&D investment (Applied immediately for next cycle visibility) ─────
         if rnd_invest:
             focus  = rnd_invest.get("focus") if isinstance(rnd_invest, dict) \
                      else rnd_invest.focus
@@ -551,7 +556,12 @@ def resolve_production(
             cost   = levels * RND_COST_PER_LEVEL
             inventory.funds -= cost
             total_rnd_cost  += cost
-            _schedule_rnd_event(db, team, cycle, comp_val, focus, levels, cost)
+            
+            # Apply immediately so it takes effect THIS resolution and is visible NEXT cycle
+            attr = f"rnd_{focus}"
+            if hasattr(slot, attr):
+                current = getattr(slot, attr)
+                setattr(slot, attr, min(MAX_RND_LEVEL, current + levels))
 
         if not machines:
             component_summaries[comp_val] = {
@@ -615,9 +625,50 @@ def resolve_production(
     # ── Mark events applied ───────────────────────────────────────────────────
     _mark_applied(events)
     
+    # ── Clear one-time decisions from memory so they don't carry over ─────────
+    if mem:
+        new_dec = dict(decisions)
+        for comp_key in [c.value for c in ComponentType]:
+            if comp_key in new_dec:
+                # We clone to avoid mutating the original dict in the same scope if needed
+                comp_dec = dict(new_dec[comp_key])
+                comp_dec["buy_machine"] = None
+                comp_dec["rnd_invest"] = None
+                new_dec[comp_key] = comp_dec
+        
+        new_dec["upgrade_automation"] = None
+        mem.decisions = new_dec
+    
     funds_spent = initial_funds - inventory.funds
     if funds_spent > 0:
         inventory.cumulative_production_cost = round(inventory.cumulative_production_cost + funds_spent, 2)
+        
+        # Record Transactions
+        from models.procurement import Transaction
+        if wage_total > 0:
+            db.add(Transaction(
+                team_id=team.id, cycle_number=cycle.cycle_number,
+                delta=-round(wage_total, 2), balance=inventory.funds,
+                type="Production", description="Workforce Payroll"
+            ))
+        if total_maint_cost > 0:
+            db.add(Transaction(
+                team_id=team.id, cycle_number=cycle.cycle_number,
+                delta=-round(total_maint_cost, 2), balance=inventory.funds,
+                type="Production", description="Fleet Maintenance Protocol"
+            ))
+        if total_buy_cost > 0:
+            db.add(Transaction(
+                team_id=team.id, cycle_number=cycle.cycle_number,
+                delta=-round(total_buy_cost, 2), balance=inventory.funds,
+                type="Production", description="Equipment Procurement (New Hardware)"
+            ))
+        if total_rnd_cost > 0:
+            db.add(Transaction(
+                team_id=team.id, cycle_number=cycle.cycle_number,
+                delta=-round(total_rnd_cost, 2), balance=inventory.funds,
+                type="Production", description="R&D Lab Investment"
+            ))
 
     db.flush()
 
@@ -649,33 +700,36 @@ def _schedule_rnd_event(
     levels:    int,
     cost:      float,
 ) -> None:
-    """Find the arrival cycle and create an RND_INVESTMENT event."""
-    from models.game import Cycle as CycleModel, Game
-    from services.deals import create_rnd_event
-
-    target_number = cycle.cycle_number + RND_CYCLES_PER_LEVEL
-    target_cycle  = (
-        db.query(CycleModel)
-        .filter(
-            CycleModel.game_id      == team.game_id,
-            CycleModel.cycle_number == target_number,
-        )
-        .first()
+    """Queue RND_INVESTMENT in GovDeal lazy table."""
+    from models.deals import GovDeal
+    from core.enums import GovDealType, GovDealStatus
+    
+    # We use GovDeal as a persistent queue since events can't be created 
+    # for cycles that don't exist yet. The R&D upgrade is tracked as a 
+    # self-buff pending deal and processed by the engine on cycle switch.
+    delay = max(1, RND_CYCLES_PER_LEVEL)
+    
+    deal = GovDeal(
+        game_id=team.game_id,
+        buyer_team_id=team.id,
+        target_team_id=team.id,
+        deal_type=GovDealType.GREEN_RESEARCH_GRANT,
+        status=GovDealStatus.PENDING,
+        bribe_amount=cost,
+        effect_scale=1.0,
+        effect_payload={
+            "component": component,
+            "focus": focus,
+            "levels": levels,
+            "delay": delay
+        },
+        discovery_probability=0.0,
+        cycles_active=0,
+        repeat_count=1,
+        negotiated_cycle_id=cycle.id,
+        notes="system_rnd_queue"
     )
-    if target_cycle is None:
-        return   # Cycle doesn't exist yet — deferred
-
-    game_obj = db.query(Game).filter(Game.id == team.game_id).first()
-    create_rnd_event(
-        db           = db,
-        game         = game_obj,
-        team         = team,
-        target_cycle = target_cycle,
-        component    = component,
-        focus        = focus,
-        levels       = levels,
-        cost         = cost,
-    )
+    db.add(deal)
 
 
 def calculate_projections(
@@ -763,13 +817,30 @@ def calculate_projections(
             tier = buy.get("tier") if isinstance(buy, dict) else buy
             cost_buy = MACHINE_TIERS.get(tier, {}).get("buy", 0.0)
             # Add virtual machine for grade/tp projections
-            machines.append(Machine(tier=tier, condition=100.0))
+            machines.append(Machine(tier=tier, condition=100.0, component=comp_val))
             
+        # --- PROJECTED CONDITION ---
+        # We must NOT mutate the real Machine objects in the session.
+        # We'll compute projected conditions for this machines list.
+        projected_machines = []
+        for m in machines:
+            cfg = MACHINE_TIERS.get(m.tier, MACHINE_TIERS["standard"])
+            p_cond = m.condition
+            if maint == "overhaul":
+                recovery = min(OVERHAUL_RECOVERY_CAP, MACHINE_MAX_CONDITION - p_cond)
+                p_cond = min(MACHINE_MAX_CONDITION, p_cond + recovery)
+            else:
+                degrade_mult = MAINTENANCE_DEGRADE_MULT.get(maint, 1.0)
+                p_cond = max(0.0, p_cond - (cfg["degrade"] * degrade_mult))
+            
+            # Create a shallow virtual machine for the grade calculator
+            projected_machines.append(Machine(tier=m.tier, condition=p_cond, component=comp_val))
+        
         cost_maint = MAINTENANCE_COST.get(maint, 0.0) * len(machines)
         total_outflow += cost_maint + cost_rnd + cost_buy
         
-        tp_max = int(total_throughput(machines) * labour_factor)
-        eff_grade = _effective_grade_for_machines(machines, slot.rnd_quality, comp_val)
+        tp_max = int(total_throughput(projected_machines) * labour_factor)
+        eff_grade = _effective_grade_for_machines(projected_machines, slot.rnd_quality, comp_val)
         sigma = _compute_sigma(upgrade_auto, inventory.skill_level, slot.rnd_consistency, comp_val)
         
         comp_projections[comp_val] = {

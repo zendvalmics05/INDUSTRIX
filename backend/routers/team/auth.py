@@ -92,6 +92,16 @@ def my_inventory(
     if inv is None:
         from fastapi import HTTPException
         raise HTTPException(404, "Inventory not found.")
+    
+    from models.procurement import Transaction
+    transactions = (
+        db.query(Transaction)
+        .filter(Transaction.team_id == team.id)
+        .order_by(Transaction.id.desc())
+        .limit(50)
+        .all()
+    )
+
     return InventoryOut(
         funds             = inv.funds,
         brand_score       = inv.brand_score,
@@ -105,4 +115,16 @@ def my_inventory(
                             if hasattr(inv.automation_level, "value")
                             else str(inv.automation_level),
         has_gov_loan      = inv.has_gov_loan,
+        transactions      = [
+            {
+                "id":           t.id,
+                "cycle_number": t.cycle_number,
+                "delta":        t.delta,
+                "balance":      t.balance,
+                "type":         t.type,
+                "description":  t.description,
+                "created_at":   t.created_at.isoformat() if t.created_at else ""
+            }
+            for t in transactions
+        ]
     )

@@ -45,6 +45,8 @@ class MarketFaction(Base):
     tier_preference  = Column(String(20),  nullable=False, default="standard")
     price_ceiling    = Column(Float,       nullable=False, default=3_000.0)
     volume           = Column(Integer,     nullable=False, default=200)
+    last_cycle_price = Column(Float,       nullable=True)
+    last_cycle_volume = Column(Integer,     nullable=True)
     flexibility      = Column(Float,       nullable=False, default=0.3)
     brand_min        = Column(Float,       nullable=False, default=0.0)
     is_active        = Column(Boolean,     nullable=False, default=True)

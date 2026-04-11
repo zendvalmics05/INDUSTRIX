@@ -137,6 +137,7 @@ def _deal_to_events(
     buyer_team_id:  int,
     target_team_id: Optional[int],
     target_component: Optional[str] = None,
+    bribe_amount:   float = 0.0,
 ) -> List[Dict]:
     """
     Map a GovDealType to one or more (phase, event_type, payload,
@@ -178,6 +179,10 @@ def _deal_to_events(
         "red_machine_sabotage": [(
             EventPhase.PRODUCTION, EventType.MACHINE_SABOTAGE,
             p({"condition_hit": min(90.0, 30.0 * scale)}), rival_id,
+        )],
+        "red_factory_destruction": [(
+            EventPhase.PRODUCTION, EventType.FACTORY_DESTRUCTION,
+            p({"condition_hit": 100.0}), rival_id,
         )],
         "red_infra_delay": [(
             EventPhase.PRODUCTION, EventType.INFRA_DELAY,
@@ -265,6 +270,17 @@ def _deal_to_events(
             EventPhase.PROCUREMENT, EventType.RESOURCE_BLOCKADE,
             p({"cost_multiplier": 1.0 + 0.50 * scale}), rival_id,
         )],
+        "green_gov_loan": [(
+            # Loans generate events across multiple cycles.
+            # Usually handled by specific endpoint, but if invoked via Backroom:
+            # treat bribe as principal.
+            EventPhase.FINANCIAL, EventType.LOAN_INTEREST,
+            p({
+                "principal": bribe_amount, 
+                "interest_per_cycle": round(bribe_amount * 0.15, 2), 
+                "duration": 5
+            }), self_id,
+        )],
     }
 
     return [
@@ -319,7 +335,7 @@ def record_gov_deal(
             f"for bribe {bribe_amount:.0f}."
         )
 
-    is_offensive = deal_type.value.startswith("red_")
+    is_offensive = deal_type.value.startswith("red_") or deal_type.value.startswith("blue_")
     if is_offensive and target_team is None:
         raise ValueError(f"'{deal_type.value}' requires a target team.")
     if not is_offensive and target_team is not None:
@@ -349,6 +365,7 @@ def record_gov_deal(
         buyer_team.id,
         target_team.id if target_team else None,
         target_component,
+        bribe_amount,
     )
     effect_payload = event_specs[0]["payload"] if event_specs else {}
 
@@ -440,6 +457,46 @@ def create_events_for_pending_deals(
 
     count = 0
     for deal in pending_deals:
+            
+        # Special handling for persistent loans
+        if deal.deal_type == GovDealType.GREEN_GOV_LOAN:
+             duration = deal.effect_payload.get("duration", 1)
+             
+             # If we've already generated all cycles, stop.
+             if deal.cycles_active >= duration:
+                 # Note: status is set to APPLIED in sales resolution after repayment
+                 continue
+             
+             # Interest event for EVERY cycle of the loan
+             spec_int = {
+                 "phase": EventPhase.FINANCIAL,
+                 "event_type": EventType.LOAN_INTEREST,
+                 "payload": {
+                     "amount": deal.effect_payload.get("interest_per_cycle"),
+                     "lender_team_id": None
+                 },
+                 "target_team_id": deal.buyer_team_id
+             }
+             _create_event_rows_for_deal(db, game, new_cycle, deal, [spec_int], deal.buyer_team_id)
+             deal.cycles_active += 1
+             
+             # Repayment event only on the VERY LAST cycle
+             if deal.cycles_active == duration:
+                 spec_rep = {
+                     "phase": EventPhase.FINANCIAL,
+                     "event_type": EventType.LOAN_REPAYMENT,
+                     "payload": {
+                         "amount": deal.effect_payload.get("principal"),
+                         "lender_team_id": None
+                     },
+                     "target_team_id": deal.buyer_team_id
+                 }
+                 _create_event_rows_for_deal(db, game, new_cycle, deal, [spec_rep], deal.buyer_team_id)
+                 # We do NOT set APPLIED here anymore. It happens in sales resolution.
+             
+             count += 1
+             continue
+
         # Check if Event rows already exist for this deal
         existing = (
             db.query(Event)
@@ -447,6 +504,10 @@ def create_events_for_pending_deals(
             .count()
         )
         if existing > 0:
+            if deal.deal_type not in (GovDealType.BLUE_ESPIONAGE,):
+                 # single-cycle deals that already have an event are done
+                 # (unless they are discoverable multiple times?)
+                 pass
             continue
 
         event_specs = _deal_to_events(
@@ -455,10 +516,16 @@ def create_events_for_pending_deals(
             None,
             deal.buyer_team_id,
             deal.target_team_id,
-            deal.effect_payload.get("component"), # Preserve targeting
+            deal.effect_payload.get("component"),  # Preserve targeting
+            deal.bribe_amount,
         )
         _create_event_rows_for_deal(db, game, new_cycle, deal, event_specs,
                                      deal.buyer_team_id)
+        
+        # Mark non-persistent deals as applied once their event is spawned
+        if deal.deal_type != GovDealType.BLUE_ESPIONAGE:
+            deal.status = GovDealStatus.APPLIED
+        
         count += 1
 
     db.flush()
@@ -732,8 +799,8 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
         )
         if latest_cycle:
             restitution_note = (
-                f"Ministry investigation confirmed hostile interference by "
-                f"an external entity. Restitution of {deal.bribe_amount:,.0f} CU "
+                f"Ministry auditors have traced unauthorized operational interference to "
+                f"a rival conglomerate. A restitution award of {deal.bribe_amount:,.0f} CU "
                 f"has been credited to your accounts."
             )
             ev_restitution = Event(
@@ -743,13 +810,13 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
                 event_type     = EventType.ASSET_EXCHANGE,
                 payload        = {
                     "notes":     restitution_note,
-                    "direction": "inbound",
-                    "from":      "Ministry Directorate — Restitution",
+                    "direction": "Inbound Receipt",
+                    "from":      "Ministry Directorate — Restitution Award",
                 },
                 target_team_id = deal.target_team_id,
                 source_team_id = None,
                 status         = EventStatus.APPLIED,
-                notes          = "Restitution following confirmed discovery of hostile deal.",
+                notes          = "Restitution following confirmed discovery of hostile arrangement.",
             )
             db.add(ev_restitution)
 
@@ -895,14 +962,14 @@ def execute_inter_team_exchange(
         _make_event(
             db=db, game_id=team_a.game_id, cycle_id=cycle_id,
             phase=EventPhase.FINANCIAL, event_type=EventType.ASSET_EXCHANGE,
-            payload={"notes": notes, "direction": "inbound", "from": team_a.name},
+            payload={"notes": notes or "Corporate Asset Exchange — Received", "direction": "Inbound Receipt", "from": team_a.name},
             target_team_id=team_b.id, source_team_id=team_a.id,
             notes=notes
         )
         _make_event(
             db=db, game_id=team_a.game_id, cycle_id=cycle_id,
             phase=EventPhase.FINANCIAL, event_type=EventType.ASSET_EXCHANGE,
-            payload={"notes": notes, "direction": "inbound", "from": team_b.name},
+            payload={"notes": notes or "Corporate Asset Exchange — Received", "direction": "Inbound Receipt", "from": team_b.name},
             target_team_id=team_a.id, source_team_id=team_b.id,
             notes=notes
         )

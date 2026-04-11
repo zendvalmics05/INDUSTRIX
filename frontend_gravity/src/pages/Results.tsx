@@ -1,8 +1,31 @@
-import { useEffect, useMemo } from 'react';
+import React, { Fragment, useState, useEffect, useMemo } from 'react';
 import { useResultsStore, useGameStore } from '../store';
 import { StatusChip } from '../components/SharedComponents';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCrown, FaArrowUp, FaAward, FaUserSecret, FaFingerprint, FaNetworkWired, FaServer, FaGem, FaBiohazard, FaGhost, FaSkullCrossbones, FaChartPie } from 'react-icons/fa';
+import { FiZap, FiInfo } from 'react-icons/fi';
+
+const Tooltip = ({ text, children }: { text: string; children: React.ReactNode }) => {
+  const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null);
+  return (
+    <div
+      className="inline-flex"
+      onMouseEnter={(e) => setPos({ x: e.clientX, y: e.clientY })}
+      onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+      onMouseLeave={() => setPos(null)}
+    >
+      {children}
+      {pos && (
+        <div
+          className="fixed z-[9999] w-max max-w-[280px] px-3 py-2 rounded-sm bg-surface-highest border border-outline-variant text-[11px] font-mono text-on-surface leading-snug shadow-2xl shadow-black/60 pointer-events-none"
+          style={{ left: pos.x + 12, top: pos.y - 8 }}
+        >
+          {text}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MarketShareChart = ({ rows }: { rows: import('../types').LeaderboardRow[] }) => {
   const colors = ['#DAB9FF', '#EFC050', '#8A63D2', '#FF8E8B', '#54C6EB', '#4ADE80', '#A78BFA', '#F472B6', '#34D399'];
@@ -79,6 +102,7 @@ const MarketShareChart = ({ rows }: { rows: import('../types').LeaderboardRow[] 
 export const Results = () => {
   const { phase, teamName } = useGameStore();
   const { cycleNumber, isFinal, rows, awards, fetchLeaderboard } = useResultsStore();
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -204,27 +228,6 @@ export const Results = () => {
               </div>
             </div>
           </motion.div>
-
-          {/* Market Share Visualization Row */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-surface-low border border-outline-variant/20 p-6 backdrop-blur-xl flex flex-col relative group rounded-sm shadow-xl mt-2 mb-2"
-          >
-            <div className="flex items-center justify-between mb-4 relative z-10 w-full">
-              <div className="flex items-center space-x-3">
-                <FaChartPie className="text-tertiary text-xl" />
-                <h3 className="font-display font-black tracking-widest uppercase text-base bg-gradient-to-r from-tertiary to-tertiary/70 bg-clip-text text-transparent">Global Market Share</h3>
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-on-surface-variant bg-surface-high/50 border border-outline-variant/10 px-3 py-1.5 rounded">
-                Live Distribution
-              </div>
-            </div>
-            <div className="w-full flex align-center justify-center relative z-10 py-6 pl-4 border-t border-outline-variant/10">
-              <MarketShareChart rows={sortedRows} />
-            </div>
-          </motion.div>
           </>
         )}
       </AnimatePresence>
@@ -237,14 +240,14 @@ export const Results = () => {
           <table className="w-full text-left font-mono text-sm border-separate border-spacing-y-3 px-6 pb-12">
             <thead className="sticky top-0 bg-surface-low/95 backdrop-blur-md z-20">
               <tr className="text-outline text-[11px] uppercase tracking-[0.2em]">
-                <th className="py-6 pl-6 font-bold uppercase">Rank</th>
-                <th className="py-6 px-4 font-bold uppercase">Team Authority</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Composite</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Net Margin</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Ent. Value</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Brand</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Ops Efficiency</th>
-                <th className="py-6 px-4 font-bold uppercase text-right">Market Share</th>
+                <th className="py-3 pl-6 font-bold uppercase">Rank</th>
+                <th className="py-3 px-4 font-bold uppercase">Team Authority</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Net Margin</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Ent. Value</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Cash</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Brand</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Ops Efficiency</th>
+                <th className="py-3 px-4 font-bold uppercase text-right">Market Share</th>
               </tr>
             </thead>
             <tbody>
@@ -252,90 +255,179 @@ export const Results = () => {
                 const isOwnTeam = teamName && row.team_name === teamName;
                 const isWinner = row.rank === 1;
                 const isTopThree = row.rank <= 3;
+                const isExpanded = expandedRow === row.team_name;
 
                 // Bottom-to-top reveal animation logic
                 const totalRows = sortedRows.length;
                 const revealDelay = (totalRows - 1 - idx) * 0.12;
 
                 return (
-                  <motion.tr
-                    key={row.team_name}
-                    initial={{ opacity: 0, x: -10, filter: 'blur(8px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    transition={{
-                      duration: 0.7,
-                      delay: revealDelay,
-                      ease: [0.33, 1, 0.68, 1]
-                    }}
-                    className={`group relative transition-all duration-300
-                      ${isWinner
-                        ? 'bg-gradient-to-r from-tertiary/20 to-surface-high border-tertiary/40 shadow-[0_4px_20px_-2px_rgba(239,192,80,0.15)] ring-1 ring-tertiary/20'
-                        : isOwnTeam
-                          ? 'bg-gradient-to-r from-primary/20 to-surface-high border-primary/40 ring-1 ring-primary/30 shadow-[0_4px_15px_-2px_rgba(218,185,255,0.1)]'
-                          : 'bg-surface-high/40 border-outline-variant/10 hover:bg-surface-high/60 border hover:border-outline-variant/30'
-                      }
-                    `}
-                  >
-                    <td className="py-6 pl-6 relative">
-                      <div className="flex items-center gap-4">
-                        <span className={`text-3xl font-display font-black tracking-tighter w-12
-                          ${isWinner ? 'text-tertiary' : isOwnTeam ? 'text-primary' : isTopThree ? 'text-secondary' : 'text-outline'}
-                        `}>
-                          {row.rank.toString().padStart(2, '0')}
+                  <Fragment key={row.team_name}>
+                    <motion.tr
+                      initial={{ opacity: 0, x: -10, filter: 'blur(8px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      transition={{
+                        duration: 0.7,
+                        delay: revealDelay,
+                        ease: [0.33, 1, 0.68, 1]
+                      }}
+                      onClick={() => setExpandedRow(isExpanded ? null : row.team_name)}
+                      className={`group relative transition-all duration-300 cursor-pointer
+                        ${isWinner
+                          ? 'bg-gradient-to-r from-tertiary/20 to-surface-high border-tertiary/40 shadow-[0_4px_20px_-2px_rgba(239,192,80,0.15)] ring-1 ring-tertiary/20'
+                          : isOwnTeam
+                            ? 'bg-gradient-to-r from-primary/20 to-surface-high border-primary/40 ring-1 ring-primary/30 shadow-[0_4px_15px_-2px_rgba(218,185,255,0.1)]'
+                            : 'bg-surface-high/40 border-outline-variant/10 hover:bg-surface-high/60 border hover:border-outline-variant/30 text-on-surface'
+                        }
+                        ${isExpanded ? 'bg-surface-highest/80 ring-2 ring-primary/50' : ''}
+                      `}
+                    >
+                      <td className="py-3 pl-6 relative">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xl font-display font-black tracking-tighter w-10
+                            ${isWinner ? 'text-tertiary' : isOwnTeam ? 'text-primary' : isTopThree ? 'text-secondary' : 'text-outline'}
+                          `}>
+                            {row.rank.toString().padStart(2, '0')}
+                          </span>
+                          {isWinner && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -20 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{ delay: revealDelay + 0.4, type: 'spring', stiffness: 200 }}
+                            >
+                              <FaCrown className="text-tertiary text-2xl drop-shadow-[0_0_10px_rgba(239,192,80,0.8)]" />
+                            </motion.div>
+                          )}
+                          {isTopThree && !isWinner && (
+                            <FaAward className={`${row.rank === 2 ? 'text-slate-300' : 'text-orange-400'} text-lg opacity-80`} />
+                          )}
+                        </div>
+                      </td>
+                      <td className={`py-3 px-4 font-display text-base tracking-normal
+                        ${isWinner ? 'text-tertiary font-black' : isOwnTeam ? 'text-primary font-bold' : 'text-on-surface'}
+                      `}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="uppercase">{row.team_name}</span>
+                          {isOwnTeam && (
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-primary/80 font-mono font-bold">PLAYER OPERATING UNIT</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right text-on-surface-variant font-mono text-sm">
+                        <span className={`font-bold ${row.net_margin < 0 ? 'text-error/80' : 'text-primary/90'}`}>
+                          {(row.net_margin * 100).toFixed(1)}%
                         </span>
-                        {isWinner && (
-                          <motion.div
-                            initial={{ scale: 0, rotate: -20 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ delay: revealDelay + 0.4, type: 'spring', stiffness: 200 }}
-                          >
-                            <FaCrown className="text-tertiary text-2xl drop-shadow-[0_0_10px_rgba(239,192,80,0.8)]" />
-                          </motion.div>
-                        )}
-                        {isTopThree && !isWinner && (
-                          <FaAward className={`${row.rank === 2 ? 'text-slate-300' : 'text-orange-400'} text-lg opacity-80`} />
-                        )}
-                      </div>
-                    </td>
-                    <td className={`py-6 px-4 font-display text-lg tracking-normal
-                      ${isWinner ? 'text-tertiary font-black' : isOwnTeam ? 'text-primary font-bold' : 'text-on-surface'}
-                    `}>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="uppercase">{row.team_name}</span>
-                        {isOwnTeam && (
-                          <span className="text-[9px] uppercase tracking-[0.2em] text-primary/80 font-mono font-bold">PLAYER OPERATING UNIT</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-6 px-4 text-right">
-                      <span className={`font-display text-2xl font-bold ${isWinner ? 'text-tertiary' : isOwnTeam ? 'text-primary' : 'text-on-surface'}`}>
-                        {row.composite_score?.toFixed(1) || 0}
-                      </span>
-                    </td>
-                    <td className="py-6 px-4 text-right text-on-surface-variant font-mono text-base">
-                      <span className={`font-bold ${row.net_margin < 0 ? 'text-error/80' : 'text-primary/90'}`}>
-                        {(row.net_margin * 100).toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className={`py-6 px-4 text-right font-bold font-mono text-base text-on-surface`}>
-                      <span className="opacity-60 text-[10px] mr-0.5">$</span>
-                      {row.enterprise_value?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="py-6 px-4 text-right text-on-surface font-mono">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <span className="text-base">{row.brand_score?.toFixed(1) || 0}</span>
-                        {row.brand_score > 50 && <FaArrowUp className="text-[10px] text-primary animate-bounce opacity-80" />}
-                      </div>
-                    </td>
-                    <td className="py-6 px-4 text-right text-on-surface font-mono text-base">
-                       {row.operational_efficiency > 0 ? (
-                         <>{(row.operational_efficiency * 10000).toFixed(2)} <span className="text-[10px] opacity-50 block leading-tight">U/${'10k'}</span></>
-                       ) : '0'}
-                    </td>
-                    <td className="py-6 px-4 text-right text-tertiary font-mono text-base font-bold">
-                      {(row.market_share * 100).toFixed(1)}%
-                    </td>
-                  </motion.tr>
+                      </td>
+                      <td className={`py-3 px-4 text-right font-bold font-mono text-sm text-on-surface`}>
+                        <span className="opacity-60 text-[10px] mr-0.5">$</span>
+                        {row.enterprise_value?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="py-3 px-4 text-right text-on-surface-variant font-mono text-sm">
+                        <span className={`font-bold ${(row.liquid_cash ?? 0) < 0 ? 'text-error/80' : 'text-primary/90'}`}>
+                          <span className="opacity-60 text-[10px] mr-0.5">$</span>
+                          {(row.liquid_cash ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right text-on-surface font-mono">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-sm">{row.brand_score?.toFixed(1) || 0}</span>
+                          {row.brand_score > 50 && <FaArrowUp className="text-[10px] text-primary animate-bounce opacity-80" />}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right text-on-surface font-mono text-sm">
+                         {row.operational_efficiency > 0 ? (
+                           <>{(row.operational_efficiency * 10000).toFixed(2)} <span className="text-[10px] opacity-50 block leading-tight">U/${'10k'}</span></>
+                         ) : '0'}
+                      </td>
+                      <td className="py-3 px-4 text-right text-tertiary font-mono text-sm font-bold">
+                        {(row.market_share * 100).toFixed(1)}%
+                      </td>
+                    </motion.tr>
+
+                    {/* Breakdown Animation */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.tr
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="bg-black/40 border-b border-primary/20"
+                        >
+                          <td colSpan={8} className="p-0">
+                            <div className="p-8 grid grid-cols-1 md:grid-cols-5 gap-4">
+                              {
+                                [
+                                {
+                                  label: 'Net Margin',
+                                  raw: `${(row.net_margin * 100).toFixed(1)}%`,
+                                  normal: '100%', weight: '30%',
+                                  score: (row.net_margin * 30).toFixed(1),
+                                  tooltip: 'How much of every dollar earned stays as profit after all costs. A high net margin means the company runs lean and efficient — it is the single most watched metric by investors and boards.'
+                                },
+                                {
+                                  label: 'Ent. Value',
+                                  raw: `$${row.enterprise_value.toLocaleString()}`,
+                                  normal: '$2M', weight: '25%',
+                                  score: ((row.enterprise_value / 2000000) * 25).toFixed(1),
+                                  tooltip: 'The total worth of the company if it were sold today — cash, machines, stock, minus debts. Enterprise value is what acquirers pay attention to. A high score here means the company has built real, lasting assets.'
+                                },
+                                {
+                                  label: 'Market Share',
+                                  raw: `${(row.market_share * 100).toFixed(1)}%`,
+                                  normal: '100%', weight: '20%',
+                                  score: (row.market_share * 20).toFixed(1),
+                                  tooltip: 'Proportion of total industry units sold by this company. Dominant market share signals competitive strength and customer preference — companies with high share are harder to displace.'
+                                },
+                                {
+                                  label: 'Brand Integrity',
+                                  raw: row.brand_score.toFixed(1),
+                                  normal: '100', weight: '15%',
+                                  score: ((row.brand_score / 100) * 15).toFixed(1),
+                                  tooltip: 'How much the market trusts this company. Strong brand commands price premiums, survives scandals, and unlocks access to premium buyers. Damaged by quality failures or illegal activity, and hard to rebuild.'
+                                },
+                                {
+                                  label: 'Ops Efficiency',
+                                  raw: (row.operational_efficiency * 10000).toFixed(2),
+                                  normal: '100', weight: '10%',
+                                  score: ((row.operational_efficiency / 0.01) * 10).toFixed(1),
+                                  tooltip: 'Output per unit of operational spend — a measure of how well the company converts investment into product. High efficiency implies smart automation, low waste, and disciplined production.'
+                                }
+                                ].map((stat) => (
+                                <div key={stat.label} className="bg-surface-highest/30 p-4 border-l-2 border-primary/50">
+                                  <Tooltip text={stat.tooltip}>
+                                    <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2 flex items-center gap-1.5 cursor-default">
+                                      {stat.label}
+                                      <FiInfo size={10} className="opacity-40 flex-shrink-0" />
+                                    </div>
+                                  </Tooltip>
+                                  <div className="flex justify-between items-baseline mb-1">
+                                    <span className={`font-bold ${parseFloat(stat.raw) < 0 ? 'text-error/90' : 'text-on-surface'}`}>{stat.raw}</span>
+                                    <span className={`text-xs font-mono ${parseFloat(stat.score) < 0 ? 'text-error' : 'text-primary'}`}>
+                                      {parseFloat(stat.score) > 0 ? '+' : ''}{stat.score}
+                                    </span>
+                                  </div>
+                                  <div className="h-1 w-full bg-black/20 mt-2">
+                                    <div 
+                                      className={`h-full shadow-[0_0_8px_rgba(218,185,255,0.4)] ${parseFloat(stat.score) < 0 ? 'bg-error/40' : 'bg-primary/40'}`} 
+                                      style={{ width: `${Math.max(0, Math.min(100, (parseFloat(stat.score) / (parseInt(stat.weight) / 100 * 100)) * 100))}%` }}
+                                    ></div>
+                                  </div>
+                                  <div className="text-[8px] mt-2 opacity-40 uppercase">Weight: {stat.weight} | Target: {stat.normal}</div>
+                                </div>
+                              ))}
+                              <div className="col-span-1 md:col-span-5 pt-4 mt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                                <p className="text-on-surface-variant italic">
+                                  <FiZap className="inline mr-1 text-primary" />
+                                  Formula: Sum of (Raw / Normalisation) × Weight. Normalisation targets reflect industry benchmarks.
+                                </p>
+                                <span className="text-primary font-black uppercase tracking-[0.2em]">Authority Audit Complete</span>
+                              </div>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      )}
+                    </AnimatePresence>
+                  </Fragment>
                 );
               })}
 
@@ -362,6 +454,22 @@ export const Results = () => {
           </table>
         </div>
 
+        {/* Market Share — always shown in backroom, informational only */}
+        <div className="mt-4 bg-surface-low border border-outline-variant/20 p-6 flex flex-col relative rounded-sm shadow-xl">
+          <div className="flex items-center justify-between mb-4 w-full">
+            <div className="flex items-center space-x-3">
+              <FaChartPie className="text-tertiary text-xl" />
+              <h3 className="font-display font-black tracking-widest uppercase text-base bg-gradient-to-r from-tertiary to-tertiary/70 bg-clip-text text-transparent">Global Market Share</h3>
+            </div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-on-surface-variant bg-surface-high/50 border border-outline-variant/10 px-3 py-1.5 rounded">
+              Informational — not a ranking factor
+            </div>
+          </div>
+          <div className="w-full flex items-center justify-center py-6 pl-4 border-t border-outline-variant/10">
+            <MarketShareChart rows={sortedRows} />
+          </div>
+        </div>
+
         {/* Endgame Superlatives */}
         {phase === 'game_over' && awards && awards.length > 0 && (
           <div className="p-8 border-t border-outline-variant/30 bg-surface-low/80">
@@ -373,8 +481,8 @@ export const Results = () => {
                 </h2>
                 <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-outline-variant/50"></div>
              </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {awards.map((award: any, i: number) => (
                   <motion.div
                     key={award.category}
@@ -401,7 +509,7 @@ export const Results = () => {
                   </motion.div>
                 ))}
              </div>
-          </div>
+           </div>
         )}
       </div>
     </div>
