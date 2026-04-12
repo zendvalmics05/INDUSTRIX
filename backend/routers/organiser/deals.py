@@ -213,6 +213,35 @@ def create_inter_team_loan(
     if borrower_inv:
         borrower_inv.funds += body.principal
 
+    # Record Transactions
+    from models.procurement import Transaction
+    # Use the current_cycle fetched later or fetch now
+    temp_current_cycle = (
+        db.query(Cycle)
+        .filter(Cycle.game_id == game.id)
+        .order_by(Cycle.cycle_number.desc())
+        .first()
+    )
+    if temp_current_cycle:
+        if lender_inv:
+            db.add(Transaction(
+                team_id=lender.id,
+                cycle_number=temp_current_cycle.cycle_number,
+                delta=-round(body.principal, 2),
+                balance=lender_inv.funds,
+                type="Loan",
+                description=f"Loan Disbursement to {borrower.name}"
+            ))
+        if borrower_inv:
+            db.add(Transaction(
+                team_id=borrower.id,
+                cycle_number=temp_current_cycle.cycle_number,
+                delta=round(body.principal, 2),
+                balance=borrower_inv.funds,
+                type="Loan",
+                description=f"Loan Received from {lender.name}"
+            ))
+
     # Create immediate principal receipt notifications
     from models.deals import Event
     from core.enums import EventPhase, EventType, EventStatus
@@ -310,6 +339,24 @@ def create_gov_loan(
         inv.funds        += body.principal
         inv.has_gov_loan  = True
         inv.brand_score   = max(0.0, inv.brand_score + BRAND_DELTA_GOV_LOAN)
+
+        # Record Transaction
+        from models.procurement import Transaction
+        temp_current_cycle = (
+            db.query(Cycle)
+            .filter(Cycle.game_id == game.id)
+            .order_by(Cycle.cycle_number.desc())
+            .first()
+        )
+        if temp_current_cycle:
+            db.add(Transaction(
+                team_id=borrower.id,
+                cycle_number=temp_current_cycle.cycle_number,
+                delta=round(body.principal, 2),
+                balance=inv.funds,
+                type="Loan",
+                description="Gov Loan Principal Received"
+            ))
 
     current_cycle = (
         db.query(Cycle)

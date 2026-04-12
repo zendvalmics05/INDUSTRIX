@@ -227,7 +227,12 @@ def get_notifications(
             Event.target_team_id == team.id,
             Event.cycle_id.in_(cycle_ids),
             Event.status == EventStatus.APPLIED,
-            Event.event_type.in_([EventType.TALENT_THEFT, EventType.RESOURCE_BLOCKADE])
+            Event.event_type.in_([
+                EventType.TALENT_THEFT, 
+                EventType.RESOURCE_BLOCKADE,
+                EventType.FACTORY_DESTRUCTION,
+                EventType.MACHINE_SABOTAGE
+            ])
         )
         .all()
     )

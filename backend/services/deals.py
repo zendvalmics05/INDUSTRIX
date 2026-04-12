@@ -54,7 +54,7 @@ from core.enums import (
 )
 from models.deals import Event, GovDeal
 from models.game import Cycle
-from models.procurement import Inventory
+from models.procurement import Inventory, Transaction
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -370,6 +370,17 @@ def record_gov_deal(
     effect_payload = event_specs[0]["payload"] if event_specs else {}
 
     inv.funds -= bribe_amount
+
+    # Record Transaction for bribe
+    from models.procurement import Transaction
+    db.add(Transaction(
+        team_id=buyer_team.id,
+        cycle_number=cycle.cycle_number,
+        delta=-round(bribe_amount, 2),
+        balance=inv.funds,
+        type="Event",
+        description=f"Backroom Bribe: {deal_type.value.replace('_', ' ').title()}"
+    ))
 
     deal = GovDeal(
         game_id               = game.id,
@@ -754,10 +765,22 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
     Works for both PENDING deals (effect not yet fired) and
     APPLIED deals (effect already fired — post-hoc discovery via code submission).
     """
+    from models.procurement import Transaction
     if deal.status in (GovDealStatus.DISCOVERED, GovDealStatus.CANCELLED):
         return
 
     fine = round(deal.bribe_amount * DEAL_FINE_MULTIPLIER, 2)
+    
+    # ── Cycle lookup for transaction records ────────────────────────────────
+    latest_cycle = (
+        db.query(Cycle)
+        .filter(Cycle.game_id == deal.game_id)
+        .order_by(Cycle.cycle_number.desc())
+        .first()
+    )
+    cycle_num = latest_cycle.cycle_number if latest_cycle else 0
+
+    # ── Aggressor penalty (Fine + Brand loss) ────────────────────────────────
     buyer_inv = (
         db.query(Inventory)
         .filter(Inventory.team_id == deal.buyer_team_id)
@@ -766,6 +789,16 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
     if buyer_inv:
         buyer_inv.funds -= fine
         buyer_inv.brand_score = max(0.0, buyer_inv.brand_score + BRAND_DELTA_DEAL_FOUND)
+
+        # Record Transaction for fine
+        db.add(Transaction(
+            team_id=deal.buyer_team_id,
+            cycle_number=cycle_num,
+            delta=-round(fine, 2),
+            balance=buyer_inv.funds,
+            type="Event",
+            description=f"Discovery Fine: {deal.deal_type.value.replace('_', ' ').title()}"
+        ))
 
     # Cancel any still-PENDING Event rows for this deal (pre-effect discovery)
     (
@@ -790,13 +823,17 @@ def apply_discovery(db: Session, deal: GovDeal) -> None:
         if victim_inv:
             victim_inv.funds = round(victim_inv.funds + deal.bribe_amount, 2)
 
+            # Record Transaction for restitution
+            db.add(Transaction(
+                team_id=deal.target_team_id,
+                cycle_number=cycle_num,
+                delta=round(deal.bribe_amount, 2),
+                balance=victim_inv.funds,
+                type="Event",
+                description="Discovery Restitution (Global Ministry Fund)"
+            ))
+        
         # Create a notification event for the victim so it shows in frontend
-        latest_cycle = (
-            db.query(Cycle)
-            .filter(Cycle.game_id == deal.game_id)
-            .order_by(Cycle.cycle_number.desc())
-            .first()
-        )
         if latest_cycle:
             restitution_note = (
                 f"Ministry auditors have traced unauthorized operational interference to "

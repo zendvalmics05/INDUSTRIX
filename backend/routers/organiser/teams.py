@@ -506,6 +506,19 @@ def repay_loan(
     if clear_gov_flag:
         inv.has_gov_loan = False
 
+    # Record Transaction
+    from models.procurement import Transaction
+    from models.game import Cycle
+    current_cycle = db.query(Cycle).filter(Cycle.game_id == game.id).order_by(Cycle.cycle_number.desc()).first()
+    db.add(Transaction(
+        team_id=team.id,
+        cycle_number=current_cycle.cycle_number if current_cycle else 0,
+        delta=-round(amount, 2),
+        balance=inv.funds,
+        type="Loan",
+        description="Loan Repayment"
+    ))
+
     db.commit()
     return {
         "team":          team.name,

@@ -62,14 +62,14 @@ export default function OrganiserPage() {
 
         <div className="flex items-center gap-6 text-xs">
           <div className="flex gap-4">
-             <div className="flex flex-col items-end">
-               <span className="text-white/40 text-[9px]">CYCLE</span>
-               <span className="text-purple-400">{gameSummary?.cycle?.number || '0'}</span>
-             </div>
-             <div className="flex flex-col items-end">
-               <span className="text-white/40 text-[9px]">PHASE</span>
-               <span className="text-purple-400 uppercase">{gameSummary?.cycle?.phase || 'NONE'}</span>
-             </div>
+            <div className="flex flex-col items-end">
+              <span className="text-white/40 text-[9px]">CYCLE</span>
+              <span className="text-purple-400">{gameSummary?.cycle?.number || '0'}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-white/40 text-[9px]">PHASE</span>
+              <span className="text-purple-400 uppercase">{gameSummary?.cycle?.phase || 'NONE'}</span>
+            </div>
           </div>
           <div className="h-4 w-px bg-white/10 mx-2" />
           <a
@@ -78,10 +78,10 @@ export default function OrganiserPage() {
             rel="noopener noreferrer"
             className="text-purple-400 border border-purple-500/30 px-3 py-1 hover:bg-purple-500/10 rounded flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
           >
-            <FiZap size={12} className="text-purple-500" /> 
+            <FiZap size={12} className="text-purple-500" />
             <span className="text-[10px] tracking-[0.15em] font-bold">SPECTATOR_VIEW</span>
           </a>
-          <button 
+          <button
             onClick={() => { logout(); navigate('/admin/login'); }}
             className="text-red-400 border border-red-900/50 px-3 py-1 hover:bg-red-950/30 rounded"
           >
@@ -92,7 +92,7 @@ export default function OrganiserPage() {
 
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
-        
+
         {/* Sidebar Nav */}
         <div className="w-48 border-r border-white/5 flex flex-col gap-1 p-2 bg-black/20">
           <NavBtn active={activeTab === 'cycle'} onClick={() => setActiveTab('cycle')} label="CYCLE_MGMT" />
@@ -118,11 +118,10 @@ function NavBtn({ active, onClick, label, color = "text-purple-400" }: any) {
   return (
     <button
       onClick={onClick}
-      className={`text-left px-4 py-2 text-[11px] font-bold tracking-widest transition-all duration-200 border-l-2 ${
-        active 
-          ? `bg-purple-500/10 border-purple-500 ${color}` 
-          : 'border-transparent text-white/40 hover:text-white/60 hover:bg-white/5'
-      }`}
+      className={`text-left px-4 py-2 text-[11px] font-bold tracking-widest transition-all duration-200 border-l-2 ${active
+        ? `bg-purple-500/10 border-purple-500 ${color}`
+        : 'border-transparent text-white/40 hover:text-white/60 hover:bg-white/5'
+        }`}
     >
       {label}
     </button>
@@ -130,11 +129,11 @@ function NavBtn({ active, onClick, label, color = "text-purple-400" }: any) {
 }
 
 // STUB COMPONENTS - Will implement properly in following steps or together
-function CyclePanel({ summary, onUpdate }: any) { 
+function CyclePanel({ summary, onUpdate }: any) {
   const { secret } = useAdminStore()
   const advance = async () => {
     if (!confirm("Advance Game Phase?")) return
-    await api.post('/organiser/cycle/advance', {}, { headers: { 'x-organiser-secret': secret }})
+    await api.post('/organiser/cycle/advance', {}, { headers: { 'x-organiser-secret': secret } })
     onUpdate()
   }
   return (
@@ -151,27 +150,27 @@ function CyclePanel({ summary, onUpdate }: any) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="border border-white/5 p-4 rounded bg-black/40">
-           <h3 className="text-[10px] text-white/40 mb-2 uppercase">Current Events</h3>
-           <div className="space-y-2">
-             {Object.entries(summary?.pending_events_by_phase || {}).map(([phase, count]: any) => (
-                <div key={phase} className="flex justify-between text-xs border-b border-white/5 pb-1">
-                  <span className="opacity-60">{phase}</span>
-                  <span className={count > 0 ? 'text-green-400' : 'opacity-30'}>{count}</span>
-                </div>
-             ))}
-           </div>
+          <h3 className="text-[10px] text-white/40 mb-2 uppercase">Current Events</h3>
+          <div className="space-y-2">
+            {Object.entries(summary?.pending_events_by_phase || {}).map(([phase, count]: any) => (
+              <div key={phase} className="flex justify-between text-xs border-b border-white/5 pb-1">
+                <span className="opacity-60">{phase}</span>
+                <span className={count > 0 ? 'text-green-400' : 'opacity-30'}>{count}</span>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="border border-white/5 p-4 rounded bg-black/40">
-           <h3 className="text-[10px] text-white/40 mb-2 uppercase">Game Rules</h3>
-           <div className="space-y-1 text-[11px]">
-              <div className="flex justify-between"><span>Demand Multiplier:</span> <span className="text-purple-400">{summary?.game?.demand_multiplier}x</span></div>
-              <div className="flex justify-between"><span>QR Hard:</span> <span className="text-purple-400">{summary?.game?.qr_hard}</span></div>
-              <div className="flex justify-between"><span>QR Soft:</span> <span className="text-purple-400">{summary?.game?.qr_soft}</span></div>
-           </div>
+          <h3 className="text-[10px] text-white/40 mb-2 uppercase">Game Rules</h3>
+          <div className="space-y-1 text-[11px]">
+            <div className="flex justify-between"><span>Demand Multiplier:</span> <span className="text-purple-400">{summary?.game?.demand_multiplier}x</span></div>
+            <div className="flex justify-between"><span>QR Hard:</span> <span className="text-purple-400">{summary?.game?.qr_hard}</span></div>
+            <div className="flex justify-between"><span>QR Soft:</span> <span className="text-purple-400">{summary?.game?.qr_soft}</span></div>
+          </div>
         </div>
       </div>
     </div>
-  ) 
+  )
 }
 
 function TeamAuditPanel({ teams }: any) {
@@ -289,7 +288,7 @@ function InitialisationWizard({ summary, onUpdate }: any) {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-mono flex flex-col items-center justify-center p-6 pb-20">
       <div className="max-w-2xl w-full space-y-8 animate-in fade-in zoom-in duration-500">
-        
+
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black tracking-tighter text-purple-500 uppercase">System Initialisation</h1>
           <p className="text-white/40 text-sm tracking-widest uppercase">Environment: JU_PROD_ENG_LAB</p>
@@ -310,51 +309,51 @@ function InitialisationWizard({ summary, onUpdate }: any) {
             <div className="space-y-4">
               <label className="block">
                 <span className="text-[10px] text-white/40 uppercase tracking-widest">Simulation Name</span>
-                <input 
-                  type="text" 
-                  value={gameForm.name} 
-                  onChange={e => setGameForm({...gameForm, name: e.target.value})}
+                <input
+                  type="text"
+                  value={gameForm.name}
+                  onChange={e => setGameForm({ ...gameForm, name: e.target.value })}
                   className="w-full bg-white/5 border border-white/10 rounded p-3 mt-1 focus:border-purple-500 outline-none"
                 />
               </label>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <label className="block">
                   <span className="text-[10px] text-white/40 uppercase">Starting Funds</span>
-                  <input 
-                    type="number" 
-                    value={gameForm.starting_funds} 
-                    onChange={e => setGameForm({...gameForm, starting_funds: parseInt(e.target.value)})}
+                  <input
+                    type="number"
+                    value={gameForm.starting_funds}
+                    onChange={e => setGameForm({ ...gameForm, starting_funds: parseInt(e.target.value) })}
                     className="w-full bg-white/5 border border-white/10 rounded p-3 mt-1 focus:border-purple-500 outline-none"
                   />
                 </label>
                 <label className="block">
                   <span className="text-[10px] text-white/40 uppercase">Demand Multiplier</span>
-                  <input 
+                  <input
                     type="number" step="0.1"
-                    value={gameForm.market_demand_multiplier} 
-                    onChange={e => setGameForm({...gameForm, market_demand_multiplier: parseFloat(e.target.value)})}
+                    value={gameForm.market_demand_multiplier}
+                    onChange={e => setGameForm({ ...gameForm, market_demand_multiplier: parseFloat(e.target.value) })}
                     className="w-full bg-white/5 border border-white/10 rounded p-3 mt-1 focus:border-purple-500 outline-none"
                   />
                 </label>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                 {['qr_hard', 'qr_soft', 'qr_premium'].map(f => (
-                   <label key={f} className="block">
-                     <span className="text-[10px] text-white/40 uppercase underline decoration-purple-500/50">{f.replace('qr_', '')}</span>
-                     <input 
-                        type="number" 
-                        value={(gameForm as any)[f]} 
-                        onChange={e => setGameForm({...gameForm, [f]: parseInt(e.target.value)})}
-                        className="w-full bg-white/5 border border-white/10 rounded p-3 mt-1 focus:border-purple-500 outline-none"
-                      />
-                   </label>
-                 ))}
+                {['qr_hard', 'qr_soft', 'qr_premium'].map(f => (
+                  <label key={f} className="block">
+                    <span className="text-[10px] text-white/40 uppercase underline decoration-purple-500/50">{f.replace('qr_', '')}</span>
+                    <input
+                      type="number"
+                      value={(gameForm as any)[f]}
+                      onChange={e => setGameForm({ ...gameForm, [f]: parseInt(e.target.value) })}
+                      className="w-full bg-white/5 border border-white/10 rounded p-3 mt-1 focus:border-purple-500 outline-none"
+                    />
+                  </label>
+                ))}
               </div>
             </div>
 
-            <button 
+            <button
               disabled={isSubmitting}
               className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase tracking-widest disabled:opacity-50"
             >
@@ -369,20 +368,20 @@ function InitialisationWizard({ summary, onUpdate }: any) {
             <form onSubmit={handleAddTeam} className="bg-black/40 p-8 rounded-2xl border border-white/5 shadow-2xl space-y-4">
               <h3 className="text-xs font-bold text-purple-400 uppercase tracking-tighter">Add Participant Team</h3>
               <div className="grid grid-cols-2 gap-4">
-                <input 
+                <input
                   placeholder="TEAM NAME"
                   value={teamForm.name}
-                  onChange={e => setTeamForm({...teamForm, name: e.target.value})}
+                  onChange={e => setTeamForm({ ...teamForm, name: e.target.value })}
                   className="bg-white/5 border border-white/10 rounded p-3 outline-none focus:border-purple-500"
                 />
-                <input 
+                <input
                   placeholder="PIN"
                   value={teamForm.pin}
-                  onChange={e => setTeamForm({...teamForm, pin: e.target.value})}
+                  onChange={e => setTeamForm({ ...teamForm, pin: e.target.value })}
                   className="bg-white/5 border border-white/10 rounded p-3 outline-none focus:border-purple-500"
                 />
               </div>
-              <button 
+              <button
                 disabled={isSubmitting}
                 className="w-full border border-purple-500/50 hover:bg-purple-500/10 text-purple-400 font-bold py-3 rounded-lg uppercase text-xs tracking-widest transition-all"
               >
@@ -394,7 +393,7 @@ function InitialisationWizard({ summary, onUpdate }: any) {
               <div className="flex justify-between items-center">
                 <h3 className="text-[10px] text-white/40 uppercase tracking-widest">Registered Entities ({summary.teams.length})</h3>
                 {summary.teams.length >= 2 && (
-                  <button 
+                  <button
                     onClick={() => setStep(3)}
                     className="text-[10px] text-green-400 border border-green-900/50 px-3 py-1 rounded-full uppercase hover:bg-green-900/20"
                   >
@@ -425,18 +424,18 @@ function InitialisationWizard({ summary, onUpdate }: any) {
               <h3 className="text-xl font-bold">READY FOR DEPLOYMENT</h3>
               <p className="text-xs text-white/40 max-w-xs mx-auto">This will launch Cycle 1 Phase 1 (Procurement). All teams will be granted access to the production grid.</p>
             </div>
-            <button 
+            <button
               onClick={handleStartCycle}
               disabled={isSubmitting}
               className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase tracking-widest disabled:opacity-50"
             >
               Initiate Simulation Core →
             </button>
-            <button 
-               onClick={() => setStep(2)}
-               className="text-[10px] text-white/30 uppercase hover:text-white/60 tracking-widest"
+            <button
+              onClick={() => setStep(2)}
+              className="text-[10px] text-white/30 uppercase hover:text-white/60 tracking-widest"
             >
-               ← Back to Teams
+              ← Back to Teams
             </button>
           </div>
         )}
@@ -449,13 +448,12 @@ function InitialisationWizard({ summary, onUpdate }: any) {
 function StepIndicator({ num, label, active, done }: any) {
   return (
     <div className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${active ? 'scale-110' : 'opacity-40'}`}>
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono border-2 ${
-        done 
-          ? 'bg-purple-500 border-purple-500 text-white' 
-          : active 
-            ? 'border-purple-500 text-purple-500' 
-            : 'border-white/20 text-white/20'
-      }`}>
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono border-2 ${done
+        ? 'bg-purple-500 border-purple-500 text-white'
+        : active
+          ? 'border-purple-500 text-purple-500'
+          : 'border-white/20 text-white/20'
+        }`}>
         {done ? '✓' : num}
       </div>
       <span className={`text-[9px] font-black tracking-tighter ${active ? 'text-purple-400' : 'text-white'}`}>{label}</span>
