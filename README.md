@@ -1,12 +1,10 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/fastapi-0.111-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React">
-  <img src="https://img.shields.io/badge/typescript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/postgresql-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
-</p>
 # 🏭 INDUSTRIX
-> **A real-time multiplayer industrial simulation engine** where teams manage a complete drone manufacturing empire — procurement, production, sales, and covert backroom deals — all competing simultaneously.
+![Python](https://img.shields.io/badge/python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/fastapi-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/typescript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgresql-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+**A real-time multiplayer industrial simulation engine** where teams manage a complete drone manufacturing empire — procurement, production, sales, and covert backroom deals — all competing simultaneously.
 *Built for Jadavpur University · Department of Production Engineering*
 ---
 ## 🎯 What is Industrix?
@@ -19,36 +17,45 @@ Each cycle has **four timed phases** (5 min each), controlled by the organiser:
 ```
 PROCUREMENT ──▶ PRODUCTION ──▶ SALES ──▶ BACKROOM ──▶ (next cycle)
 ```
+---
 ### 📦 Phase 1 — Procurement
 Choose suppliers for **6 drone components** from a catalog of **60 sources**. Each source has unique quality distributions and pricing. Then select a transport mode:
 | Mode | Base Cost | Quality Risk | Damage Chance |
-|:-----|:----------|:-------------|:--------------|
+|------|-----------|--------------|---------------|
 | ✈️ Air | ₹25,000 | None | 0% |
 | 🚂 Rail | ₹2,200 | Low | 7% |
 | 🚛 Road | ₹400 | Medium | 14% |
 | 🚢 Water | ₹7,500 | High | 18% |
 **Components:** Airframe · Propulsion · Avionics · Fire Suppression · Sensing/Safety · Battery
+---
 ### ⚙️ Phase 2 — Production
 Manage your factory floor — hire workers, set wage levels, choose maintenance strategy, and invest in automation & R&D. Worker **morale** and **skill** directly affect output quality.
 | Machine Tier | Throughput | Cost | Starting Grade |
-|:-------------|:-----------|:-----|:---------------|
+|--------------|-----------|------|----------------|
 | Basic | 200 units | ₹15K | 40 |
 | Standard | 400 units | ₹35K | 60 |
 | Industrial | 700 units | ₹80K | 75 |
 | Precision | 1,000 units | ₹180K | 90 |
+---
 ### 💰 Phase 3 — Sales
-Assemble drones and sell into a market of **16 buyer factions** — from *Elite Research Hubs* (premium only, brand min 75) to *Hazardous Waste Patrol* (will buy anything). Each faction has volume limits, price ceilings, and brand requirements.
+Assemble drones and sell into a market of **16 buyer factions** — from *Elite Research Hubs* (premium only, brand min 75) to *Hazardous Waste Patrol* (will buy anything).
 | Drone Tier | Grade Range | Price Range |
-|:-----------|:------------|:------------|
+|------------|------------|-------------|
 | 🥇 Premium | 80 – 100 | ₹4,800 – ₹9,800 |
 | 🥈 Standard | 50 – 79 | ₹3,000 – ₹4,500 |
 | 🥉 Substandard | 25 – 49 | ₹1,400 – ₹2,400 |
 | ❌ Reject | 0 – 24 | ₹200 (scrap) |
+---
 ### 🤝 Phase 4 — Backroom
 Execute covert deals across **22 deal types**:
 - 🔴 **Sabotage** — Disrupt rivals' supply chains, destroy machines, trigger labour strikes, manipulate market access
 - 🟢 **Advantage** — Priority supply, subsidised inputs, demand boosts, audit immunity, tax evasion
 > ⚠️ Every deal has a **discovery probability** that compounds with repeated use. Getting caught = **2.5× fines** + severe brand damage.
+---
+## 🛠️ Tech Stack
+**Backend** — Python 3.10+ · FastAPI · SQLAlchemy 2.0 · PostgreSQL 16 · Pydantic v2 · Alembic · SciPy · Uvicorn
+**Frontend** — React 19 · TypeScript 5.9 · Vite 8 · Zustand · Tailwind CSS 3 · Framer Motion · Axios
+**Infra** — Docker Compose (PostgreSQL + Redis)
 ---
 ## 🏗️ Architecture
 ```
@@ -56,8 +63,8 @@ Execute covert deals across **22 deal types**:
 │           industrix_frontend/                      │
 │   React 19 · TypeScript · Zustand · Tailwind CSS  │
 │                                                    │
-│   Login │ Procurement │ Production │ Sales         │
-│   Events │ Inventory │ Market │ Results            │
+│   Login | Procurement | Production | Sales         │
+│   Events | Inventory | Market | Results            │
 └─────────────────────┬─────────────────────────────┘
                       │ Axios
                       │ Headers: x-team-id, x-team-pin
@@ -66,32 +73,27 @@ Execute covert deals across **22 deal types**:
 │                 backend/                           │
 │     FastAPI · SQLAlchemy 2.0 · Pydantic v2        │
 │                                                    │
-│  Team Routes         │  Organiser Routes           │
-│  /team/login         │  /organiser/cycle/*         │
-│  /team/procurement   │  /organiser/deals/*         │
-│  /team/production    │  /organiser/teams/*         │
-│  /team/sales         │  /organiser/auction/*       │
-│  /team/events        │  /organiser/market/*        │
+│  Team Routes         |  Organiser Routes           │
+│  /team/login         |  /organiser/cycle/*         │
+│  /team/procurement   |  /organiser/deals/*         │
+│  /team/production    |  /organiser/teams/*         │
+│  /team/sales         |  /organiser/auction/*       │
+│  /team/events        |  /organiser/market/*        │
 │                                                    │
-│  Services ──▶ Models ──▶ PostgreSQL 16 (Docker)   │
+│  Services --> Models --> PostgreSQL 16 (Docker)    │
 └───────────────────────────────────────────────────┘
 ```
----
-## 🛠️ Tech Stack
-**Backend** — Python 3.10+ · FastAPI · SQLAlchemy 2.0 · PostgreSQL 16 · Pydantic v2 · Alembic · SciPy · Uvicorn
-**Frontend** — React 19 · TypeScript 5.9 · Vite 8 · Zustand · Tailwind CSS 3 · Framer Motion · Axios
-**Infra** — Docker Compose (PostgreSQL + Redis)
 ---
 ## 🚀 Getting Started
 ### Prerequisites
 - Python 3.10+
-- Node.js 18+ & npm
+- Node.js 18+ and npm
 - Docker
 ### 1. Database
 ```bash
 docker compose up -d
-# PostgreSQL on :5434, Redis on :6379
 ```
+This starts PostgreSQL on port `5434` and Redis on port `6379`.
 ### 2. Backend
 ```bash
 cd backend
@@ -101,7 +103,7 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 Create `backend/.env`:
-```env
+```
 DATABASE_URL=postgresql://postgres:secret@localhost:5434/industrix
 SECRET_KEY=your-secret-key-here
 ```
@@ -111,16 +113,16 @@ python reset.py          # Wipe and create tables
 python seed_game.py      # Seed 60 sources + market factions
 python seed_teams.py     # Seed 14 teams with PINs
 uvicorn main:app --reload
-# → http://localhost:8000
-# → http://localhost:8000/docs (Swagger)
 ```
+- Backend: `http://localhost:8000`
+- Swagger docs: `http://localhost:8000/docs`
 ### 3. Frontend
 ```bash
 cd industrix_frontend
 npm install
 npm run dev
-# → http://localhost:5180
 ```
+- Frontend: `http://localhost:5180`
 ---
 ## 📁 Project Structure
 ```
@@ -161,7 +163,7 @@ INDUSTRIX/
 ### Team Endpoints
 Auth via headers: `x-team-id` + `x-team-pin`
 | Method | Endpoint | Description |
-|:-------|:---------|:------------|
+|--------|----------|-------------|
 | POST | `/team/login` | Authenticate |
 | GET | `/team/status` | Current phase *(no auth)* |
 | GET | `/team/me` | Inventory snapshot |
@@ -179,7 +181,7 @@ Auth via headers: `x-team-id` + `x-team-pin`
 ### Organiser Endpoints
 Auth via header: `x-organiser-secret`
 | Method | Endpoint | Description |
-|:-------|:---------|:------------|
+|--------|----------|-------------|
 | POST | `/organiser/cycle/create` | Start new cycle |
 | POST | `/organiser/cycle/advance` | Advance phase |
 | POST | `/organiser/deals/propose` | Create backroom deal |
@@ -189,15 +191,19 @@ Auth via header: `x-organiser-secret`
 ## ⚙️ Scoring
 Teams are ranked on a **weighted composite score**:
 | Metric | Weight | What it measures |
-|:-------|:-------|:-----------------|
-| Net Margin | 30% | Revenue → profit efficiency |
+|--------|--------|-----------------|
+| Net Margin | 30% | Revenue to profit efficiency |
 | Enterprise Value | 25% | Total accumulated wealth |
 | Market Share | 20% | Slice of total units sold |
 | Brand Score | 15% | Reputation (quality + scandals) |
-| Operational Efficiency | 10% | Units produced per ₹ spent |
+| Operational Efficiency | 10% | Units produced per currency spent |
 ---
-<p align="center">
-  <strong>Jadavpur University · Department of Production Engineering</strong>
-  <br><br>
-  <code>[ PROCURE ] → [ PRODUCE ] → [ SELL ] → [ DEAL ] → [ REPEAT ]</code>
-</p>
+## 🤝 Contributing
+1. Fork the repo
+2. Create your feature branch — `git checkout -b feature/amazing-feature`
+3. Commit your changes — `git commit -m 'Add amazing feature'`
+4. Push to the branch — `git push origin feature/amazing-feature`
+5. Open a Pull Request
+---
+**Jadavpur University · Department of Production Engineering**
+`[ PROCURE ] → [ PRODUCE ] → [ SELL ] → [ DEAL ] → [ REPEAT ]`
