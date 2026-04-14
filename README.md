@@ -4,6 +4,7 @@
 ![React](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/typescript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+
 **A real-time multiplayer industrial simulation engine** where teams manage a complete drone manufacturing empire — procurement, production, sales, and covert backroom deals — all competing simultaneously.
 *Built for Jadavpur University · Department of Production Engineering*
 ---
