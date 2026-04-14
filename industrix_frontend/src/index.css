@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-body m-0 p-0 antialiased min-h-screen text-sm;
+  }
+}
+
+@layer utilities {
+  .clip-rect {
+    clip-path: inset(0);
+  }
+}
+
+/* Base resets & structural styles for inputs */
+input[type="number"],
+input[type="text"],
+select {
+  @apply bg-surface border border-outline-variant text-on-surface appearance-none outline-none focus:border-outline;
+}
+input:disabled, select:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Premium Range Input Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  @apply h-4 flex items-center;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  @apply bg-surface-highest/60 h-1 rounded-full border border-outline-variant/20 transition-colors;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 14px;
+  background: #dab9ff; /* primary */
+  border-radius: 50%;
+  border: 2px solid #111417; /* surface */
+  box-shadow: 0 0 12px rgba(218, 185, 255, 0.3);
+  margin-top: -6px; /* Center thumb on track */
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  @apply scale-125;
+  box-shadow: 0 0 20px rgba(218, 185, 255, 0.6);
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+  @apply scale-110;
+  background: #b072fb; /* primary-container */
+}
+
+/* Premium Scrollbar Styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #111417;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #323539; /* surface-highest */
+  border-radius: 20px;
+  border: 1px solid #111417;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #dab9ff; /* primary */
+}
+
+/* Global scrollbar for the body as well */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #111417;
+}
+::-webkit-scrollbar-thumb {
+  background: #282a2e;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b4453;
+}

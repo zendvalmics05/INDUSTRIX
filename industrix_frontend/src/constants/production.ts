@@ -1,0 +1,79 @@
+/**
+ * backend/core/config.py aligned constants for the frontend.
+ * Authoritative for current game balance.
+ */
+
+export const MACHINE_TIERS = {
+  basic: { grade: 40, throughput: 200, labour: 4, degrade: 15.0, buy: 15000, scrap: 1000 },
+  standard: { grade: 60, throughput: 400, labour: 8, degrade: 12.0, buy: 35000, scrap: 3000 },
+  industrial: { grade: 75, throughput: 700, labour: 10, degrade: 8.0, buy: 80000, scrap: 8000 },
+  precision: { grade: 90, throughput: 1000, labour: 20, degrade: 10.0, buy: 180000, scrap: 25000 },
+};
+
+export const MAINTENANCE_COSTS = {
+  none: 0,
+  basic: 500,
+  full: 1500,
+  overhaul: 5000,
+};
+
+export const MAINTENANCE_DEGRADE_MULT = {
+  none: 1.0,
+  basic: 0.4,
+  full: 0.1,
+  overhaul: 0.0,
+};
+
+export const OVERHAUL_RECOVERY_CAP = 30.0;
+export const MACHINE_MAX_CONDITION = 100.0;
+
+export const WAGE_COSTS = {
+  below_market: 300,
+  market: 500,
+  above_market: 750,
+};
+
+export const WAGE_MORALE_DELTA = {
+  below_market: -10.0,
+  market: 0.0,
+  above_market: 8.0,
+};
+
+export const UNDERSTAFFING_MORALE_PENALTY = 0.20; // per 1% understaffed
+
+export const AUTOMATION_LABOUR_MULT = {
+  manual: 1.0,
+  semi_auto: 0.6,
+  full_auto: 0.25,
+};
+
+export const AUTOMATION_SIGMA_MULT = {
+  manual: 1.0,
+  semi_auto: 0.65,
+  full_auto: 0.35,
+};
+
+export const AUTOMATION_UPGRADE_COST = {
+  manual: 0.0,
+  semi_auto: 80000,
+  full_auto: 160000,
+};
+
+export const RND_COST_PER_LEVEL = 40000.0;
+export const RND_QUALITY_BONUS = 3.0;
+export const RND_CONSISTENCY_BONUS = 2.0;
+export const RND_YIELD_BONUS = 0.04;
+
+export const BASE_SIGMA = 15.0;
+export const SKILL_SIGMA_REDUCTION = 0.50;
+export const CONDITION_GRADE_EXPONENT = 0.6;
+export const RM_WEIGHT = 0.40;
+
+export const COMPONENT_COMPLEXITY: Record<string, { sigma_mult: number; grade_offset: number }> = {
+  airframe: { sigma_mult: 1.0, grade_offset: 0 },
+  propulsion: { sigma_mult: 1.3, grade_offset: -5 },
+  avionics: { sigma_mult: 1.6, grade_offset: -8 },
+  fire_suppression: { sigma_mult: 0.8, grade_offset: 2 },
+  sensing_safety: { sigma_mult: 1.4, grade_offset: -4 },
+  battery: { sigma_mult: 1.1, grade_offset: -2 },
+};

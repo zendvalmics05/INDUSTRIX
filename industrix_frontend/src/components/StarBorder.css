@@ -1,0 +1,75 @@
+.star-border-container {
+  display: inline-flex;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.border-gradient-bottom,
+.border-gradient-top {
+  position: absolute;
+  width: 300%;
+  height: 50%;
+  opacity: 0;
+  border-radius: 50%;
+  z-index: 0;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+  animation-play-state: paused;
+  transition: opacity 0.3s ease;
+}
+
+.border-gradient-bottom {
+  bottom: -12px;
+  right: -250%;
+  animation-name: star-movement-bottom;
+}
+
+.border-gradient-top {
+  top: -12px;
+  left: -250%;
+  animation-name: star-movement-top;
+}
+
+/* Play and show only on hover, and only when not disabled */
+.star-border-container:not(:disabled):hover .border-gradient-bottom,
+.star-border-container:not(:disabled):hover .border-gradient-top {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+/* Pause and hide if disabled */
+.star-border-container:disabled .border-gradient-bottom,
+.star-border-container:disabled .border-gradient-top {
+  opacity: 0 !important;
+  animation-play-state: paused !important;
+}
+
+.inner-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes star-movement-bottom {
+  0% {
+    transform: translate(0%, 0%);
+  }
+  100% {
+    transform: translate(-100%, 0%);
+  }
+}
+
+@keyframes star-movement-top {
+  0% {
+    transform: translate(0%, 0%);
+  }
+  100% {
+    transform: translate(100%, 0%);
+  }
+}
